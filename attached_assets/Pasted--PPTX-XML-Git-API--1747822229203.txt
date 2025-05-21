@@ -1,0 +1,117 @@
+要約
+
+システム要件としては、「PPTXのXMLレベル差分抽出」「Gitライクなブランチ・マージ管理」「ブラウザ上での即時プレビュー」「高度機能付与のAPI連携」が必須。
+
+アーキテクチャは「クライアント編集UI＋プレビュー」「差分抽出＆変換API」「バージョン管理ストレージ」「ブランチ／マージUI」の４層構成が望ましい。
+
+ライブラリ選定では、クライアントには TipTap＋react-konva、差分表示に react-diff-view、バックエンド差分抽出に python-pptx や pptx4j/docx4j + Oracle XMLDiff、高度機能には Aspose.Slides Cloud または GroupDocs Comparison Cloud API を組み合わせるのが最適です。
+
+1. システム要件定義
+1.1 差分抽出
+PPTX内部のXMLを直接パースし、意味ある差分を抽出する機能が必要 
+Oracle ドキュメント
+。
+
+「テキスト」「レイアウト」「スタイル」「図形の追加／削除」などを細かく検出できること。
+
+1.2 バージョン管理
+Gitライクな「ブランチ」「マージ」「コミット履歴」をUIで操作可能にすること。
+
+コミットごとに差分スナップショットを保持し、過去バージョンへのロールバック／比較をサポート。
+
+1.3 クライアントプレビュー
+ブラウザ上でスライドを即時レンダリングし、編集結果を目視できること。
+
+軽量かつ高速に動作し、大規模なスライドでもストレスなくプレビュー可能。
+
+1.4 高度機能付与
+アニメーションやスライド遷移、SmartArtなどの高度機能は、クライアントで生成しきれないため、APIを介して付与するアプローチが必須 
+Aspose Documentation
+。
+
+2. 推奨アーキテクチャ
+mermaid
+コピーする
+編集する
+flowchart LR
+  subgraph Client
+    A[編集 UI (SlideData生成)] --> B[プレビュー (Canvas/SVG)]
+  end
+  subgraph API Layer
+    C[差分抽出サービス] --> D[差分JSON]
+    E[高度機能付与サービス] --> F[最終PPTX生成]
+  end
+  subgraph Storage
+    G[バージョンストア (差分 & ファイル)]
+  end
+  subgraph UI
+    H[ブランチ/マージ管理画面]
+  end
+
+  A --> C
+  B --> G
+  D --> G
+  H --> G
+  H --> E
+  E --> G
+  G --> B
+  G --> H
+3. ライブラリ／技術スタック検討
+3.1 クライアント編集 UI ＆ プレビュー
+機能	ライブラリ	理由
+リッチテキスト／構造化エディタ	TipTap
+（ProseMirrorベース） 
+liveblocks.io
+初期導入が容易で公式エクステンション多数、TypeScript対応も完備
+プレビュー描画	react-konva 
+konvajs.org
+Canvasベースで自由な図形・テキストレンダリングが可能。大規模スライドの高速プレビューに最適
+差分表示	react-diff-view 
+npm
+Gitのunified diffをそのままUIに反映でき、インライン・サイドバイサイド両対応
+
+3.2 バックエンド差分抽出
+機能	ライブラリ／サービス	理由
+PPTX読み込み・XML解析	python-pptx 
+python-pptx.readthedocs.io
+
+or pptx4j/docx4j 
+docx4java.org
+docx4java.org
+PPTXをネイティブに読み書きできる豊富なAPI。Python版は開発速度、Java版はエンタープライズ適用↑
+XML差分検出	Oracle XMLDiff 
+Oracle ドキュメント
+XML構造を理解したセマンティックな差分ツール。XSLで差分レンダリングも可能
+Markdown変換	pptx2md 
+GitHub
+PPTX→Markdown変換でテキスト差分取得を補助。レビューワークフローにも活用可
+
+3.3 高度機能付与 API
+機能	サービス	理由
+アニメーション／遷移／SmartArt	Aspose.Slides Cloud REST API 
+Aspose Documentation
+
+or GroupDocs Comparison Cloud API 
+kb.groupdocs.cloud
+REST経由で高度機能を付与・比較。サーバーレスでスケーラブル、幅広いフォーマット変換もサポート
+
+4. 今すべき設計フェーズ
+ドメインモデル定義
+
+SlideData／DiffData のスキーマをTypeScriptとOpenAPIで同時定義。
+
+APIプロトタイプ
+
+Python（Flask/FastAPI） or Java（Spring Boot）で、python-pptx＋Oracle XMLDiffを呼ぶ差分APIを実装。
+
+クライアントPoC
+
+TipTap＋react-konva＋react-diff-viewベースのエディタ／プレビューUIを構築し、差分APIと疎結合で連携。
+
+バージョンストレージ設計
+
+差分JSON＋PPTXバイナリを格納するスキーマレスDB（MongoDB/Cosmos DB） or オブジェクトストレージ＋メタDB構成を検討。
+
+高度機能API連携検証
+
+Aspose.Slides CloudでサンプルPPTXにアニメーションを追加し、エンドツーエンドで最終ファイルを取得するワークフローを確認。
