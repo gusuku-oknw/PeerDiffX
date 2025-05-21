@@ -32,6 +32,26 @@ export function AuthButtons() {
   }
 
   if (isAuthenticated) {
+    // Get user initials for avatar fallback
+    const getInitials = () => {
+      if (user?.firstName && user?.lastName) {
+        return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
+      } else if (user?.username) {
+        return user.username.charAt(0).toUpperCase();
+      }
+      return 'U';
+    };
+
+    // Get display name
+    const getDisplayName = () => {
+      if (user?.firstName && user?.lastName) {
+        return `${user.firstName} ${user.lastName}`;
+      } else if (user?.username) {
+        return user.username;
+      }
+      return 'User';
+    };
+    
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -39,8 +59,7 @@ export function AuthButtons() {
             <Avatar className="h-8 w-8">
               <AvatarImage src={user?.profileImageUrl || ""} alt="プロフィール" />
               <AvatarFallback>
-                {user?.firstName?.charAt(0) || ""}
-                {user?.lastName?.charAt(0) || ""}
+                {getInitials()}
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -49,10 +68,10 @@ export function AuthButtons() {
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
-                {user?.firstName} {user?.lastName}
+                {getDisplayName()}
               </p>
               <p className="text-xs leading-none text-muted-foreground">
-                {user?.email}
+                {user?.email || ''}
               </p>
             </div>
           </DropdownMenuLabel>

@@ -534,11 +534,16 @@ if (import.meta.url === `file://${__filename}`) {
   initializeDatabase()
     .then(() => {
       console.log('Database initialization complete.');
-      pool.end();
+      // Don't close the pool when running within the main application
+      if (process.env.NODE_ENV !== 'development') {
+        pool.end();
+      }
     })
     .catch((error) => {
       console.error('Database initialization failed:', error);
-      pool.end();
+      if (process.env.NODE_ENV !== 'development') {
+        pool.end();
+      }
       process.exit(1);
     });
 }
