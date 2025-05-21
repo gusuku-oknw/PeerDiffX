@@ -127,10 +127,67 @@ export default function Header() {
           </Button>
           
           <div className="hidden md:block relative">
-            <Button variant="ghost" size="icon" className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
-              <FaBell />
-              <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></div>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md relative">
+                  <FaBell />
+                  <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-sm">Notifications</h4>
+                    <Button variant="ghost" size="sm" className="text-xs text-blue-500 hover:text-blue-700">
+                      Mark all as read
+                    </Button>
+                  </div>
+                </div>
+                <div className="max-h-[300px] overflow-y-auto">
+                  <div className="p-3 border-b border-gray-100 dark:border-gray-800 bg-blue-50 dark:bg-blue-900/20">
+                    <div className="flex items-start">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xs font-semibold mr-3">
+                        TK
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">New comment on slide 2</div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Takashi K. commented on your presentation "Q4_Presentation.pptx"</p>
+                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">2 minutes ago</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+                    <div className="flex items-start">
+                      <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 flex-shrink-0 flex items-center justify-center text-green-600 dark:text-green-400 text-xs font-semibold mr-3">
+                        YN
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">Branch merged</div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Your branch "feature-new-slide" was merged into "main"</p>
+                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">Yesterday</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+                    <div className="flex items-start">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900 flex-shrink-0 flex items-center justify-center text-purple-600 dark:text-purple-400 text-xs font-semibold mr-3">
+                        SJ
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">Presentation shared with you</div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Sara J. shared "Q1 Planning" presentation with you</p>
+                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">2 days ago</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-2 border-t border-gray-200 dark:border-gray-700">
+                  <Button variant="ghost" size="sm" className="w-full text-sm text-center text-blue-500 hover:text-blue-700">
+                    View all notifications
+                  </Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
           <DropdownMenu>
