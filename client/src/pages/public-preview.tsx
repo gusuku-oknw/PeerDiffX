@@ -30,6 +30,14 @@ export default function PublicPreview() {
   const commitId = params?.commitId ? parseInt(params.commitId, 10) : 35;
   console.log('Using commitId:', commitId);
   
+  // URLが通常の数値IDだった場合は、エンコードしたURLにリダイレクト
+  useEffect(() => {
+    if (params?.presentationId && !isNaN(Number(params.presentationId)) && !params.presentationId.startsWith('pdx-')) {
+      const encodedId = encodeId(Number(params.presentationId));
+      window.location.href = `/public-preview/${encodedId}${params.commitId ? `/${params.commitId}` : ''}`;
+    }
+  }, [params]);
+  
   // プレゼンテーション情報を取得
   const { data: presentation, isLoading: isLoadingPresentation } = usePresentation(presentationId);
   

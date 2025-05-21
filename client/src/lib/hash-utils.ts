@@ -3,9 +3,8 @@
  * URLで直接IDを表示せず、セキュリティを向上させる
  */
 export function encodeId(id: number): string {
-  // IDと現在時刻をエンコード
-  const timestamp = Date.now() % 1000000;
-  const dataToEncode = `${id}-${timestamp}`;
+  // IDのみをエンコードする（一貫性のため）
+  const dataToEncode = `${id}`;
   
   // Base64エンコード
   const encodedData = btoa(dataToEncode);
