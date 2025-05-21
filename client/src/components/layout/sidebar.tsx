@@ -163,7 +163,7 @@ export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
             </div>
           )}
           
-          <div className="space-y-1 mt-3">
+          <div className="space-y-1 mt-3 overflow-hidden">
             {isLoadingBranches ? (
               <div className="animate-pulse space-y-2 px-3">
                 <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
@@ -172,33 +172,35 @@ export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
             ) : (
               <div className="px-3">
                 <h4 className="text-xs text-gray-500 dark:text-gray-400 mb-2">利用可能なブランチ</h4>
-                {branches.map((branch) => (
-                  <div 
-                    key={branch.id} 
-                    onClick={() => changeBranch(branch.id)}
-                    className={`flex items-center px-3 py-2 rounded-md ${
-                      currentBranch?.id === branch.id 
-                        ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' 
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
-                    }`}
-                  >
-                    <div className={`w-3 h-3 rounded-full mr-2 flex-shrink-0 ${
-                      branch.name === 'main' 
-                        ? 'bg-blue-500' 
-                        : branch.name.startsWith('feature') 
-                          ? 'bg-green-500' 
-                          : 'bg-purple-500'
-                    }`}></div>
-                    <span className={currentBranch?.id === branch.id ? 'font-medium text-sm' : 'text-sm'}>
-                      {branch.name}
-                    </span>
-                    {branch.isDefault && (
-                      <span className="ml-1 text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded">
-                        デフォルト
+                <div className="max-h-[200px] overflow-y-auto pr-1 -mr-1 space-y-1">
+                  {branches.map((branch) => (
+                    <div 
+                      key={branch.id} 
+                      onClick={() => changeBranch(branch.id)}
+                      className={`flex items-center px-3 py-2 rounded-md ${
+                        currentBranch?.id === branch.id 
+                          ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' 
+                          : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
+                      }`}
+                    >
+                      <div className={`w-3 h-3 rounded-full mr-2 flex-shrink-0 ${
+                        branch.name === 'main' 
+                          ? 'bg-blue-500' 
+                          : branch.name.startsWith('feature') 
+                            ? 'bg-green-500' 
+                            : 'bg-purple-500'
+                      }`}></div>
+                      <span className={`${currentBranch?.id === branch.id ? 'font-medium text-sm' : 'text-sm'} truncate max-w-[140px]`}>
+                        {branch.name}
                       </span>
-                    )}
-                  </div>
-                ))}
+                      {branch.isDefault && (
+                        <span className="ml-1 text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded whitespace-nowrap flex-shrink-0">
+                          デフォルト
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

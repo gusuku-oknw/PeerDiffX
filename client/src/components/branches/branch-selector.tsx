@@ -133,12 +133,17 @@ export default function BranchSelector({
       <div className="flex items-center space-x-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="flex items-center gap-2">
-              <GitBranch className="h-4 w-4" />
-              {currentBranch ? currentBranch.name : "ブランチ"}
+            <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto text-left justify-start overflow-hidden">
+              <GitBranch className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">
+                {currentBranch ? currentBranch.name : "ブランチ"}
+              </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuContent 
+            align="start" 
+            className="w-56 max-w-[90vw] max-h-[60vh] overflow-y-auto"
+          >
             {loading ? (
               <DropdownMenuItem disabled>
                 <span className="animate-pulse">読み込み中...</span>
@@ -151,9 +156,9 @@ export default function BranchSelector({
                     onClick={() => onBranchChange(branch.id)}
                     className={branch.id === currentBranchId ? "bg-accent" : ""}
                   >
-                    <GitBranch className="h-4 w-4 mr-2" />
-                    {branch.name}
-                    {branch.isDefault && <span className="ml-2 text-xs opacity-70">(default)</span>}
+                    <GitBranch className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{branch.name}</span>
+                    {branch.isDefault && <span className="ml-2 text-xs opacity-70 whitespace-nowrap">(default)</span>}
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
@@ -164,7 +169,7 @@ export default function BranchSelector({
                       新しいブランチ
                     </DropdownMenuItem>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="sm:max-w-[425px] max-w-[85vw]">
                     <DialogHeader>
                       <DialogTitle>新しいブランチを作成</DialogTitle>
                       <DialogDescription>
@@ -172,8 +177,8 @@ export default function BranchSelector({
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="branch-name" className="text-right">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                        <Label htmlFor="branch-name" className="sm:text-right">
                           ブランチ名
                         </Label>
                         <Input
@@ -181,11 +186,11 @@ export default function BranchSelector({
                           value={newBranchName}
                           onChange={(e) => setNewBranchName(e.target.value)}
                           placeholder="feature/new-design"
-                          className="col-span-3"
+                          className="col-span-1 sm:col-span-3"
                         />
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="branch-description" className="text-right">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                        <Label htmlFor="branch-description" className="sm:text-right">
                           説明
                         </Label>
                         <Input
@@ -193,20 +198,20 @@ export default function BranchSelector({
                           value={newBranchDescription}
                           onChange={(e) => setNewBranchDescription(e.target.value)}
                           placeholder="新しいデザインの試作"
-                          className="col-span-3"
+                          className="col-span-1 sm:col-span-3"
                         />
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label className="text-right">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                        <Label className="sm:text-right">
                           ベース
                         </Label>
-                        <div className="col-span-3 text-sm">
+                        <div className="col-span-1 sm:col-span-3 text-sm">
                           {currentBranch ? currentBranch.name : "選択されたブランチ"}
                         </div>
                       </div>
                     </div>
-                    <DialogFooter>
-                      <Button onClick={handleCreateBranch}>
+                    <DialogFooter className="flex-col sm:flex-row gap-2">
+                      <Button onClick={handleCreateBranch} className="w-full sm:w-auto">
                         ブランチを作成
                       </Button>
                     </DialogFooter>
@@ -221,7 +226,7 @@ export default function BranchSelector({
                         ブランチをマージ
                       </DropdownMenuItem>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="sm:max-w-[425px] max-w-[85vw]">
                       <DialogHeader>
                         <DialogTitle>ブランチをマージ</DialogTitle>
                         <DialogDescription>
@@ -229,15 +234,15 @@ export default function BranchSelector({
                         </DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="source-branch" className="text-right">
+                        <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                          <Label htmlFor="source-branch" className="sm:text-right">
                             マージ元
                           </Label>
                           <select
                             id="source-branch"
                             value={sourceBranchId || ""}
                             onChange={(e) => setSourceBranchId(parseInt(e.target.value))}
-                            className="col-span-3 p-2 border rounded"
+                            className="col-span-1 sm:col-span-3 p-2 border rounded w-full"
                           >
                             <option value="">選択してください</option>
                             {branches
@@ -249,30 +254,16 @@ export default function BranchSelector({
                               ))}
                           </select>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="target-branch" className="text-right">
+                        <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                          <Label htmlFor="target-branch" className="sm:text-right">
                             マージ先
                           </Label>
-                          <select
-                            id="target-branch"
-                            value={targetBranchId || ""}
-                            onChange={(e) => setTargetBranchId(parseInt(e.target.value))}
-                            className="col-span-3 p-2 border rounded"
-                          >
-                            <option value="">選択してください</option>
-                            {branches.map(branch => (
-                              <option 
-                                key={branch.id} 
-                                value={branch.id} 
-                                selected={branch.id === currentBranchId}
-                              >
-                                {branch.name}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="col-span-1 sm:col-span-3 text-sm border rounded-md p-2">
+                            {currentBranch?.name || "現在のブランチ"}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="commit-message" className="text-right">
+                        <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+                          <Label htmlFor="commit-message" className="sm:text-right">
                             コミットメッセージ
                           </Label>
                           <Input
@@ -280,12 +271,12 @@ export default function BranchSelector({
                             value={mergeCommitMessage}
                             onChange={(e) => setMergeCommitMessage(e.target.value)}
                             placeholder="Merge branch 'feature/new-design' into 'main'"
-                            className="col-span-3"
+                            className="col-span-1 sm:col-span-3"
                           />
                         </div>
                       </div>
-                      <DialogFooter>
-                        <Button onClick={handleMergeBranch}>
+                      <DialogFooter className="flex-col sm:flex-row gap-2">
+                        <Button onClick={handleMergeBranch} className="w-full sm:w-auto">
                           マージを実行
                         </Button>
                       </DialogFooter>
