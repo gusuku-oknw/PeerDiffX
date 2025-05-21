@@ -14,7 +14,7 @@ import { Link } from "wouter";
 import SlideCanvas from "@/components/slides/slide-canvas";
 
 export default function SnapshotPage() {
-  const [, params] = useRoute("/snapshot/:id");
+  const [, params] = useRoute("/preview/pdx-:id");
   const snapshotId = params?.id;
   
   const [snapshot, setSnapshot] = useState<any>(null);
