@@ -53,7 +53,14 @@ function renderStructuredContent(content: any): JSX.Element {
     // Check if it's our expected slide content format with elements
     if (content.elements && Array.isArray(content.elements)) {
       return (
-        <div className="slide-structured-content relative" style={{ background: content.background || 'transparent' }}>
+        <div 
+          className="slide-structured-content relative w-full h-full" 
+          style={{ 
+            background: content.background || '#ffffff',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
           {content.elements.map((element: any, index: number) => (
             <div 
               key={element.id || index}
@@ -68,10 +75,48 @@ function renderStructuredContent(content: any): JSX.Element {
               }}
             >
               {element.type === 'text' && (
-                <div>{element.content}</div>
+                <div style={{ 
+                  overflow: 'hidden', 
+                  width: '100%', 
+                  height: '100%',
+                  fontSize: element.style?.fontSize || 'inherit',
+                  fontWeight: element.style?.fontWeight || 'inherit',
+                  color: element.style?.color || 'inherit',
+                  textAlign: element.style?.textAlign || 'inherit',
+                }}>
+                  {element.content}
+                </div>
               )}
               {element.type === 'image' && element.src && (
-                <img src={element.src} alt={element.alt || ''} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                <img 
+                  src={element.src} 
+                  alt={element.alt || ''} 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'contain' 
+                  }} 
+                />
+              )}
+              {element.type === 'shape' && (
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: element.style?.backgroundColor || 'transparent',
+                  borderRadius: element.style?.borderRadius || '0',
+                  border: element.style?.border,
+                  opacity: element.style?.opacity,
+                  transform: element.style?.transform
+                }}>
+                  {element.content && (
+                    <div style={{ 
+                      padding: '8px',
+                      color: element.style?.color || 'inherit'
+                    }}>
+                      {element.content}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           ))}
@@ -80,10 +125,22 @@ function renderStructuredContent(content: any): JSX.Element {
     } 
     
     // Fallback for other formats
-    return <pre className="text-sm overflow-auto max-h-60">{JSON.stringify(content, null, 2)}</pre>;
+    return (
+      <div className="p-4">
+        <div className="p-3 rounded bg-muted/50 overflow-auto max-h-[400px]">
+          <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(content, null, 2)}</pre>
+        </div>
+      </div>
+    );
   } catch (error: any) {
     console.error('Error rendering structured content:', error);
-    return <div className="text-red-500">Error rendering slide content: {error.message}</div>;
+    return (
+      <div className="p-4">
+        <div className="p-3 rounded bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300">
+          Error rendering slide content: {error.message}
+        </div>
+      </div>
+    );
   }
 }
 
@@ -122,6 +179,9 @@ export function XmlSlideRenderer({ slide }: XmlSlideRendererProps): JSX.Element 
 /**
  * Creates a safe HTML representation of the XML content
  */
+/**
+ * Creates a safe HTML representation of the XML content from PowerPoint slides
+ */
 function createSlideSafely(xmlContent: string): string {
   try {
     if (!xmlContent || xmlContent.trim().length === 0) {
@@ -136,34 +196,82 @@ function createSlideSafely(xmlContent: string): string {
       .replace(/<meta\b[^<]*>/gi, '');
     
     // Extract text content from XML for simple display
-    // For PowerPoint XML, look for text within a:t tags
-    let displayContent = sanitizedContent;
+    let displayContent = '';
     
-    // Try to extract text from PowerPoint XML format
+    // Try to extract text from PowerPoint XML format - look for text within a:t tags
     const textMatches = sanitizedContent.match(/<a:t>(.*?)<\/a:t>/g);
+    
     if (textMatches && textMatches.length > 0) {
-      const extractedText = textMatches.map(match => {
-        return match.replace(/<a:t>(.*?)<\/a:t>/g, '$1');
-      }).join('<br>');
-      
-      displayContent = `<div class="pptx-text">${extractedText}</div>`;
+      // Extract and format text content
+      const extractedTexts = extractTextFromPowerPoint(textMatches);
+      displayContent = extractedTexts;
+    } else {
+      // Fallback to raw XML content with formatting
+      displayContent = `<pre class="text-sm overflow-auto max-h-full whitespace-pre-wrap">${sanitizedContent}</pre>`;
     }
     
     // Add wrapper with styling
     return `
-      <div class="slide-content">
+      <div class="slide-content h-full overflow-y-auto p-4">
         <style>
-          .slide-content p { margin-bottom: 0.5em; }
-          .slide-content [style*="font-size"] { line-height: 1.4; }
-          .pptx-text { font-size: 1.2rem; line-height: 1.6; margin: 1rem 0; }
+          .slide-content { font-family: system-ui, -apple-system, sans-serif; color: inherit; }
+          .slide-content p { margin-bottom: 0.8em; line-height: 1.6; }
+          .slide-content h3 { margin-top: 1em; margin-bottom: 0.5em; }
+          .slide-content pre { font-size: 0.8rem; line-height: 1.4; }
         </style>
-        ${displayContent}
+        <div class="max-w-3xl mx-auto">
+          ${displayContent}
+        </div>
       </div>
     `;
   } catch (error: any) {
     console.error('Error processing XML content:', error);
-    return `<div class="text-red-500">Error processing slide content: ${error.message}</div>`;
+    return `<div class="text-red-500 p-4">Error processing slide content: ${error.message}</div>`;
   }
+}
+
+/**
+ * Extracts and formats text from PowerPoint XML matches
+ */
+function extractTextFromPowerPoint(textMatches: RegExpMatchArray): string {
+  const currentParagraph: string[] = [];
+  const paragraphs: string[] = [];
+  
+  // Process each text match
+  textMatches.forEach(match => {
+    const text = match.replace(/<a:t>(.*?)<\/a:t>/g, '$1');
+    
+    // If text contains Japanese characters, it might be a title
+    const hasJapanese = /[\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF\u3400-\u4DBF]/.test(text);
+    
+    if (text.trim().length > 0) {
+      if (hasJapanese && text.length < 30) {
+        // Finish current paragraph if any
+        if (currentParagraph.length > 0) {
+          paragraphs.push(currentParagraph.join(' '));
+          currentParagraph.length = 0; // Clear array
+        }
+        // Add this as a heading
+        paragraphs.push(`<h3 class="text-xl font-semibold my-3">${text}</h3>`);
+      } else {
+        currentParagraph.push(text);
+      }
+    } else if (currentParagraph.length > 0) {
+      // Empty text might be a paragraph break
+      paragraphs.push(currentParagraph.join(' '));
+      currentParagraph.length = 0; // Clear array
+    }
+  });
+  
+  // Add any remaining paragraph
+  if (currentParagraph.length > 0) {
+    paragraphs.push(currentParagraph.join(' '));
+  }
+  
+  // Format paragraphs as HTML
+  return paragraphs.map(p => {
+    return p.startsWith('<h3') ? p : `<p class="mb-3">${p}</p>`;
+  }).join('\n');
 }
 
 /**
