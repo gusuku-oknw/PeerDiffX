@@ -79,7 +79,7 @@ export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
   const activePresentationId = parseInt(location.split('/')[2]) || presentations?.[0]?.id;
   
   return (
-    <div className="hidden md:block w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+    <div className="hidden md:block w-64 lg:w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto h-screen sticky top-0">
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">PeerDiffX</h2>

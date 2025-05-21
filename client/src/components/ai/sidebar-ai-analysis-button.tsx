@@ -5,11 +5,14 @@ import { FaRobot, FaBrain } from "react-icons/fa";
 
 interface SidebarAiAnalysisButtonProps {
   presentationId: number;
-  commitId: number;
+  commitId?: number; // オプショナルに変更
 }
 
-export function SidebarAiAnalysisButton({ presentationId, commitId }: SidebarAiAnalysisButtonProps) {
+export function SidebarAiAnalysisButton({ presentationId, commitId = 0 }: SidebarAiAnalysisButtonProps) {
   const [open, setOpen] = useState(false);
+  
+  // シンプルな実装に変更（コミットID取得は複雑すぎるのでAI分析パネル側に任せる）
+  const effectiveCommitId = commitId || 0;
 
   return (
     <>
@@ -24,7 +27,7 @@ export function SidebarAiAnalysisButton({ presentationId, commitId }: SidebarAiA
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-4xl max-w-[90vw] h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-4xl max-w-[90vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center">
               <FaBrain className="mr-2 text-blue-600" />
@@ -32,7 +35,7 @@ export function SidebarAiAnalysisButton({ presentationId, commitId }: SidebarAiA
             </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            <AiAnalysisPanel presentationId={presentationId} commitId={commitId} />
+            <AiAnalysisPanel presentationId={presentationId} commitId={effectiveCommitId} />
           </div>
         </DialogContent>
       </Dialog>
