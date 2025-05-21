@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { decodeId } from "@/lib/hash-utils";
-import { renderSlideContent } from "@/features/slides/slide-renderer";
+import { renderSlideContent, Slide } from "../features/slides/slide-renderer";
 
 /**
  * Public preview page component
@@ -25,20 +25,11 @@ export default function PublicPreview() {
   
   // Fetch presentation data
   const { 
-    data: presentation,
+    data: presentation = {},
     isLoading: isLoadingPresentation,
     error: presentationError
-  } = useQuery({
-    queryKey: ['/api/presentations', presentationId],
-    enabled: !!presentationId,
-    retry: 1,
-    onError: (error: Error) => {
-      toast({
-        title: "プレゼンテーションの読み込みに失敗しました",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
+  } = useQuery<{name?: string}>({
+    queryKey: ['/api/presentations', presentationId]
   });
   
   // Fetch commit data (either specified commit or latest)
@@ -73,15 +64,7 @@ export default function PublicPreview() {
         return commits[0]; // Latest commit
       }
     },
-    enabled: !!presentationId,
-    retry: 1,
-    onError: (error: Error) => {
-      toast({
-        title: "コミットの読み込みに失敗しました",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
+    enabled: !!presentationId
   });
   
   // Fetch slides for the current commit
@@ -89,7 +72,7 @@ export default function PublicPreview() {
     data: slides = [],
     isLoading: isLoadingSlides,
     error: slidesError
-  } = useQuery({
+  } = useQuery<Slide[]>({
     queryKey: ['/api/preview/slides', commit?.id],
     queryFn: async () => {
       if (!commit?.id) return [];
@@ -99,15 +82,7 @@ export default function PublicPreview() {
       
       return response.json();
     },
-    enabled: !!commit?.id,
-    retry: 1,
-    onError: (error: Error) => {
-      toast({
-        title: "スライドの読み込みに失敗しました",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
+    enabled: !!commit?.id
   });
   
   // Navigate to previous slide
