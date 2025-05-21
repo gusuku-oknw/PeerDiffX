@@ -190,7 +190,7 @@ export const branches = pgTable("branches", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  presentationId: integer("presentation_id").references(() => presentations.id).notNull(),
+  presentationId: integer("presentation_id").references(() => presentations.id, { onDelete: 'cascade' }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   isDefault: boolean("is_default").default(false),
@@ -210,9 +210,9 @@ export type Branch = typeof branches.$inferSelect;
 export const commits = pgTable("commits", {
   id: serial("id").primaryKey(),
   message: text("message").notNull(),
-  branchId: integer("branch_id").references(() => branches.id).notNull(),
+  branchId: integer("branch_id").references(() => branches.id, { onDelete: 'cascade' }).notNull(),
   userId: varchar("user_id", { length: 255 }).references(() => users.id),
-  parentId: integer("parent_id").references(() => commits.id),
+  parentId: integer("parent_id").references(() => commits.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }) as any;
 
@@ -229,7 +229,7 @@ export type Commit = typeof commits.$inferSelect;
 // Slide schemas
 export const slides = pgTable("slides", {
   id: serial("id").primaryKey(),
-  commitId: integer("commit_id").references(() => commits.id).notNull(),
+  commitId: integer("commit_id").references(() => commits.id, { onDelete: 'cascade' }).notNull(),
   slideNumber: integer("slide_number").notNull(),
   title: text("title"),
   content: jsonb("content").notNull(),
@@ -252,8 +252,8 @@ export type Slide = typeof slides.$inferSelect;
 // Diff schemas
 export const diffs = pgTable("diffs", {
   id: serial("id").primaryKey(),
-  commitId: integer("commit_id").references(() => commits.id).notNull(),
-  slideId: integer("slide_id").references(() => slides.id).notNull(),
+  commitId: integer("commit_id").references(() => commits.id, { onDelete: 'cascade' }).notNull(),
+  slideId: integer("slide_id").references(() => slides.id, { onDelete: 'cascade' }).notNull(),
   diffContent: jsonb("diff_content").notNull(),
   xmlDiff: text("xml_diff"),
   changeType: varchar("change_type", { length: 20 }).notNull(), // 'added', 'modified', 'deleted'
@@ -380,13 +380,13 @@ export const snapshotsRelations = relations(snapshots, ({ one }) => ({
 // コメント機能のスキーマ
 export const comments = pgTable("comments", {
   id: serial("id").primaryKey(),
-  slideId: integer("slide_id").notNull().references(() => slides.id),
+  slideId: integer("slide_id").notNull().references(() => slides.id, { onDelete: 'cascade' }),
   userId: varchar("user_id", { length: 255 }).references(() => users.id),
   message: text("message").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   resolved: boolean("resolved").default(false),
-  parentId: integer("parent_id").references(() => comments.id),
+  parentId: integer("parent_id").references(() => comments.id, { onDelete: 'set null' }),
 }) as any;
 
 export const insertCommentSchema = createInsertSchema(comments).pick({
