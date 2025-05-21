@@ -18,7 +18,7 @@ import { decodeId } from "@/lib/hash-utils";
 import { Share } from "@/components/ui/share";
 import SlideThumbnails from "@/components/slides/slide-thumbnails";
 import SlideCanvas from "@/components/slides/slide-canvas";
-import { FaHistory, FaCode, FaLayerGroup, FaComment, FaTools } from "react-icons/fa";
+import { FaHistory, FaCode, FaLayerGroup, FaComment, FaTools, FaRobot, FaBrain } from "react-icons/fa";
 
 /**
  * 公開プレビューページ - 本来のPeerDiffXデザインに合わせた高度なUIに修正
@@ -32,7 +32,7 @@ export default function PublicPreview() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [showBottomPanel, setShowBottomPanel] = useState(false);
-  const [activeTabPanel, setActiveTabPanel] = useState<'history' | 'xml' | 'comments'>('history');
+  const [activeTabPanel, setActiveTabPanel] = useState<'history' | 'xml' | 'comments' | 'ai'>('history');
   
   // URLパラメータからID情報を取得（エンコードIDにも対応）
   const rawPresentationId = params?.presentationId;
@@ -256,7 +256,7 @@ export default function PublicPreview() {
   };
   
   // ボトムパネルを開く
-  const handleOpenBottomPanel = (tab: 'history' | 'xml' | 'comments') => {
+  const handleOpenBottomPanel = (tab: 'history' | 'xml' | 'comments' | 'ai') => {
     setActiveTabPanel(tab);
     setShowBottomPanel(true);
   };
@@ -470,6 +470,20 @@ export default function PublicPreview() {
                   最終更新: {presentation?.updatedAt ? new Date(presentation.updatedAt).toLocaleDateString('ja-JP') : '---'}
                 </div>
               </div>
+              
+              {/* AI分析ボタン - サイドバーに追加 */}
+              <button 
+                onClick={() => {
+                  setActiveTabPanel('ai');
+                  setShowBottomPanel(true);
+                }}
+                className="flex items-center w-full px-3 py-2 mt-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+              >
+                <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
+                  <FaRobot className="text-xs" />
+                </div>
+                <span>AI分析</span>
+              </button>
             </div>
             
             <div className="mb-6">
