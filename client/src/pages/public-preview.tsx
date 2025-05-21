@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { FileCode, AlertTriangle, ChevronLeft, ChevronRight, Maximize, Home } from "lucide-react";
@@ -19,9 +19,15 @@ export default function PublicPreview() {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
-  // Extract IDs from URL parameters and ensure they are valid numbers
-  const presentationId = params?.presentationId ? parseInt(params.presentationId) : 0;
-  const commitId = params?.commitId ? parseInt(params.commitId) : undefined;
+  // Extract IDs from URL parameters - handle both direct IDs and encoded IDs
+  const presentationId = params?.presentationId ? 
+    (params.presentationId.startsWith('pdx-') ? 
+      decodeId(params.presentationId) : 
+      parseInt(params.presentationId)) : 0;
+  const commitId = params?.commitId ? 
+    (params.commitId.startsWith('pdx-') ? 
+      decodeId(params.commitId) : 
+      parseInt(params.commitId)) : undefined;
   
   // Debug the route parameters
   useEffect(() => {
@@ -244,9 +250,8 @@ export default function PublicPreview() {
   // Get the current slide
   const currentSlide = slides[currentSlideIndex];
   
-  // Ensure all useEffect hooks are called unconditionally at the top level
-  // リダイレクト処理のuseEffect - このフックはすべてのレンダリングパスで実行される必要があります
-  useEffect(() => {
+  // すべてのuseEffectフックを条件分岐なしで最上位レベルで呼び出す
+  const handleRedirect = useCallback(() => {
     if (presentation?.alternateFound && presentation?.id) {
       // 存在しないプレゼンテーションから存在するものへ自動リダイレクト
       toast({
@@ -254,10 +259,15 @@ export default function PublicPreview() {
         description: `ID ${presentationId} のプレゼンテーションは見つかりませんでした。利用可能なプレゼンテーションを表示します。`,
       });
       
-      // 新しいURLへリダイレクト
+      // 新しいURLへリダイレクト（このURLはエンコードしない）
+      console.log('リダイレクト先:', `/public-preview/${presentation.id}`);
       window.location.href = `/public-preview/${presentation.id}`;
     }
   }, [presentation, presentationId, toast]);
+  
+  useEffect(() => {
+    handleRedirect();
+  }, [handleRedirect]);
 
   // If there's an error, show error UI
   if (presentationError || commitError || slidesError) {
@@ -321,8 +331,8 @@ export default function PublicPreview() {
     );
   }
   
-  // This debugging effect hook must be placed here for consistent order
-  useEffect(() => {
+  // デバッグログのためのフック - 必ず最上位に定義して順序を保つ
+  const logDebugInfo = useCallback(() => {
     if (commit?.id) {
       console.log('Current commit:', commit);
       console.log('Loaded slides:', slides);
@@ -332,6 +342,11 @@ export default function PublicPreview() {
       }
     }
   }, [commit, slides, currentSlideIndex]);
+
+  // デバッグ情報を表示する
+  useEffect(() => {
+    logDebugInfo();
+  }, [logDebugInfo]);
 
   // Return UI for empty slides
   if (commit?.id && slides.length === 0) {
