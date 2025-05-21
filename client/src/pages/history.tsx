@@ -114,10 +114,10 @@ export default function History() {
   return (
     <div className="container mx-auto p-8 max-w-4xl">
       <div className="mb-8">
-        <Link href="/">
+        <Link href={`/preview/${branch.presentationId}`}>
           <Button variant="outline" className="mb-4">
             <FaArrowLeft className="mr-2" />
-            Back to Dashboard
+            Back to Editor
           </Button>
         </Link>
         <h1 className="text-3xl font-bold mb-2">Commit History</h1>

@@ -171,6 +171,7 @@ export default function Preview() {
             onNextSlide={handleNextSlide}
             onViewXmlDiff={handleViewXmlDiff}
             onViewHistory={handleViewHistory}
+            versionPanelVisible={showVersionPanel}
           />
           
           {showVersionPanel && (

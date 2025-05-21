@@ -11,6 +11,7 @@ interface SlideCanvasProps {
   onNextSlide: () => void;
   onViewXmlDiff: () => void;
   onViewHistory: () => void;
+  versionPanelVisible?: boolean;
 }
 
 export default function SlideCanvas({
@@ -20,7 +21,8 @@ export default function SlideCanvas({
   onPrevSlide,
   onNextSlide,
   onViewXmlDiff,
-  onViewHistory
+  onViewHistory,
+  versionPanelVisible
 }: SlideCanvasProps) {
   const { data: slide, isLoading } = useSlide(slideId);
   const [zoomLevel, setZoomLevel] = useState(100);
@@ -210,12 +212,12 @@ export default function SlideCanvas({
             <span>XML Diff</span>
           </Button>
           <Button 
-            variant="outline" 
+            variant={versionPanelVisible ? "default" : "outline"}
             size="sm" 
-            className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm flex items-center"
+            className={`px-3 py-1.5 rounded-md border ${versionPanelVisible ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'} text-sm flex items-center transition-colors`}
             onClick={onViewHistory}
           >
-            <FaHistory className="mr-2 text-gray-500" />
+            <FaHistory className={`mr-2 ${versionPanelVisible ? 'text-white' : 'text-gray-500'}`} />
             <span>History</span>
           </Button>
           <Button className="px-3 py-1.5 rounded-md bg-blue-500 hover:bg-blue-600 text-white transition text-sm">
