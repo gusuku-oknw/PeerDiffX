@@ -19,6 +19,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API routes (prefix with /api)
   const apiRouter = app;
   
+  // 開発環境用の認証モック
+  // ユーザー情報API (開発用モック)
+  app.get('/api/auth/user', (req, res) => {
+    res.json({
+      id: 'dev-user',
+      username: 'dev',
+      email: 'dev@example.com',
+      firstName: '開発',
+      lastName: 'ユーザー',
+      profileImageUrl: null,
+      roleId: 5,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+  });
+  
+  // ログインAPI (開発用モック)
+  app.get('/api/login', (req, res) => {
+    res.redirect('/');
+  });
+  
+  // ログアウトAPI (開発用モック)
+  app.get('/api/logout', (req, res) => {
+    res.redirect('/');
+  });
+  
   // Register the access control routes
   app.use(accessControlRouter);
 

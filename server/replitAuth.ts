@@ -56,7 +56,7 @@ export async function setupAuth(app: Express) {
 
   // Configure Replit OpenID Connect strategy
   passport.use(new Strategy({
-    issuer: process.env.ISSUER_URL || 'https://replit.com/oidc',
+    issuerHost: 'replit.com',
     clientID: process.env.REPL_ID!,
     clientSecret: 'none', // Replit doesn't require a client secret
     callbackURL: `https://${process.env.REPLIT_DOMAINS!.split(',')[0]}/api/callback`,
