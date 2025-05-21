@@ -28,7 +28,7 @@ export function AuthButtons() {
   };
 
   if (isLoading) {
-    return <Button variant="ghost" size="sm" disabled>読み込み中...</Button>;
+    return <Button variant="ghost" size="sm" disabled>Loading...</Button>;
   }
 
   if (isAuthenticated) {
@@ -100,18 +100,13 @@ export function AuthButtons() {
 
   return (
     <div className="flex items-center gap-2">
-      <Link href="/signup">
-        <Button variant="ghost" size="sm" disabled={isAuthLoading}>
-          サインアップ
-        </Button>
-      </Link>
       <Button 
         variant="default" 
         size="sm"
         disabled={isAuthLoading}
         onClick={handleLogin}
       >
-        {isAuthLoading ? "読み込み中..." : "ログイン"}
+        {isAuthLoading ? "Loading..." : "Login with Replit"}
       </Button>
     </div>
   );

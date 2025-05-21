@@ -13,12 +13,6 @@ async function main() {
       ADD COLUMN IF NOT EXISTS profile_image_url TEXT;
     `);
 
-    // Update user id to be varchar instead of serial
-    await db.execute(`
-      ALTER TABLE users 
-      ALTER COLUMN id TYPE VARCHAR(255);
-    `);
-
     // Make password nullable (for OAuth users)
     await db.execute(`
       ALTER TABLE users
