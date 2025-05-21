@@ -5,7 +5,7 @@ import SlideThumbnails from "@/components/slides/slide-thumbnails";
 import SlideCanvas from "@/components/slides/slide-canvas";
 import VersionPanel from "@/components/version/version-panel";
 import DiffViewer from "@/components/diff/diff-viewer";
-import { ShareDialog } from "@/components/share/share-dialog";
+import { ShareButton } from "@/components/share/ShareButton";
 import { Button } from "@/components/ui/button";
 import { decodeId } from "@/lib/hash-utils";
 import { usePresentationState } from "@/features/presentation/use-presentation-state";

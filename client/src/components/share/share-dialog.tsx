@@ -11,9 +11,10 @@ interface ShareDialogProps {
   presentationId: number;
   commitId: number;
   slideId?: number;
+  onClose?: () => void;
 }
 
-export function ShareDialog({ presentationId, commitId, slideId }: ShareDialogProps) {
+export function ShareDialog({ presentationId, commitId, slideId, onClose }: ShareDialogProps) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
