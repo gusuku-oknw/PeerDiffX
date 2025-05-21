@@ -51,12 +51,15 @@ export default function Preview() {
     afterCommitTime: ""
   });
   
-  // Set active slide when slides are loaded
+  // 強化された初期スライド設定ロジック
   useEffect(() => {
-    if (slides && slides.length > 0 && !activeSlideId) {
+    console.log("スライド読み込み状態:", slides);
+    // データがロードされたらすぐにアクティブスライドを設定
+    if (slides && slides.length > 0) {
+      console.log("スライドが見つかりました、ID設定:", slides[0].id);
       setActiveSlideId(slides[0].id);
     }
-  }, [slides, activeSlideId]);
+  }, [slides]);
   
   const handleSelectSlide = (slideId: number) => {
     setActiveSlideId(slideId);
@@ -195,32 +198,29 @@ export default function Preview() {
     );
   }
   
-  // スライドが空の場合（通常はここには到達しないはずだが、念のため）
-  if (latestCommit && (!slides || slides.length === 0)) {
-    return (
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar onToggleVersionPanel={toggleVersionPanel} />
-        
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center p-8 max-w-lg">
-            <h2 className="text-2xl font-bold mb-4">新しいプレゼンテーション</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              このプレゼンテーションにはまだスライドがありません。
-              自動でリロードしています...
-            </p>
-            <div className="flex justify-center gap-4">
-              <Button onClick={() => window.location.reload()}>
-                今すぐリフレッシュ
-              </Button>
-              <Button variant="outline" onClick={() => window.location.href = "/"}>
-                ホームに戻る
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // 最初に自動的にスライドを登録する（リロード時に利用）
+  useEffect(() => {
+    // コミットはあるがスライドがない状態を検出
+    if (latestCommit && (!slides || slides.length === 0)) {
+      const timer = setTimeout(() => {
+        console.log("データを再読み込みします...");
+        window.location.reload();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [latestCommit, slides]);
+  
+  // デバッグ用に状態をログ出力
+  useEffect(() => {
+    console.log("現在の状態:", {
+      presentationId,
+      defaultBranch,
+      latestCommit,
+      slides: slides?.length,
+      activeSlideId
+    });
+  }, [presentationId, defaultBranch, latestCommit, slides, activeSlideId]);
 
   return (
     <div className="flex-1 flex overflow-hidden">
