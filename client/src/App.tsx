@@ -7,6 +7,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { Navbar } from "@/components/ui/navbar";
 import Home from "@/pages/home";
+import Login from "@/pages/login";
+import Signup from "@/pages/signup";
+import Profile from "@/pages/profile";
 import Preview from "@/pages/preview";
 import DiffView from "@/pages/diff-view";
 import History from "@/pages/history";
@@ -18,6 +21,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
+      <Route path="/profile" component={Profile} />
       <Route path="/preview/:id" component={Preview} />
       <Route path="/diff/:baseCommitId/:compareCommitId" component={DiffView} />
       <Route path="/history/:branchId" component={History} />
