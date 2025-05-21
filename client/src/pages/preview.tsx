@@ -158,11 +158,11 @@ export default function Preview() {
     );
   }
   
-  // 自動リフレッシュロジック: ブランチやコミットのデータを確認
+  // 自動リフレッシュと初期化ロジックをすべてのレンダリングパスで実行
   useEffect(() => {
+    // データが不完全な場合の自動リロード
     if (presentation && (!defaultBranch || !latestCommit)) {
       console.log("データが不完全です。自動リロードを準備します...");
-      // 5秒後に自動的にリロード
       const timer = setTimeout(() => {
         window.location.reload();
       }, 5000);
