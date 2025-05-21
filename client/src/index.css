@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* カスタムスタイルの追加 */
+.flex-1 {
+  flex: 0 0 auto !important;
+}
+
 :root {
       --background: 0 0% 100%;
 --foreground: 20 14.3% 4.1%;
