@@ -27,14 +27,14 @@ export function SidebarAiAnalysisButton({ presentationId, commitId = 0 }: Sideba
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-4xl max-w-[90vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-3xl lg:max-w-5xl h-[80vh] max-h-[80vh] p-0 overflow-hidden">
+          <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle className="flex items-center">
               <FaBrain className="mr-2 text-blue-600" />
               AI分析ダッシュボード
             </DialogTitle>
           </DialogHeader>
-          <div className="mt-4">
+          <div className="overflow-y-auto p-6 h-full">
             <AiAnalysisPanel presentationId={presentationId} commitId={effectiveCommitId} />
           </div>
         </DialogContent>
