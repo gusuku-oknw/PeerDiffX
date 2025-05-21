@@ -7,6 +7,8 @@ import { AiAnalysisButton } from "@/components/ai/ai-analysis-button";
 import { AiAnalysisPanel } from "@/components/ai/ai-analysis-panel";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import VersionPanel from "@/components/version/version-panel";
+import { SlideControls } from "@/components/slides/slide-controls";
+import { SnapshotButton } from "@/components/share/snapshot-button";
 
 interface SlideCanvasProps {
   slideId: number;
@@ -17,6 +19,8 @@ interface SlideCanvasProps {
   onViewXmlDiff: () => void;
   onViewHistory?: () => void;
   shareDialogComponent?: React.ReactNode;
+  presentationId?: number; // プレゼンテーションID（スナップショット機能用）
+  presentationName?: string; // プレゼンテーション名（スナップショット機能用）
 }
 
 export default function SlideCanvas({
@@ -27,7 +31,9 @@ export default function SlideCanvas({
   onNextSlide,
   onViewXmlDiff,
   onViewHistory,
-  shareDialogComponent
+  shareDialogComponent,
+  presentationId,
+  presentationName
 }: SlideCanvasProps) {
   const { data: slide, isLoading } = useSlide(slideId);
   const [presentationSettings] = useLocalStorage('presentation_settings', {
