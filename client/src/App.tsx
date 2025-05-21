@@ -42,6 +42,7 @@ function Router() {
       <Route path="/branches/:presentationId" component={Branches} />
       <Route path="/settings" component={SettingsPage} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
+      <Route path="/demo" component={() => React.lazy(() => import('@/pages/demo'))()} />
       <Route component={NotFound} />
     </Switch>
   );
