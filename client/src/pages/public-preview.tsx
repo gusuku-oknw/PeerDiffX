@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useRoute } from 'wouter';
+import { useRoute, Link } from 'wouter';
 import { useSlide, usePresentation, useSlides } from '@/hooks/use-pptx';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { FaLayerGroup } from 'react-icons/fa';
+import { Home } from 'lucide-react';
 
 /**
- * インラインスタイルを使った最小限のプレゼンテーションビューア
- * 右側の余白問題を解決するため、すべてのスタイルをインラインで実装
+ * 改良版プレゼンテーションプレビュー
+ * UIコンポーネントを使いつつ、レイアウト問題を解決
  */
 export default function PublicPreview() {
   const [, params] = useRoute<{ presentationId: string; commitId?: string }>('/public-preview/:presentationId/:commitId?');
@@ -58,19 +61,28 @@ export default function PublicPreview() {
     setCurrentSlideId(slideId);
   };
 
+  // 前/次のスライドに移動
+  const goToPreviousSlide = () => {
+    if (currentSlideIndex > 0) {
+      const prevSlide = slides[currentSlideIndex - 1];
+      setCurrentSlideId(prevSlide.id);
+    }
+  };
+
+  const goToNextSlide = () => {
+    if (currentSlideIndex < slides.length - 1) {
+      const nextSlide = slides[currentSlideIndex + 1];
+      setCurrentSlideId(nextSlide.id);
+    }
+  };
+
   // キーボードショートカット
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
-        if (currentSlideIndex > 0) {
-          const prevSlide = slides[currentSlideIndex - 1];
-          handleSelectSlide(prevSlide.id);
-        }
+        goToPreviousSlide();
       } else if (e.key === 'ArrowRight') {
-        if (currentSlideIndex < slides.length - 1) {
-          const nextSlide = slides[currentSlideIndex + 1];
-          handleSelectSlide(nextSlide.id);
-        }
+        goToNextSlide();
       }
     };
 
@@ -83,13 +95,8 @@ export default function PublicPreview() {
   // ローディング表示
   if (isLoadingPresentation || !presentation) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ width: '100%', maxWidth: '400px', padding: '16px' }}>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-full max-w-md p-8">
           <Skeleton className="h-8 w-1/2 rounded-md" />
           <Skeleton className="h-32 w-full rounded-md mt-4" />
         </div>
@@ -103,112 +110,142 @@ export default function PublicPreview() {
       display: 'flex',
       flexDirection: 'column',
       height: '100vh',
-      width: '100%',
+      width: '100vw',
       margin: 0,
       padding: 0,
       overflow: 'hidden'
     }}>
-      {/* ヘッダー */}
-      <div style={{
-        height: '48px',
-        backgroundColor: '#fff',
-        borderBottom: '1px solid #e5e7eb',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 16px'
-      }}>
-        <h1 style={{ fontSize: '14px', fontWeight: 500 }}>{presentation?.name || 'プレゼンテーション'}</h1>
+      {/* ヘッダー - UIコンポーネントを使用 */}
+      <div className="bg-white border-b border-gray-200 p-3 flex items-center justify-between">
+        <div className="flex items-center">
+          <Link href="/" className="mr-4 flex items-center">
+            <div className="w-8 h-8 rounded-md bg-blue-500 flex items-center justify-center text-white mr-2">
+              <FaLayerGroup className="w-4 h-4" />
+            </div>
+            <span className="font-semibold text-gray-800">PeerDiffX</span>
+          </Link>
+          <div className="text-sm text-gray-600 ml-2">
+            {presentation?.name || 'Loading...'}
+          </div>
+        </div>
+        <div className="flex space-x-2">
+          <Button asChild size="sm" variant="ghost">
+            <Link href="/">
+              <Home className="mr-1.5 h-3.5 w-3.5" />
+              ホーム
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      {/* メインコンテンツ */}
+      {/* メインコンテンツ - インラインスタイルで構造を保証 */}
       <div style={{
         display: 'flex',
-        flex: 1,
-        overflow: 'hidden'
+        flex: '1 1 auto',
+        overflow: 'hidden',
+        width: '100%'
       }}>
-        {/* 左側サムネイル */}
-        <div style={{
-          width: '192px',
-          backgroundColor: '#fff',
-          borderRight: '1px solid #e5e7eb',
-          overflow: 'auto'
-        }}>
-          <div style={{ padding: '8px' }}>
-            <p style={{ fontSize: '12px', fontWeight: 500, marginBottom: '8px', padding: '0 8px' }}>スライド一覧</p>
+        {/* 左側サムネイル - UIクラスとインラインスタイルの組み合わせ */}
+        <div className="border-r bg-white" style={{ width: '240px', overflow: 'auto' }}>
+          <div className="p-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4">スライド一覧</h3>
             
             {slides.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div className="space-y-2">
                 {slides.map((slide: any) => (
                   <div 
                     key={slide.id}
-                    style={{
-                      padding: '8px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      backgroundColor: currentSlideId === slide.id ? '#ebf5ff' : 'transparent',
-                      color: currentSlideId === slide.id ? '#2563eb' : 'inherit',
-                    }}
+                    className={`p-2 rounded-md cursor-pointer ${
+                      currentSlideId === slide.id 
+                        ? 'bg-blue-50 text-blue-600 border-l-2 border-blue-500' 
+                        : 'hover:bg-gray-100'
+                    }`}
                     onClick={() => handleSelectSlide(slide.id)}
                   >
-                    スライド {slide.slideNumber}
+                    <div className="w-full rounded-md overflow-hidden border border-gray-200 mb-1 aspect-video bg-white">
+                      {slide.thumbnail ? (
+                        <img src={slide.thumbnail} alt={`スライド ${slide.slideNumber}`} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
+                          <div className="text-xs">{slide.slideNumber}</div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-xs truncate">{slide.title || `スライド ${slide.slideNumber}`}</div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ padding: '8px', fontSize: '12px', color: '#6b7280' }}>
+              <div className="py-4 px-2 text-center text-gray-500 text-sm">
                 スライドがありません
               </div>
             )}
           </div>
         </div>
         
-        {/* 右側スライド表示 */}
+        {/* 右側スライド表示 - 全幅表示のためのスタイリング */}
         <div style={{
-          flex: 1,
+          flex: '1 1 auto',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: '#f9fafb',
           padding: '16px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          width: 'calc(100% - 240px)'
         }}>
           {currentSlideId && currentSlide ? (
-            <div style={{
-              width: '100%',
-              maxWidth: '800px',
-              aspectRatio: '16/9',
-              backgroundColor: '#fff',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              borderRadius: '4px',
-              padding: '32px',
-              position: 'relative'
-            }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>
-                {currentSlide.title || 'タイトルなし'}
-              </h2>
-              {currentSlide.content && currentSlide.content.elements && (
-                <div>
-                  {currentSlide.content.elements.map((element: any, idx: number) => (
-                    element.type === 'text' && (
-                      <p key={idx} style={{
-                        position: 'absolute',
-                        left: `${element.x}px`,
-                        top: `${element.y}px`,
-                        color: element.style?.color || '#000',
-                        fontSize: `${element.style?.fontSize || 16}px`,
-                        fontWeight: element.style?.fontWeight || 'normal',
-                      }}>
-                        {element.content}
-                      </p>
-                    )
-                  ))}
+            <div className="relative w-full max-w-4xl mx-auto aspect-[16/9] bg-white rounded shadow-sm">
+              <div className="absolute inset-0 p-8 flex flex-col">
+                <h2 className="text-3xl font-bold mb-4">{currentSlide.title || 'タイトルなし'}</h2>
+                {currentSlide.content && currentSlide.content.elements && (
+                  <div>
+                    {currentSlide.content.elements.map((element: any, idx: number) => (
+                      element.type === 'text' && (
+                        <p key={idx} style={{
+                          position: 'absolute',
+                          left: `${element.x}px`,
+                          top: `${element.y}px`,
+                          color: element.style?.color || '#000',
+                          fontSize: `${element.style?.fontSize || 16}px`,
+                          fontWeight: element.style?.fontWeight || 'normal',
+                        }}>
+                          {element.content}
+                        </p>
+                      )
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* スライド下部のコントロール */}
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-full px-4 py-1.5 shadow-sm">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={goToPreviousSlide}
+                    disabled={currentSlideIndex === 0}
+                  >
+                    前へ
+                  </Button>
+                  <div className="text-xs text-gray-500">
+                    {currentSlideIndex + 1} / {slides.length}
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={goToNextSlide}
+                    disabled={currentSlideIndex === slides.length - 1}
+                  >
+                    次へ
+                  </Button>
                 </div>
-              )}
+              </div>
             </div>
           ) : (
-            <div style={{ textAlign: 'center', color: '#6b7280' }}>
-              <p>スライドを選択してください</p>
+            <div className="text-center">
+              <p className="text-gray-500">スライドを選択してください</p>
             </div>
           )}
         </div>
