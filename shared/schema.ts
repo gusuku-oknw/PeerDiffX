@@ -1,18 +1,84 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp, varchar, primaryKey } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// User schemas
+// ロールの定義（学生、企業担当者、管理者など）
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertRoleSchema = createInsertSchema(roles).pick({
+  name: true,
+  description: true,
+});
+
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type Role = typeof roles.$inferSelect;
+
+// パーミッションの定義（閲覧、編集、コメント、管理など）
+export const permissions = pgTable("permissions", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+  description: text("description"),
+  resource: varchar("resource", { length: 50 }).notNull(),  // presentations, branches, commits, etc.
+  action: varchar("action", { length: 50 }).notNull(),      // read, write, comment, etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertPermissionSchema = createInsertSchema(permissions).pick({
+  name: true,
+  description: true,
+  resource: true,
+  action: true,
+});
+
+export type InsertPermission = z.infer<typeof insertPermissionSchema>;
+export type Permission = typeof permissions.$inferSelect;
+
+// ロールとパーミッションの関連付け
+export const rolePermissions = pgTable("role_permissions", {
+  roleId: integer("role_id").notNull().references(() => roles.id, { onDelete: 'cascade' }),
+  permissionId: integer("permission_id").notNull().references(() => permissions.id, { onDelete: 'cascade' }),
+}, (table) => {
+  return {
+    pk: primaryKey({ columns: [table.roleId, table.permissionId] }),
+  };
+});
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions);
+export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
+export type RolePermission = typeof rolePermissions.$inferSelect;
+
+// User schemas 拡張
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  email: varchar("email", { length: 255 }).unique(),
+  firstName: varchar("first_name", { length: 100 }),
+  lastName: varchar("last_name", { length: 100 }),
+  organization: varchar("organization", { length: 255 }),
+  isActive: boolean("is_active").default(true).notNull(),
+  roleId: integer("role_id").references(() => roles.id),
+  lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  email: true,
+  firstName: true,
+  lastName: true,
+  organization: true,
+  roleId: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -20,22 +86,87 @@ export type User = typeof users.$inferSelect;
 
 // Define relations after all tables are defined
 
+// Roleとユーザーの関係
+export const rolesRelations = relations(roles, ({ many }) => ({
+  users: many(users),
+  rolePermissions: many(rolePermissions),
+}));
+
+// Permissionの関係
+export const permissionsRelations = relations(permissions, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+}));
+
+// Role-Permission 関連の関係
+export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
+  role: one(roles, {
+    fields: [rolePermissions.roleId],
+    references: [roles.id],
+  }),
+  permission: one(permissions, {
+    fields: [rolePermissions.permissionId],
+    references: [permissions.id],
+  }),
+}));
+
+// ユーザーの関係
+export const usersRelations = relations(users, ({ one, many }) => ({
+  role: one(roles, {
+    fields: [users.roleId],
+    references: [roles.id],
+  }),
+  presentations: many(presentations),
+  accessGranted: many(presentationAccess, { relationName: "accessGranted" }),
+  accessCreated: many(presentationAccess, { relationName: "accessCreated" }),
+}));
+
 // Presentation schemas
 export const presentations = pgTable("presentations", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   userId: integer("user_id").references(() => users.id),
+  isPublic: boolean("is_public").default(false).notNull(),
+  status: varchar("status", { length: 20 }).default("draft").notNull(), // draft, active, archived
+  thumbnail: text("thumbnail"),  // URLまたはBase64エンコードされたサムネイル
 });
 
 export const insertPresentationSchema = createInsertSchema(presentations).pick({
   name: true,
+  description: true,
   userId: true,
+  isPublic: true,
+  status: true,
+  thumbnail: true,
 });
 
 export type InsertPresentation = z.infer<typeof insertPresentationSchema>;
 export type Presentation = typeof presentations.$inferSelect;
+
+// プレゼンテーションに対するユーザーアクセス権
+export const presentationAccess = pgTable("presentation_access", {
+  id: serial("id").primaryKey(),
+  presentationId: integer("presentation_id").notNull().references(() => presentations.id, { onDelete: 'cascade' }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  accessLevel: varchar("access_level", { length: 20 }).notNull(), // view, comment, edit, admin
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdBy: integer("created_by").references(() => users.id),
+  expiresAt: timestamp("expires_at"), // アクセス権の有効期限（オプション）
+});
+
+export const insertPresentationAccessSchema = createInsertSchema(presentationAccess).pick({
+  presentationId: true,
+  userId: true,
+  accessLevel: true,
+  createdBy: true,
+  expiresAt: true,
+});
+
+export type InsertPresentationAccess = z.infer<typeof insertPresentationAccessSchema>;
+export type PresentationAccess = typeof presentationAccess.$inferSelect;
 
 // Branch schemas
 export const branches = pgTable("branches", {
@@ -151,13 +282,30 @@ export type DiffContent = {
 };
 
 // Define all relations after all tables are defined
-export const usersRelations = relations(users, ({ many }) => ({
-  presentations: many(presentations),
-}));
+// usersRelations は前に定義済みなので削除
 
 export const presentationsRelations = relations(presentations, ({ one, many }) => ({
   user: one(users, { fields: [presentations.userId], references: [users.id] }),
   branches: many(branches),
+  accessControls: many(presentationAccess),
+}));
+
+// プレゼンテーションアクセスの関係
+export const presentationAccessRelations = relations(presentationAccess, ({ one }) => ({
+  presentation: one(presentations, {
+    fields: [presentationAccess.presentationId],
+    references: [presentations.id],
+  }),
+  user: one(users, {
+    fields: [presentationAccess.userId],
+    references: [users.id],
+    relationName: "accessGranted",
+  }),
+  createdByUser: one(users, {
+    fields: [presentationAccess.createdBy],
+    references: [users.id],
+    relationName: "accessCreated",
+  }),
 }));
 
 export const branchesRelations = relations(branches, ({ one, many }) => ({
