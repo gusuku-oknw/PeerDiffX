@@ -1,8 +1,6 @@
-import { drizzle } from 'drizzle-orm/pg-memory';
-import * as schema from "@shared/schema";
+// Simple fake db implementation to match what MemStorage expects
+console.log("Using in-memory storage only");
 
-// Create in-memory database instance
-console.log("Creating in-memory database...");
-
-// Create drizzle instance with schema
-export const db = drizzle({ schema });
+export const db = {
+  query: async () => ({ rows: [] })
+};

@@ -1,12 +1,4 @@
 import {
-  users,
-  presentations,
-  branches,
-  commits,
-  slides,
-  diffs,
-  snapshots,
-  comments,
   type User,
   type InsertUser,
   type Presentation,
@@ -24,7 +16,7 @@ import {
   type Comment,
   type InsertComment
 } from "@shared/schema";
-import { DatabaseStorage } from "./storage-db";
+import { MemStorage } from "./mem-storage";
 
 // Interface for storage operations
 export interface IStorage {
@@ -82,5 +74,5 @@ export interface IStorage {
   getReplies(commentId: number): Promise<Comment[]>;
 }
 
-// Create and export a DatabaseStorage instance
-export const storage = new DatabaseStorage();
+// Create and export a MemStorage instance for in-memory storage
+export const storage = new MemStorage();
