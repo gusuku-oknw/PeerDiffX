@@ -3,12 +3,24 @@
 @tailwind utilities;
 
 /* レイアウト構造の全体的な修正 */
-.flex-1.flex.overflow-hidden {
+.full-width-container {
   width: 100%;
-  max-width: 100vw; /* ビューポート幅を超えないようにする */
+  max-width: 100%;
+  box-sizing: border-box;
+  padding-right: 0;
+  margin-right: 0;
   overflow: hidden;
-  position: relative; /* 子要素の絶対位置指定の基準点 */
-  display: flex; /* フレックスボックスを使用 */
+  position: relative;
+  display: flex;
+}
+
+/* 右側の余白を削除する */
+body, html {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
 }
 
 /* プレビュー画面のメインレイアウト構造 */

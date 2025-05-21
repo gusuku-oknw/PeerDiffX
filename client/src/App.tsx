@@ -53,7 +53,7 @@ function App() {
         <TooltipProvider>
           <div className="h-screen flex flex-col">
             {!isPublicPreview && <Navbar />}
-            <div className={`flex-1 flex overflow-hidden ${isPublicPreview ? 'pt-0' : ''}`}>
+            <div className={`flex-1 flex overflow-hidden full-width-container ${isPublicPreview ? 'pt-0' : ''}`}>
               <Router />
             </div>
           </div>
