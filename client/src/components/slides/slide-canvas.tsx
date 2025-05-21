@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSlide } from "@/hooks/use-pptx";
 import { Button } from "@/components/ui/button";
 import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory } from "react-icons/fa";
@@ -23,7 +23,7 @@ export default function SlideCanvas({
   onViewHistory
 }: SlideCanvasProps) {
   const { data: slide, isLoading } = useSlide(slideId);
-  const [zoomLevel, setZoomLevel] = React.useState(100);
+  const [zoomLevel, setZoomLevel] = useState(100);
   const canvasRef = useRef<HTMLDivElement>(null);
   
   const handleZoomIn = () => {
