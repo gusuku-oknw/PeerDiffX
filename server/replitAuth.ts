@@ -6,8 +6,8 @@ import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
-import { storage } from "./storage";
 import { pool } from "./db";
+import { storage } from "./storage";
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -27,12 +27,13 @@ export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
-    pool,
+    pool: pool,
+    createTableIfMissing: false,
+    ttl: sessionTtl,
     tableName: "sessions",
-    createTableIfMissing: true
   });
   return session({
-    secret: process.env.SESSION_SECRET || "peerdiffx-secret-key",
+    secret: process.env.SESSION_SECRET || "localsessionsecret",
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -54,41 +55,20 @@ function updateUserSession(
   user.expires_at = user.claims?.exp;
 }
 
-async function upsertUser(
-  claims: any,
-) {
-  try {
-    // ユーザーIDはReplitが提供するsub（一意のID）を使用
-    const userId = parseInt(claims["sub"]);
-    
-    // 既存ユーザーを確認
-    const existingUser = await storage.getUser(userId);
-    
-    if (existingUser) {
-      // ユーザー情報を更新（今回はシンプルにするため更新は行いません）
-      return existingUser;
-    } else {
-      // 新規ユーザーを作成
-      const newUser = await storage.createUser({
-        id: userId,
-        username: claims["email"] || `user${userId}`,
-        password: "", // OAuth認証なのでパスワードは使用しない
-        email: claims["email"] || null,
-        firstName: claims["first_name"] || null,
-        lastName: claims["last_name"] || null,
-        organization: null,
-        isActive: true,
-        roleId: 1, // デフォルトロール
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        lastLogin: new Date()
-      });
-      return newUser;
-    }
-  } catch (error) {
-    console.error("Error upserting user:", error);
-    throw error;
-  }
+async function upsertUser(claims: any) {
+  // Get user from claims and upsert to our database
+  const userData = {
+    username: claims.sub,
+    password: '', // No password for OAuth users
+    email: claims.email,
+    firstName: claims.first_name,
+    lastName: claims.last_name,
+    profileImageUrl: claims.profile_image_url,
+    roleId: 5, // Default to regular user role
+    isActive: true
+  };
+
+  return await storage.upsertUser(userData);
 }
 
 export async function setupAuth(app: Express) {
@@ -101,26 +81,25 @@ export async function setupAuth(app: Express) {
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
-    verified: Function
+    done: Function
   ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
+    try {
+      const user = {};
+      updateUserSession(user, tokens);
+      await upsertUser(tokens.claims());
+      done(null, user);
+    } catch (error) {
+      done(error);
+    }
   };
 
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
+  for (const domain of process.env.REPLIT_DOMAINS!.split(",")) {
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,
-        client: new client.Client(config, {
-          client_id: process.env.REPL_ID!,
-        }),
-        params: {
-          scope: "openid email profile offline_access",
-        },
-        redirect_uri: `https://${domain}/api/callback`,
+        client: new client.Client(config),
+        scope: "openid email profile offline_access",
+        callbackURL: `https://${domain}/api/callback`,
       },
       verify,
     );
@@ -130,13 +109,22 @@ export async function setupAuth(app: Express) {
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
+  // Login endpoint
   app.get("/api/login", (req, res, next) => {
+    // If already logged in, redirect to home
+    if (req.isAuthenticated()) {
+      return res.redirect("/");
+    }
+
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
+      state: client.generators.state(),
+      nonce: client.generators.nonce(),
     })(req, res, next);
   });
 
+  // Callback endpoint
   app.get("/api/callback", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
@@ -144,37 +132,27 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
+  // Logout endpoint
   app.get("/api/logout", (req, res) => {
     req.logout(() => {
       res.redirect(
-        client.generators.logoutUrl(config, {
+        client.generators.endSessionUrl(config, {
           client_id: process.env.REPL_ID!,
           post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href
+        })
       );
     });
   });
 
-  // ユーザー情報を取得するエンドポイント
-  app.get("/api/auth/user", async (req: any, res) => {
-    if (!req.isAuthenticated() || !req.user?.claims) {
-      return res.json(null);
-    }
-
+  // User info endpoint
+  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = parseInt(req.user.claims.sub);
-      const user = await storage.getUser(userId);
-
-      if (!user) {
-        return res.json(null);
-      }
-
-      // パスワードなど機密情報を除外
-      const { password, ...safeUser } = user;
-      return res.json(safeUser);
+      const userId = req.user.claims.sub;
+      const user = await storage.getUserByUsername(userId);
+      res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
-      return res.status(500).json({ message: "Error fetching user information" });
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 }
@@ -183,7 +161,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user?.expires_at) {
-    return res.status(401).json({ message: "認証が必要です" });
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   const now = Math.floor(Date.now() / 1000);
@@ -198,11 +176,8 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   try {
     const config = await getOidcConfig();
-    const client_instance = new client.Client(config, {
-      client_id: process.env.REPL_ID!,
-    });
-    
-    const tokenSet = await client_instance.refresh(refreshToken);
+    const client = new client.Client(config);
+    const tokenSet = await client.refresh(refreshToken);
     updateUserSession(user, tokenSet);
     return next();
   } catch (error) {

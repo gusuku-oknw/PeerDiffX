@@ -29,6 +29,36 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.insert(users).values(userData).returning();
     return user;
   }
+  
+  async upsertUser(userData: Partial<InsertUser>): Promise<User> {
+    // Check if user already exists
+    if (userData.username) {
+      const existingUser = await this.getUserByUsername(userData.username);
+      
+      if (existingUser) {
+        // Update existing user
+        const [updatedUser] = await db
+          .update(users)
+          .set({
+            ...userData,
+            updatedAt: new Date()
+          })
+          .where(eq(users.username, userData.username))
+          .returning();
+        return updatedUser;
+      }
+    }
+    
+    // Create new user if not exists
+    // Ensure password is set (can be empty for OAuth)
+    const newUserData = {
+      ...userData,
+      password: userData.password || '',  // Default empty password for OAuth users
+    } as InsertUser;
+    
+    const [newUser] = await db.insert(users).values(newUserData).returning();
+    return newUser;
+  }
 
   // Presentation operations
   async getPresentations(): Promise<Presentation[]> {

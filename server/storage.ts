@@ -24,6 +24,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: Partial<InsertUser>): Promise<User>;
   
   // Presentation operations
   getPresentations(): Promise<Presentation[]>;
