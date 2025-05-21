@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { LanguageProvider } from "@/components/i18n/language-context";
@@ -12,6 +12,7 @@ import Signup from "@/pages/signup";
 import Profile from "@/pages/profile";
 // プレビューページ
 import Preview from "@/pages/preview";
+import PublicPreview from "@/pages/public-preview";
 import DiffView from "@/pages/diff-view";
 import History from "@/pages/history";
 import Branches from "@/pages/branches";
@@ -19,6 +20,10 @@ import SettingsPage from "@/pages/settings";
 import AdminDashboard from "@/pages/admin/dashboard";
 
 function Router() {
+  const [location] = useLocation();
+  // 公開プレビューページの場合はNavbarを表示しない
+  const isPublicPreview = location.startsWith('/public-preview');
+
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -26,10 +31,10 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/profile" component={Profile} />
       <Route path="/preview/:id" component={Preview} />
+      <Route path="/public-preview/:presentationId/:commitId?" component={PublicPreview} />
       <Route path="/diff/:baseCommitId/:compareCommitId" component={DiffView} />
       <Route path="/history/:branchId" component={History} />
       <Route path="/branches/:presentationId" component={Branches} />
-      {/* スナップショット機能は削除 */}
       <Route path="/settings" component={SettingsPage} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route component={NotFound} />
@@ -38,13 +43,17 @@ function Router() {
 }
 
 function App() {
+  const [location] = useLocation();
+  // 公開プレビューページの場合はNavbarを表示しない
+  const isPublicPreview = location.startsWith('/public-preview');
+  
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <TooltipProvider>
           <div className="h-screen flex flex-col">
-            <Navbar />
-            <div className="flex-1 flex overflow-hidden">
+            {!isPublicPreview && <Navbar />}
+            <div className={`flex-1 flex overflow-hidden ${isPublicPreview ? 'pt-0' : ''}`}>
               <Router />
             </div>
           </div>
