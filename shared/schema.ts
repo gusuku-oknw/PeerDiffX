@@ -36,6 +36,8 @@ export const permissions = pgTable("permissions", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 50 }).notNull().unique(),
   description: text("description"),
+  resource: varchar("resource", { length: 50 }).notNull(), // リソース（presentations, slides, comments など）
+  action: varchar("action", { length: 50 }).notNull(), // アクション（view, edit, delete など）
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -43,6 +45,8 @@ export const permissions = pgTable("permissions", {
 export const insertPermissionSchema = createInsertSchema(permissions).pick({
   name: true,
   description: true,
+  resource: true,
+  action: true,
 });
 
 export type InsertPermission = z.infer<typeof insertPermissionSchema>;
