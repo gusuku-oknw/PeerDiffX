@@ -395,6 +395,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // コメント関連のエンドポイント
+  apiRouter.get("/api/slides/:slideId/comments", async (req: Request, res: Response) => {
+    try {
+      const slideId = parseInt(req.params.slideId);
+      const comments = await storage.getComments(slideId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error getting comments:", error);
+      res.status(500).json({ error: "Failed to get comments" });
+    }
+  });
+
+  apiRouter.post("/api/comments", async (req: Request, res: Response) => {
+    try {
+      const comment = await storage.createComment(req.body);
+      res.json(comment);
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      res.status(500).json({ error: "Failed to create comment" });
+    }
+  });
+
+  apiRouter.patch("/api/comments/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updatedComment = await storage.updateComment(id, req.body);
+      if (updatedComment) {
+        res.json(updatedComment);
+      } else {
+        res.status(404).json({ error: "Comment not found" });
+      }
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      res.status(500).json({ error: "Failed to update comment" });
+    }
+  });
+
+  apiRouter.delete("/api/comments/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteComment(id);
+      if (success) {
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "Comment not found" });
+      }
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      res.status(500).json({ error: "Failed to delete comment" });
+    }
+  });
+
+  apiRouter.get("/api/comments/:commentId/replies", async (req: Request, res: Response) => {
+    try {
+      const commentId = parseInt(req.params.commentId);
+      const replies = await storage.getReplies(commentId);
+      res.json(replies);
+    } catch (error) {
+      console.error("Error getting replies:", error);
+      res.status(500).json({ error: "Failed to get replies" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

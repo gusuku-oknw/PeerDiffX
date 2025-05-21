@@ -5,8 +5,9 @@ import { commits, type Commit, type InsertCommit } from "@shared/schema";
 import { slides, type Slide, type InsertSlide } from "@shared/schema";
 import { diffs, type Diff, type InsertDiff } from "@shared/schema";
 import { snapshots, type Snapshot, type InsertSnapshot } from "@shared/schema";
+import { comments, type Comment, type InsertComment } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, lt } from "drizzle-orm";
+import { eq, and, desc, lt, isNull } from "drizzle-orm";
 
 import { IStorage } from "./storage";
 
@@ -191,5 +192,58 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return result.length;
+  }
+
+  // コメント機能の実装
+  async getComments(slideId: number): Promise<Comment[]> {
+    return db
+      .select()
+      .from(comments)
+      .where(and(
+        eq(comments.slideId, slideId), 
+        isNull(comments.parentId)
+      ))
+      .orderBy(desc(comments.createdAt));
+  }
+
+  async getComment(id: number): Promise<Comment | undefined> {
+    const [comment] = await db
+      .select()
+      .from(comments)
+      .where(eq(comments.id, id));
+    return comment || undefined;
+  }
+
+  async createComment(comment: InsertComment): Promise<Comment> {
+    const [newComment] = await db
+      .insert(comments)
+      .values(comment)
+      .returning();
+    return newComment;
+  }
+
+  async updateComment(id: number, comment: Partial<Comment>): Promise<Comment | undefined> {
+    const [updatedComment] = await db
+      .update(comments)
+      .set({ ...comment, updatedAt: new Date() })
+      .where(eq(comments.id, id))
+      .returning();
+    return updatedComment || undefined;
+  }
+
+  async deleteComment(id: number): Promise<boolean> {
+    const result = await db
+      .delete(comments)
+      .where(eq(comments.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async getReplies(commentId: number): Promise<Comment[]> {
+    return db
+      .select()
+      .from(comments)
+      .where(eq(comments.parentId, commentId))
+      .orderBy(comments.createdAt);
   }
 }
