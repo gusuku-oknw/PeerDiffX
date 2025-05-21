@@ -10,8 +10,8 @@ import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import Profile from "@/pages/profile";
-// 新しいプレビューページを使用
-import Preview from "@/pages/preview-new";
+// プレビューページ
+import Preview from "@/pages/preview";
 import DiffView from "@/pages/diff-view";
 import History from "@/pages/history";
 import Branches from "@/pages/branches";
