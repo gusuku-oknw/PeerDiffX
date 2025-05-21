@@ -1,0 +1,53 @@
+Warning: validateDOMNesting(...): %s cannot appear as a descendant of <%s>.%s <button> button 
+    at button
+    at _c (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/ui/button.tsx:47:11)
+    at button
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=fee6e928:42:13
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fee6e928:79:13
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fee6e928:56:13
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=fee6e928:42:13
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4XNOAIBL.js?v=fee6e928:1929:13
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=3502f950:197:13
+    at Provider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fee6e928:38:15)
+    at Provider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fee6e928:38:15)
+    at Popper (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4XNOAIBL.js?v=fee6e928:1921:11)
+    at Tooltip (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=3502f950:106:5)
+    at Provider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fee6e928:38:15)
+    at TooltipProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=3502f950:62:5)
+    at div
+    at div
+    at div
+    at div
+    at _c11 (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/ui/card.tsx:123:13)
+    at div
+    at _c (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/ui/card.tsx:20:11)
+    at AiAnalysisPanel (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/ai/ai-analysis-panel.tsx?t=1747843643533:34:35)
+    at div
+    at div
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=fee6e928:42:13
+    at Presence (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LUE5KDWX.js?v=fee6e928:24:11)
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=30357d97:174:13
+    at _c5 (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/ui/tabs.tsx:72:12)
+    at div
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=fee6e928:42:13
+    at Provider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fee6e928:38:15)
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=30357d97:52:7
+    at div
+    at div
+    at div
+    at div
+    at div
+    at SlideCanvas (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/slides/slide-canvas.tsx?t=1747843643533:29:3)
+    at div
+    at Preview (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/pages/preview.tsx?t=1747843643533:31:22)
+    at Route (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=e0372f9e:323:16)
+    at Switch (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=e0372f9e:379:17)
+    at Router
+    at div
+    at div
+    at Provider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fee6e928:38:15)
+    at TooltipProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=3502f950:62:5)
+    at LanguageProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/i18n/language-context.tsx:190:36)
+    at QueryClientProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9997b41f:2805:3)
+    at App
+    at ThemeProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/theme-provider.tsx:25:3)

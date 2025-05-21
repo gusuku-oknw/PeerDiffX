@@ -309,7 +309,7 @@ export function AiAnalysisPanel({ presentationId, commitId }: AiAnalysisPanelPro
             <div className="flex items-center gap-2">
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger asChild>
                     <Button variant="secondary" size="sm" className="h-9 px-3">
                       <FaDownload className="mr-1.5" />
                       <span className="text-sm">レポート保存</span>
@@ -323,7 +323,7 @@ export function AiAnalysisPanel({ presentationId, commitId }: AiAnalysisPanelPro
               
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger asChild>
                     <Button variant="outline" size="sm" className="h-9 px-3">
                       <FaPrint className="mr-1.5" />
                       <span className="text-sm">印刷</span>
@@ -337,7 +337,7 @@ export function AiAnalysisPanel({ presentationId, commitId }: AiAnalysisPanelPro
               
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger asChild>
                     <Button variant="outline" size="sm" className="h-9 px-3">
                       <FaShare className="mr-1.5" />
                       <span className="text-sm">共有</span>
