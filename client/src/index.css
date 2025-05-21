@@ -23,11 +23,30 @@
   overflow: hidden;
   flex: 1 0 auto; /* 伸びるが縮まない */
   max-width: calc(100vw - 260px); /* サイドバーの幅を考慮 */
+  display: flex;
+  flex-direction: column;
 }
 
-/* ボトムバーが開いた時のスタイル */
-.slide-canvas-container > div:last-child {
-  flex-shrink: 0; /* 縮まないようにする */
+/* ボトムパネルのスタイル */
+.bottom-panel {
+  flex-shrink: 0;
+  overflow: hidden;
+  width: 100%;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+/* リサイズハンドルのスタイル */
+.resize-handle {
+  cursor: ns-resize;
+  height: 4px;
+  width: 100%;
+  background-color: #f0f0f0;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.resize-handle:hover {
+  opacity: 1;
 }
 
 /* ダイアログのサイズと位置を調整 */
