@@ -57,12 +57,14 @@ export default function Preview() {
   // すべてのuseEffectを集約
   // 1. スライドが読み込まれたら、最初のスライドをアクティブにする
   useEffect(() => {
-    console.log("スライド読み込み状態:", slides);
+    // activeSlideIdが既に設定されている場合は何もしない
+    if (activeSlideId) return;
+    
     if (slides && slides.length > 0) {
       console.log("スライドが見つかりました、ID設定:", slides[0].id);
       setActiveSlideId(slides[0].id);
     }
-  }, [slides]);
+  }, [slides, activeSlideId]);
   
   // 2. データが不完全な場合の処理
   useEffect(() => {
@@ -112,19 +114,11 @@ export default function Preview() {
   
   // 3. コミットがあるのにスライドがない場合の対応
   useEffect(() => {
-    if (isAutoRefreshEnabled && latestCommit && (!slides || slides.length === 0)) {
-      console.log("スライドがありません。コミットは存在します。スライドチェック...");
+    if (isAutoRefreshEnabled && latestCommit && (!slides || slides.length === 0) && !activeSlideId) {
       
       const checkAndCreateSlides = async () => {
         try {
-          // すでにアクティブスライドが設定されている場合は処理しない
-          if (activeSlideId) {
-            console.log("すでにアクティブスライドが設定されています。ID:", activeSlideId);
-            return;
-          }
-          
           // まず、キャッシュを回避してスライドデータを再度取得する
-          console.log("スライドを再確認中...");
           const timestamp = new Date().getTime();
           const checkResponse = await fetch(`/api/commits/${latestCommit.id}/slides?nocache=${timestamp}`, {
             headers: {
@@ -136,17 +130,12 @@ export default function Preview() {
           
           if (checkResponse.ok) {
             const slideData = await checkResponse.json();
-            console.log("再確認したスライドデータ:", slideData);
             
             // スライドが既に存在する場合は、最初のスライドをアクティブにする
             if (slideData && slideData.length > 0) {
-              console.log("スライドが見つかりました。最初のスライドをアクティブにします:", slideData[0].id);
               setActiveSlideId(slideData[0].id);
               return;
             }
-            
-            // スライドが本当に存在しない場合のみ、作成処理に進む
-            console.log("スライドが確実に存在しません。作成処理に進みます...");
             
             // スライド自動作成APIを呼び出す
             const createResponse = await fetch(`/api/commits/${latestCommit.id}/create-slides`, {
@@ -162,14 +151,11 @@ export default function Preview() {
             
             if (createResponse.ok) {
               const newSlides = await createResponse.json();
-              console.log("スライドを自動作成しました:", newSlides);
               if (newSlides && newSlides.length > 0) {
                 setActiveSlideId(newSlides[0].id);
               }
             } else {
               // 通常のスライド作成APIを使用
-              console.log("スライド作成APIを使用します...");
-              
               const defaultContent = {
                 elements: [
                   {
@@ -219,7 +205,6 @@ export default function Preview() {
               
               if (response.ok) {
                 const newSlide = await response.json();
-                console.log("スライドを手動作成しました:", newSlide);
                 setActiveSlideId(newSlide.id);
               }
             }
@@ -235,15 +220,17 @@ export default function Preview() {
     }
   }, [latestCommit, slides, isAutoRefreshEnabled, activeSlideId]);
   
-  // 4. デバッグ用に状態をログ出力
+  // 4. デバッグ用に状態をログ出力（開発中のみ）
   useEffect(() => {
-    console.log("現在の状態:", {
-      presentationId,
-      defaultBranch,
-      latestCommit,
-      slides: slides?.length,
-      activeSlideId
-    });
+    if (false) { // 本番環境では実行しない
+      console.log("現在の状態:", {
+        presentationId,
+        defaultBranch,
+        latestCommit,
+        slides: slides?.length,
+        activeSlideId
+      });
+    }
   }, [presentationId, defaultBranch, latestCommit, slides, activeSlideId]);
   
   // イベントハンドラの定義
