@@ -436,13 +436,10 @@ export default function SlideCanvas({
                     <div className="overflow-auto">
                       {slide && (
                         <AiAnalysisPanel 
-                          presentationId={slide.presentationId || 1} 
+                          presentationId={1} 
                           commitId={slide.commitId || 1} 
                         />
                       )}
-                    </div>
-                  </TabsContent>
-                      </div>
                     </div>
                   </TabsContent>
                 </Tabs>
