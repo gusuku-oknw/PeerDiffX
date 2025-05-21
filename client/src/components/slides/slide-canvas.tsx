@@ -285,63 +285,50 @@ export default function SlideCanvas({
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm flex items-center"
-            onClick={onViewXmlDiff}
-          >
-            <FaCode className="mr-2 text-gray-500" />
-            <span>XML Diff</span>
-          </Button>
-          <Button 
-            variant={(showSidePanel && activeTab === 'history') ? "default" : "outline"}
-            size="sm" 
-            className={`px-3 py-1.5 rounded-md border ${(showSidePanel && activeTab === 'history') ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'} text-sm flex items-center transition-colors`}
-            onClick={() => {
-              if (activeTab === 'history' && showSidePanel) {
-                setShowSidePanel(false);
-              } else {
-                setActiveTab('history');
-                setShowSidePanel(true);
-              }
-            }}
-          >
-            <FaHistory className={`mr-2 ${(showSidePanel && activeTab === 'history') ? 'text-white' : 'text-gray-500'}`} />
-            <span>履歴</span>
-          </Button>
-          
-          <Button 
-            variant={(showSidePanel && activeTab === 'comments') ? "default" : "outline"}
-            size="sm" 
-            className={`ml-2 px-3 py-1.5 rounded-md border ${(showSidePanel && activeTab === 'comments') ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'} text-sm flex items-center transition-colors`}
-            onClick={() => {
-              if (activeTab === 'comments' && showSidePanel) {
-                setShowSidePanel(false);
-              } else {
-                setActiveTab('comments');
-                setShowSidePanel(true);
-              }
-            }}
-          >
-            <FaComments className={`mr-2 ${(showSidePanel && activeTab === 'comments') ? 'text-white' : 'text-gray-500'}`} />
-            <span>コメント</span>
-          </Button>
-          
-          {/* AI分析ボタン - 企業ダッシュボード用 */}
-          <div className="ml-2">
-            <AiAnalysisButton presentationId={1} commitId={slide?.commitId || 1} />
+          {/* 左側：XMLとAI分析のユーティリティボタン */}
+          <div className="flex items-center">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm flex items-center"
+              onClick={onViewXmlDiff}
+            >
+              <FaCode className="mr-2 text-gray-500" />
+              <span>XML表示</span>
+            </Button>
+            
+            {/* AI分析ボタン */}
+            <div className="ml-2">
+              <AiAnalysisButton presentationId={1} commitId={slide?.commitId || 1} />
+            </div>
           </div>
           
-          {shareDialogComponent && (
-            <div className="ml-2">
-              {shareDialogComponent}
-            </div>
-          )}
-          <Button className="ml-2 px-3 py-1.5 rounded-md bg-green-600 hover:bg-green-700 text-white transition text-sm flex items-center">
-            <FaCodeBranch className="mr-2 text-white" />
-            <span>Commit</span>
-          </Button>
+          {/* 右側：パネル操作とコミット */}
+          <div className="ml-auto flex items-center">
+            {/* サイドパネルボタン */}
+            <Button 
+              variant={showSidePanel ? "default" : "outline"}
+              size="sm" 
+              className={`px-3 py-1.5 rounded-md border ${showSidePanel ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'} text-sm flex items-center transition-colors`}
+              onClick={() => setShowSidePanel(!showSidePanel)}
+            >
+              {showSidePanel ? 
+                <><FaComments className="mr-2 text-white" />パネルを閉じる</> : 
+                <><FaComments className="mr-2 text-gray-500" />パネルを開く</>
+              }
+            </Button>
+            
+            {shareDialogComponent && (
+              <div className="ml-2">
+                {shareDialogComponent}
+              </div>
+            )}
+            
+            <Button className="ml-2 px-3 py-1.5 rounded-md bg-green-600 hover:bg-green-700 text-white transition text-sm flex items-center">
+              <FaCodeBranch className="mr-2 text-white" />
+              <span>Commit</span>
+            </Button>
+          </div>
         </div>
       </div>
       
@@ -365,9 +352,18 @@ export default function SlideCanvas({
                 <Tabs defaultValue={activeTab} onValueChange={(val) => setActiveTab(val as 'comments' | 'history' | 'locks')}>
                   <div className="flex justify-between items-center px-2">
                     <TabsList className="h-10">
-                      <TabsTrigger value="comments" className="text-xs">コメント</TabsTrigger>
-                      <TabsTrigger value="history" className="text-xs">履歴</TabsTrigger>
-                      <TabsTrigger value="locks" className="text-xs">ロック</TabsTrigger>
+                      <TabsTrigger value="comments" className="text-xs flex items-center">
+                        <FaComments className="mr-1 text-xs" />
+                        <span>コメント</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="history" className="text-xs flex items-center">
+                        <FaHistory className="mr-1 text-xs" />
+                        <span>履歴</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="locks" className="text-xs flex items-center">
+                        <FaLock className="mr-1 text-xs" />
+                        <span>ロック</span>
+                      </TabsTrigger>
                     </TabsList>
                     <Button 
                       variant="ghost" 
