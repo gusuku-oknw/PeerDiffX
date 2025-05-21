@@ -6,7 +6,8 @@ import {
   slides, type Slide, type InsertSlide,
   diffs, type Diff, type InsertDiff,
   snapshots, type Snapshot, type InsertSnapshot,
-  comments, type Comment, type InsertComment
+  comments, type Comment, type InsertComment,
+  presentationAccess
 } from "../shared/schema";
 import { db } from "./db";
 import { eq, and, desc, lt, isNull } from "drizzle-orm";
