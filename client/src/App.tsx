@@ -5,7 +5,7 @@ import { LanguageProvider } from "@/components/i18n/language-context";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import Header from "@/components/layout/header";
+import { Navbar } from "@/components/ui/navbar";
 import Home from "@/pages/home";
 import Preview from "@/pages/preview";
 import DiffView from "@/pages/diff-view";
@@ -35,7 +35,7 @@ function App() {
       <LanguageProvider>
         <TooltipProvider>
           <div className="h-screen flex flex-col">
-            <Header />
+            <Navbar />
             <div className="flex-1 flex overflow-hidden">
               <Router />
             </div>
