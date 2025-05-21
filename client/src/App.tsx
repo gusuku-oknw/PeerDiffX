@@ -1,6 +1,7 @@
 import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
+import { LanguageProvider } from "@/components/i18n/language-context";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
@@ -27,15 +28,17 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <div className="h-screen flex flex-col">
-          <Header />
-          <div className="flex-1 flex overflow-hidden">
-            <Router />
+      <LanguageProvider>
+        <TooltipProvider>
+          <div className="h-screen flex flex-col">
+            <Header />
+            <div className="flex-1 flex overflow-hidden">
+              <Router />
+            </div>
           </div>
-        </div>
-        <Toaster />
-      </TooltipProvider>
+          <Toaster />
+        </TooltipProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

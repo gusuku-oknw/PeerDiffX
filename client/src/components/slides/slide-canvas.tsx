@@ -27,6 +27,7 @@ export default function SlideCanvas({
   const { data: slide, isLoading } = useSlide(slideId);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '4:3'>('16:9'); // Default to 16:9 widescreen
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   
   const handleZoomIn = () => {
@@ -37,6 +38,70 @@ export default function SlideCanvas({
     setZoomLevel(prev => Math.max(prev - 10, 50));
   };
   
+  // フルスクリーン状態を監視
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+  
+  // スワイプとクリックでのスライド操作（フルスクリーン時のみ）
+  useEffect(() => {
+    if (!isFullscreen || !canvasRef.current) return;
+    
+    let startX = 0;
+    const MIN_SWIPE_DISTANCE = 50;
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      startX = e.touches[0].clientX;
+    };
+    
+    const handleTouchEnd = (e: TouchEvent) => {
+      const endX = e.changedTouches[0].clientX;
+      const diffX = endX - startX;
+      
+      if (Math.abs(diffX) >= MIN_SWIPE_DISTANCE) {
+        if (diffX > 0 && currentSlideNumber > 1) {
+          // 右へスワイプ = 前のスライド
+          onPrevSlide();
+        } else if (diffX < 0 && currentSlideNumber < totalSlides) {
+          // 左へスワイプ = 次のスライド
+          onNextSlide();
+        }
+      }
+    };
+    
+    const handleClick = (e: MouseEvent) => {
+      // クリック位置に基づいて左右を判定
+      const { left, width } = canvasRef.current!.getBoundingClientRect();
+      const clickX = e.clientX - left;
+      
+      if (clickX < width / 2 && currentSlideNumber > 1) {
+        // 左半分をクリック = 前のスライド
+        onPrevSlide();
+      } else if (clickX >= width / 2 && currentSlideNumber < totalSlides) {
+        // 右半分をクリック = 次のスライド
+        onNextSlide();
+      }
+    };
+    
+    const element = canvasRef.current;
+    element.addEventListener('touchstart', handleTouchStart);
+    element.addEventListener('touchend', handleTouchEnd);
+    element.addEventListener('click', handleClick);
+    
+    return () => {
+      element.removeEventListener('touchstart', handleTouchStart);
+      element.removeEventListener('touchend', handleTouchEnd);
+      element.removeEventListener('click', handleClick);
+    };
+  }, [isFullscreen, canvasRef, currentSlideNumber, totalSlides, onPrevSlide, onNextSlide]);
+
   const handleFullscreen = () => {
     if (canvasRef.current) {
       if (document.fullscreenElement) {
