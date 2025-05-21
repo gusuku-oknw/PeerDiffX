@@ -444,7 +444,7 @@ export default function SlideCanvas({
                   </TabsContent>
                   
                   <TabsContent value="ai" className="m-0 p-0">
-                    <div className="overflow-auto">
+                    <div className="h-[calc(100vh-14rem)] overflow-auto px-2 py-2">
                       {slide && (
                         <AiAnalysisPanel 
                           presentationId={1} 

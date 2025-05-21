@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   FaRobot, 
   FaChartBar, 
@@ -11,7 +12,10 @@ import {
   FaThumbsUp,
   FaThumbsDown,
   FaKeyboard,
-  FaEye
+  FaEye,
+  FaDownload,
+  FaPrint,
+  FaShare
 } from "react-icons/fa";
 
 interface AiAnalysisPanelProps {
@@ -70,14 +74,14 @@ export function AiAnalysisPanel({ presentationId, commitId }: AiAnalysisPanelPro
       <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <FaRobot className="mr-2 h-5 w-5" />
-            <CardTitle>AI分析レポート</CardTitle>
+            <FaRobot className="mr-2 h-6 w-6" />
+            <CardTitle className="text-xl">AI分析レポート</CardTitle>
           </div>
-          <div className="text-xs bg-blue-900 py-1 px-2 rounded-full">
+          <div className="bg-blue-900 py-1.5 px-3 rounded-full text-sm">
             最終更新: 2時間前
           </div>
         </div>
-        <CardDescription className="text-blue-100">
+        <CardDescription className="text-blue-100 text-base mt-2">
           プレゼンテーションの詳細分析と改善提案
         </CardDescription>
       </CardHeader>
@@ -85,20 +89,20 @@ export function AiAnalysisPanel({ presentationId, commitId }: AiAnalysisPanelPro
         <Tabs defaultValue="summary" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-4 mb-4">
             <TabsTrigger value="summary" className="flex items-center">
-              <FaFileAlt className="mr-2 h-4 w-4" />
-              <span>要約</span>
+              <FaFileAlt className="mr-2 h-5 w-5" />
+              <span className="text-sm">要約</span>
             </TabsTrigger>
             <TabsTrigger value="sentiment" className="flex items-center">
-              <FaThumbsUp className="mr-2 h-4 w-4" />
-              <span>感情分析</span>
+              <FaThumbsUp className="mr-2 h-5 w-5" />
+              <span className="text-sm">感情分析</span>
             </TabsTrigger>
             <TabsTrigger value="keywords" className="flex items-center">
-              <FaKeyboard className="mr-2 h-4 w-4" />
-              <span>キーワード</span>
+              <FaKeyboard className="mr-2 h-5 w-5" />
+              <span className="text-sm">キーワード</span>
             </TabsTrigger>
             <TabsTrigger value="readability" className="flex items-center">
-              <FaEye className="mr-2 h-4 w-4" />
-              <span>読みやすさ</span>
+              <FaEye className="mr-2 h-5 w-5" />
+              <span className="text-sm">読みやすさ</span>
             </TabsTrigger>
           </TabsList>
           
@@ -299,13 +303,69 @@ export function AiAnalysisPanel({ presentationId, commitId }: AiAnalysisPanelPro
           </TabsContent>
         </Tabs>
       </CardContent>
-      <CardFooter className="bg-gray-50 dark:bg-gray-800 p-4 border-t flex justify-between">
-        <Button variant="outline" size="sm">
-          完全レポートをダウンロード
-        </Button>
-        <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-          <FaRobot className="mr-1" />
-          PeerDiffX AI分析エンジン v2.3
+      <CardFooter className="bg-gray-50 dark:bg-gray-800 p-4 border-t">
+        <div className="w-full space-y-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button variant="secondary" size="sm" className="h-9 px-3">
+                      <FaDownload className="mr-1.5" />
+                      <span className="text-sm">レポート保存</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>分析レポートをPDFで保存</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button variant="outline" size="sm" className="h-9 px-3">
+                      <FaPrint className="mr-1.5" />
+                      <span className="text-sm">印刷</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>分析レポートを印刷</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button variant="outline" size="sm" className="h-9 px-3">
+                      <FaShare className="mr-1.5" />
+                      <span className="text-sm">共有</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>このレポートを共有</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                AI分析スコア: <span className="text-blue-600 dark:text-blue-400 font-bold">85/100</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="w-full flex justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-2 text-sm">
+            <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+              <FaRobot className="mr-1.5" />
+              PeerDiffX AI分析エンジン v2.3
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              最終更新: 2023年5月21日 14:30
+            </div>
+          </div>
         </div>
       </CardFooter>
     </Card>
