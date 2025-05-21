@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSlide } from "@/hooks/use-pptx";
 import { Button } from "@/components/ui/button";
-import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaDesktop, FaTv, FaComments, FaCodeBranch } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch } from "react-icons/fa";
 import { CommentsPanel } from "@/components/comments/comments-panel";
 import { AiAnalysisButton } from "@/components/ai/ai-analysis-button";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 interface SlideCanvasProps {
   slideId: number;
@@ -29,8 +30,14 @@ export default function SlideCanvas({
   shareDialogComponent
 }: SlideCanvasProps) {
   const { data: slide, isLoading } = useSlide(slideId);
-  const [zoomLevel, setZoomLevel] = useState(100);
-  const [aspectRatio, setAspectRatio] = useState<'16:9' | '4:3'>('16:9'); // Default to 16:9 widescreen
+  const [presentationSettings] = useLocalStorage('presentation_settings', {
+    defaultAspectRatio: '16:9',
+    defaultZoomLevel: 100
+  });
+  const [zoomLevel, setZoomLevel] = useState(presentationSettings.defaultZoomLevel);
+  const [aspectRatio, setAspectRatio] = useState<'16:9' | '4:3'>(
+    presentationSettings.defaultAspectRatio as '16:9' | '4:3'
+  );
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -117,9 +124,7 @@ export default function SlideCanvas({
     }
   };
   
-  const toggleAspectRatio = () => {
-    setAspectRatio(prev => prev === '16:9' ? '4:3' : '16:9');
-  };
+  // アスペクト比の切り替え機能は設定ページに移動したため、この関数は使用されない
   
   if (isLoading) {
     return (

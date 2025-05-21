@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -12,14 +12,15 @@ import { Separator } from "@/components/ui/separator";
 import { apiRequest } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 export default function SettingsPage() {
   const { user, isLoading: isLoadingUser } = useAuth();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("general");
   
-  // UI設定 (実際のAPIエンドポイントはまだないので、フロントエンドでのみ状態管理)
-  const [settings, setSettings] = useState({
+  // ローカルストレージから設定を読み込み
+  const [settings, setSettings] = useLocalStorage('app_settings', {
     darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
     language: "ja",
     notifications: {
@@ -37,6 +38,20 @@ export default function SettingsPage() {
       defaultZoomLevel: 100      // デフォルトのズームレベル
     }
   });
+  
+  // プレゼンテーション設定を別途保存（スライドキャンバスで使用）
+  const [_, setPresentationSettings] = useLocalStorage('presentation_settings', {
+    defaultAspectRatio: settings.presentation.defaultAspectRatio,
+    defaultZoomLevel: settings.presentation.defaultZoomLevel
+  });
+  
+  // 設定が変更されたときにプレゼンテーション設定も同期
+  useEffect(() => {
+    setPresentationSettings({
+      defaultAspectRatio: settings.presentation.defaultAspectRatio,
+      defaultZoomLevel: settings.presentation.defaultZoomLevel
+    });
+  }, [settings.presentation, setPresentationSettings]);
 
   // 設定変更のミューテーション (現在はAPIエンドポイントがないため、モックしています)
   const { mutate: updateSettings, isPending } = useMutation({
