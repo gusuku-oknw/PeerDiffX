@@ -218,21 +218,17 @@ export const comments = pgTable("comments", {
   id: serial("id").primaryKey(),
   slideId: integer("slide_id").notNull().references(() => slides.id),
   userId: integer("user_id").references(() => users.id),
-  content: text("content").notNull(),
+  message: text("message").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  positionX: integer("position_x").notNull(),
-  positionY: integer("position_y").notNull(),
   resolved: boolean("resolved").default(false),
-  parentId: integer("parent_id").references(({ table }) => table.id),
+  parentId: integer("parent_id").references(() => comments.id),
 });
 
 export const insertCommentSchema = createInsertSchema(comments).pick({
   slideId: true,
   userId: true,
-  content: true,
-  positionX: true,
-  positionY: true,
+  message: true,
   parentId: true,
 });
 
