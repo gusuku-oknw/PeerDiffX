@@ -197,7 +197,7 @@ export const commits = pgTable("commits", {
   userId: integer("user_id").references(() => users.id),
   parentId: integer("parent_id").references(() => commits.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}) as any;
 
 export const insertCommitSchema = createInsertSchema(commits).pick({
   message: true,
@@ -370,7 +370,7 @@ export const comments = pgTable("comments", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   resolved: boolean("resolved").default(false),
   parentId: integer("parent_id").references(() => comments.id),
-});
+}) as any;
 
 export const insertCommentSchema = createInsertSchema(comments).pick({
   slideId: true,

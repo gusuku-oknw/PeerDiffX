@@ -31,14 +31,23 @@ export async function initializeDatabase() {
   // Create a demo user
   const demoUser: InsertUser = {
     username: "demo",
-    password: "demo123" // In a real app, this would be hashed
+    password: "demo123", // In a real app, this would be hashed
+    email: "demo@example.com",
+    firstName: "Demo",
+    lastName: "User",
+    organization: "PeerDiffX Inc",
+    roleId: null
   };
   const [user] = await db.insert(users).values(demoUser).returning();
 
   // Create a demo presentation
   const demoPresentation: InsertPresentation = {
     name: "Q4_Presentation.pptx",
-    userId: user.id
+    description: "Corporate quarterly results presentation",
+    userId: user.id,
+    isPublic: false,
+    status: "draft",
+    thumbnail: null
   };
   const [presentation] = await db.insert(presentations).values(demoPresentation).returning();
 

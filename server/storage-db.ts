@@ -1,14 +1,35 @@
-import { db } from "./db";
-import {
-  users, branches, presentations, commits, slides, diffs, snapshots, comments,
-  type User, type Branch, type Presentation, type Commit, type Slide, type Diff, type Snapshot, type Comment,
-  type InsertUser, type InsertBranch, type InsertPresentation, type InsertCommit, type InsertSlide, type InsertDiff, type InsertSnapshot, type InsertComment,
+import { 
+  users, 
+  presentations, 
+  branches, 
+  commits, 
+  slides, 
+  diffs, 
+  snapshots,
+  comments,
+  type User,
+  type InsertUser,
+  type Presentation,
+  type InsertPresentation,
+  type Branch,
+  type InsertBranch,
+  type Commit,
+  type InsertCommit,
+  type Slide,
+  type InsertSlide,
+  type Diff,
+  type InsertDiff,
+  type Snapshot,
+  type InsertSnapshot,
+  type Comment,
+  type InsertComment
 } from "@shared/schema";
-import { eq, and, or, desc } from "drizzle-orm";
+import { db } from "./db";
+import { eq, and, desc, sql, lt, isNull } from "drizzle-orm";
 import { IStorage } from "./storage";
 
 export class DatabaseStorage implements IStorage {
-  // ユーザー関連のメソッド
+  // User operations
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -23,8 +44,8 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.insert(users).values(userData).returning();
     return user;
   }
-
-  // プレゼンテーション関連のメソッド
+  
+  // Presentation operations
   async getPresentations(): Promise<Presentation[]> {
     return await db.select().from(presentations);
   }
@@ -55,8 +76,8 @@ export class DatabaseStorage implements IStorage {
   async deletePresentation(id: number): Promise<void> {
     await db.delete(presentations).where(eq(presentations.id, id));
   }
-
-  // ブランチ関連のメソッド
+  
+  // Branch operations
   async getBranchesByPresentationId(presentationId: number): Promise<Branch[]> {
     return await db
       .select()
@@ -73,10 +94,12 @@ export class DatabaseStorage implements IStorage {
     const [branch] = await db
       .select()
       .from(branches)
-      .where(and(
-        eq(branches.presentationId, presentationId),
-        eq(branches.isDefault, true)
-      ));
+      .where(
+        and(
+          eq(branches.presentationId, presentationId),
+          eq(branches.isDefault, true)
+        )
+      );
     return branch;
   }
 
@@ -97,8 +120,8 @@ export class DatabaseStorage implements IStorage {
   async deleteBranch(id: number): Promise<void> {
     await db.delete(branches).where(eq(branches.id, id));
   }
-
-  // コミット関連のメソッド
+  
+  // Commit operations
   async getCommitsByBranchId(branchId: number): Promise<Commit[]> {
     return await db
       .select()
@@ -126,8 +149,8 @@ export class DatabaseStorage implements IStorage {
     const [commit] = await db.insert(commits).values(commitData).returning();
     return commit;
   }
-
-  // スライド関連のメソッド
+  
+  // Slide operations
   async getSlidesByCommitId(commitId: number): Promise<Slide[]> {
     return await db
       .select()
@@ -158,10 +181,13 @@ export class DatabaseStorage implements IStorage {
   async deleteSlide(id: number): Promise<void> {
     await db.delete(slides).where(eq(slides.id, id));
   }
-
-  // 差分関連のメソッド
+  
+  // Diff operations
   async getDiffsByCommitId(commitId: number): Promise<Diff[]> {
-    return await db.select().from(diffs).where(eq(diffs.commitId, commitId));
+    return await db
+      .select()
+      .from(diffs)
+      .where(eq(diffs.commitId, commitId));
   }
 
   async getDiff(id: number): Promise<Diff | undefined> {
@@ -173,44 +199,53 @@ export class DatabaseStorage implements IStorage {
     const [diff] = await db.insert(diffs).values(diffData).returning();
     return diff;
   }
-
-  // スナップショット関連のメソッド
+  
+  // Snapshot operations
   async getSnapshot(id: string): Promise<Snapshot | undefined> {
     const [snapshot] = await db.select().from(snapshots).where(eq(snapshots.id, id));
     return snapshot;
   }
 
   async createSnapshot(snapshotData: InsertSnapshot): Promise<Snapshot> {
-    const [snapshot] = await db.insert(snapshots).values(snapshotData).returning();
+    const [snapshot] = await db.insert(snapshots).values({
+      ...snapshotData,
+      data: snapshotData.data || {}
+    }).returning();
     return snapshot;
   }
 
   async updateSnapshotAccessCount(id: string): Promise<Snapshot | undefined> {
-    const [snapshot] = await db.select().from(snapshots).where(eq(snapshots.id, id));
-    if (!snapshot) return undefined;
-
-    const [updatedSnapshot] = await db
+    const [snapshot] = await db
       .update(snapshots)
-      .set({ accessCount: snapshot.accessCount + 1 })
+      .set({
+        accessCount: sql`${snapshots.accessCount} + 1`
+      })
       .where(eq(snapshots.id, id))
       .returning();
-    return updatedSnapshot;
+    return snapshot;
   }
 
   async deleteExpiredSnapshots(): Promise<number> {
     const now = new Date();
     const result = await db
       .delete(snapshots)
-      .where(desc(snapshots.expiresAt) < now);
-    return result.count || 0;
+      .where(lt(snapshots.expiresAt, now));
+    
+    // For PostgreSQL, deletedCount is available in the result
+    return Number(result.count) || 0;
   }
-
-  // コメント関連のメソッド
+  
+  // Comment operations
   async getComments(slideId: number): Promise<Comment[]> {
     return await db
       .select()
       .from(comments)
-      .where(eq(comments.slideId, slideId))
+      .where(
+        and(
+          eq(comments.slideId, slideId),
+          isNull(comments.parentId)
+        )
+      )
       .orderBy(comments.createdAt);
   }
 
