@@ -155,14 +155,14 @@ export default function Preview() {
     );
   }
   
-  // Check if we have a presentation but missing other data
-  if (presentation && (!defaultBranch || !latestCommit || !slides || slides.length === 0)) {
+  // エラーケース: ブランチやコミットがまったくない
+  if (presentation && (!defaultBranch || !latestCommit)) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center p-8 max-w-lg">
           <h2 className="text-2xl font-bold mb-4">プレゼンテーションを初期化しています</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            このプレゼンテーションは初期化中です。ブランチやスライドデータが作成されています。
+            このプレゼンテーションは初期化中です。ブランチやコミットデータが作成されています。
             更新するには画面をリフレッシュしてください。
           </p>
           <div className="flex justify-center gap-4">
@@ -195,11 +195,38 @@ export default function Preview() {
     );
   }
   
+  // スライドが空の場合（通常はここには到達しないはずだが、念のため）
+  if (latestCommit && (!slides || slides.length === 0)) {
+    return (
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar onToggleVersionPanel={toggleVersionPanel} />
+        
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center p-8 max-w-lg">
+            <h2 className="text-2xl font-bold mb-4">新しいプレゼンテーション</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              このプレゼンテーションにはまだスライドがありません。
+              自動でリロードしています...
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button onClick={() => window.location.reload()}>
+                今すぐリフレッシュ
+              </Button>
+              <Button variant="outline" onClick={() => window.location.href = "/"}>
+                ホームに戻る
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex overflow-hidden">
       <Sidebar onToggleVersionPanel={toggleVersionPanel} />
       
-      {activeSlideId && (
+      {activeSlideId ? (
         <>
           <SlideThumbnails 
             commitId={latestCommit.id} 
@@ -209,7 +236,7 @@ export default function Preview() {
           
           <SlideCanvas 
             slideId={activeSlideId}
-            totalSlides={slides.length}
+            totalSlides={slides?.length || 0}
             currentSlideNumber={activeSlide?.slideNumber || 1}
             onPrevSlide={handlePrevSlide}
             onNextSlide={handleNextSlide}
@@ -234,6 +261,19 @@ export default function Preview() {
             />
           )}
         </>
+      ) : (
+        // アクティブスライドがない場合は自動的にリロード
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center p-8">
+            <h2 className="text-2xl font-bold mb-4">プレゼンテーションを読み込み中...</h2>
+            <div className="flex justify-center">
+              <div className="animate-spin h-10 w-10 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+            </div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">
+              3秒後に自動的にリロードします
+            </p>
+          </div>
+        </div>
       )}
       
       <DiffViewer 
