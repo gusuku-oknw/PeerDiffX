@@ -31,13 +31,11 @@ export default function PublicPreview() {
   
   const [currentSlideId, setCurrentSlideId] = useState<number | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [currentSlide, setCurrentSlide] = useState<any>(null);
   
   // 最初のスライドが読み込まれたら選択
   useEffect(() => {
     if (slides?.length > 0) {
       setCurrentSlideId(slides[0].id);
-      setCurrentSlide(slides[0]);
       setCurrentSlideIndex(0);
     }
   }, [slides]);
@@ -46,14 +44,11 @@ export default function PublicPreview() {
   useEffect(() => {
     if (!currentSlideId && slides?.length > 0) {
       setCurrentSlideId(slides[0].id);
-      setCurrentSlide(slides[0]);
       setCurrentSlideIndex(0);
     } else if (currentSlideId) {
-      const slide = slides?.find((s: any) => s.id === currentSlideId);
-      if (slide) {
-        setCurrentSlide(slide);
-        const index = slides.findIndex((s: any) => s.id === currentSlideId);
-        setCurrentSlideIndex(index !== -1 ? index : 0);
+      const index = slides.findIndex((s: any) => s.id === currentSlideId);
+      if (index !== -1) {
+        setCurrentSlideIndex(index);
       }
     }
   }, [currentSlideId, slides]);
@@ -78,6 +73,16 @@ export default function PublicPreview() {
     }
   };
 
+  // XMLディフを表示
+  const handleViewXmlDiff = () => {
+    console.log("XML表示機能は準備中です");
+  };
+  
+  // 履歴を表示
+  const handleViewHistory = () => {
+    console.log("履歴表示機能は準備中です");
+  };
+
   // キーボードショートカット
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -93,11 +98,6 @@ export default function PublicPreview() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [currentSlideIndex, slides]);
-
-  // XMLディフを表示
-  const handleViewXmlDiff = () => {
-    console.log("XML表示機能は準備中です");
-  };
 
   // ローディング表示
   if (isLoadingPresentation || !presentation) {
@@ -200,110 +200,28 @@ export default function PublicPreview() {
           </div>
         </div>
       
-        {/* 中央サムネイル表示部分 */}
-        <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto">
-          <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-medium">Slides</h3>
-          </div>
-          <div className="p-2">
-            {slides.length > 0 ? (
-              <div className="grid gap-2">
-                {slides.map((slide: any) => (
-                  <div 
-                    key={slide.id}
-                    className={`p-2 rounded-md cursor-pointer ${
-                      currentSlideId === slide.id 
-                        ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }`}
-                    onClick={() => handleSelectSlide(slide.id)}
-                  >
-                    <div className="w-full rounded-md overflow-hidden border border-gray-200 dark:border-gray-700 mb-1 aspect-video bg-white">
-                      {slide.thumbnail ? (
-                        <img src={slide.thumbnail} alt={`スライド ${slide.slideNumber}`} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800 text-gray-400">
-                          <div className="text-xs font-medium">Slide {slide.slideNumber}</div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-xs truncate mt-1">{slide.title || `Slide ${slide.slideNumber}`}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-4 px-2 text-center text-gray-500 text-sm">
-                スライドがありません
-              </div>
-            )}
-          </div>
-        </div>
+        {/* 中央サムネイル表示部分 - 既存のコンポーネントを使用 */}
+        <SlideThumbnails 
+          commitId={commitId}
+          activeSlideId={currentSlideId || undefined}
+          onSelectSlide={handleSelectSlide}
+          slides={slides}
+        />
         
-        {/* メインスライド表示エリア */}
+        {/* メインスライド表示エリア - 既存のコンポーネントを使用 */}
         <div className="flex-1 bg-gray-50 dark:bg-gray-900 overflow-hidden" style={{ minWidth: 0 }}>
           {currentSlideId ? (
-            <div className="h-full flex flex-col">
-              {/* スライド操作ツールバー */}
-              <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-2 flex items-center">
-                <div className="flex items-center space-x-2 mr-auto">
-                  <Button size="sm" variant="ghost" onClick={goToPreviousSlide} disabled={currentSlideIndex === 0}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    スライド {currentSlideIndex + 1}/{slides.length}
-                  </span>
-                  <Button size="sm" variant="ghost" onClick={goToNextSlide} disabled={currentSlideIndex === slides.length - 1}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Button size="sm" variant="ghost">
-                    <FaSearchMinus className="h-3.5 w-3.5" />
-                  </Button>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">100%</span>
-                  <Button size="sm" variant="ghost">
-                    <FaSearchPlus className="h-3.5 w-3.5" />
-                  </Button>
-                  <div className="h-6 border-l border-gray-200 dark:border-gray-700 mx-1"></div>
-                  <Button size="sm" variant="ghost">
-                    <FaExpand className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={handleViewXmlDiff}>
-                    <FaCode className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-              
-              {/* スライド表示エリア */}
-              <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
-                <div className="w-full max-w-4xl bg-white rounded shadow-sm" style={{ aspectRatio: '16/9' }}>
-                  {currentSlide.content ? (
-                    <div className="p-8 h-full relative">
-                      <h2 className="text-3xl font-bold">{currentSlide.title || 'タイトルなし'}</h2>
-                      {currentSlide.content.elements && currentSlide.content.elements.map((element: any, idx: number) => (
-                        element.type === 'text' && (
-                          <p key={idx} style={{
-                            position: 'absolute',
-                            left: `${element.x}px`,
-                            top: `${element.y}px`,
-                            color: element.style?.color || '#000',
-                            fontSize: `${element.style?.fontSize || 16}px`,
-                            fontWeight: element.style?.fontWeight || 'normal',
-                          }}>
-                            {element.content}
-                          </p>
-                        )
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <p className="text-gray-500">スライドコンテンツを読み込み中...</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <SlideCanvas
+              slideId={currentSlideId}
+              totalSlides={slides.length}
+              currentSlideNumber={currentSlideIndex + 1}
+              onPrevSlide={goToPreviousSlide}
+              onNextSlide={goToNextSlide}
+              onViewXmlDiff={handleViewXmlDiff}
+              onViewHistory={handleViewHistory}
+              presentationId={presentationId}
+              presentationName={presentation?.name}
+            />
           ) : (
             <div className="h-full flex items-center justify-center">
               <p className="text-gray-500">スライドを選択してください</p>
