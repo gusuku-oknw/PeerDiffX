@@ -117,6 +117,12 @@ export default function Preview() {
       
       const checkAndCreateSlides = async () => {
         try {
+          // すでにアクティブスライドが設定されている場合は処理しない
+          if (activeSlideId) {
+            console.log("すでにアクティブスライドが設定されています。ID:", activeSlideId);
+            return;
+          }
+          
           // まず、キャッシュを回避してスライドデータを再度取得する
           console.log("スライドを再確認中...");
           const timestamp = new Date().getTime();
@@ -132,10 +138,10 @@ export default function Preview() {
             const slideData = await checkResponse.json();
             console.log("再確認したスライドデータ:", slideData);
             
-            // スライドが既に存在する場合は、再ロードするだけ
+            // スライドが既に存在する場合は、最初のスライドをアクティブにする
             if (slideData && slideData.length > 0) {
-              console.log("スライドが見つかりました。表示を更新します...");
-              // スライドが見つかったのでstateを更新するだけ
+              console.log("スライドが見つかりました。最初のスライドをアクティブにします:", slideData[0].id);
+              setActiveSlideId(slideData[0].id);
               return;
             }
             
@@ -155,8 +161,11 @@ export default function Preview() {
             });
             
             if (createResponse.ok) {
-              console.log("スライドを自動作成しました。");
-              // ここでリロードしなくてもuseQueryによってデータが再取得される
+              const newSlides = await createResponse.json();
+              console.log("スライドを自動作成しました:", newSlides);
+              if (newSlides && newSlides.length > 0) {
+                setActiveSlideId(newSlides[0].id);
+              }
             } else {
               // 通常のスライド作成APIを使用
               console.log("スライド作成APIを使用します...");
@@ -194,7 +203,7 @@ export default function Preview() {
                 background: "#ffffff"
               };
 
-              await fetch("/api/slides", {
+              const response = await fetch("/api/slides", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json"
@@ -208,7 +217,11 @@ export default function Preview() {
                 })
               });
               
-              console.log("スライドを手動作成しました。再取得します...");
+              if (response.ok) {
+                const newSlide = await response.json();
+                console.log("スライドを手動作成しました:", newSlide);
+                setActiveSlideId(newSlide.id);
+              }
             }
           }
         } catch (error) {
@@ -217,10 +230,10 @@ export default function Preview() {
       };
       
       // 少し遅延させて実行（他の処理が完了する時間を確保）
-      const timer = setTimeout(checkAndCreateSlides, 2000);
+      const timer = setTimeout(checkAndCreateSlides, 1000);
       return () => clearTimeout(timer);
     }
-  }, [latestCommit, slides, isAutoRefreshEnabled]);
+  }, [latestCommit, slides, isAutoRefreshEnabled, activeSlideId]);
   
   // 4. デバッグ用に状態をログ出力
   useEffect(() => {
