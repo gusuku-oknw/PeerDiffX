@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { insertPresentationSchema, insertBranchSchema, insertCommitSchema, insertSlideSchema, insertDiffSchema, insertCommentSchema } from "@shared/schema";
 import { extractDiffFromPPTX, comparePPTXFiles, lockFile, unlockFile, checkLockStatus } from "./services/diff-service";
+import accessControlRouter from "./routes/access-control-routes";
+import { isAuthenticated, canAccessPresentation } from "./middleware/auth-middleware";
 import multer from "multer";
 import fs from "fs";
 import path from "path";

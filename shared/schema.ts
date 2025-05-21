@@ -281,8 +281,7 @@ export type DiffContent = {
   }[];
 };
 
-// Define all relations after all tables are defined
-// usersRelations は前に定義済みなので削除
+// テーブル間のリレーション定義（修正版）
 
 export const presentationsRelations = relations(presentations, ({ one, many }) => ({
   user: one(users, { fields: [presentations.userId], references: [users.id] }),
