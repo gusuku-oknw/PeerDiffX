@@ -144,25 +144,27 @@ export default function Preview() {
       <Sidebar onToggleVersionPanel={toggleVersionPanel} />
       
       {activeSlideId ? (
-        <>
+        <div className="flex-1 flex overflow-hidden">
           <SlideThumbnails 
             commitId={latestCommit?.id} 
             activeSlideId={activeSlideId} 
             onSelectSlide={handleSelectSlide} 
           />
           
-          <SlideCanvas 
-            slideId={activeSlideId}
-            totalSlides={slides?.length || 0}
-            currentSlideNumber={activeSlide?.slideNumber || 1}
-            onPrevSlide={handlePrevSlide}
-            onNextSlide={handleNextSlide}
-            onViewXmlDiff={handleViewXmlDiff}
-            onViewHistory={() => setShowVersionPanel(true)}
-            presentationId={presentationId}
-            presentationName={presentation?.name}
-          />
-        </>
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <SlideCanvas 
+              slideId={activeSlideId}
+              totalSlides={slides?.length || 0}
+              currentSlideNumber={activeSlide?.slideNumber || 1}
+              onPrevSlide={handlePrevSlide}
+              onNextSlide={handleNextSlide}
+              onViewXmlDiff={handleViewXmlDiff}
+              onViewHistory={() => setShowVersionPanel(true)}
+              presentationId={presentationId}
+              presentationName={presentation?.name}
+            />
+          </div>
+        </div>
       ) : (
         // スライドがロードされていない場合の表示
         <div className="flex-1 flex items-center justify-center">
