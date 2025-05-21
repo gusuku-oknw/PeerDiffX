@@ -276,8 +276,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "One or both commits not found" });
       }
       
-      const baseSlides = await storage.getSlides(baseCommitId);
-      const compareSlides = await storage.getSlides(compareCommitId);
+      const baseSlides = await storage.getSlidesByCommitId(baseCommitId);
+      const compareSlides = await storage.getSlidesByCommitId(compareCommitId);
       
       // Generate a comparison result
       const comparison = {
@@ -315,7 +315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // ベースとなるデータの取得
       const presentation = await storage.getPresentation(presentationId);
       const commit = await storage.getCommit(commitId);
-      const slides = await storage.getSlides(commitId);
+      const slides = await storage.getSlidesByCommitId(commitId);
       
       if (!presentation || !commit || !slides.length) {
         return res.status(404).json({ error: "Presentation, commit, or slides not found" });
@@ -440,12 +440,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.delete("/api/comments/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const success = await storage.deleteComment(id);
-      if (success) {
-        res.json({ success: true });
-      } else {
-        res.status(404).json({ error: "Comment not found" });
-      }
+      await storage.deleteComment(id);
+      res.json({ success: true });
     } catch (error) {
       console.error("Error deleting comment:", error);
       res.status(500).json({ error: "Failed to delete comment" });
