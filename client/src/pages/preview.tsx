@@ -69,13 +69,25 @@ export default function Preview() {
   // 2. データが不完全な場合の処理
   useEffect(() => {
     // ブランチが見つからない問題を処理
-    if (isAutoRefreshEnabled && presentation) {
-      if (!defaultBranch) {
-        console.log("デフォルトブランチが見つかりません。作成を試みます...");
-        
-        // ブランチがない場合は作成を試みる
-        const createDefaultBranch = async () => {
-          try {
+    if (isAutoRefreshEnabled && presentation && !defaultBranch && !activeSlideId) {
+      // ブランチを作成する前に、もう一度現在のブランチを確認する
+      // 並行してリクエストが走ることでエラーが起きないようにします
+      const checkAndCreateBranch = async () => {
+        try {
+          // キャッシュ回避のタイムスタンプを付ける
+          const timestamp = new Date().getTime();
+          const checkResponse = await fetch(`/api/presentations/${presentation.id}/branches?nocache=${timestamp}`);
+          
+          if (checkResponse.ok) {
+            const branches = await checkResponse.json();
+            
+            // すでにブランチが存在する場合は、データをリロード
+            if (branches && branches.length > 0) {
+              // 既存のブランチが見つかったのでページを再読み込みせずにクエリを無効化する
+              return;
+            }
+            
+            // ブランチが本当に存在しない場合のみ、作成処理に進む
             const response = await fetch("/api/branches", {
               method: "POST",
               headers: {
@@ -89,28 +101,20 @@ export default function Preview() {
               })
             });
             
-            if (response.ok) {
-              console.log("デフォルトブランチを作成しました。リロードします...");
-              setTimeout(() => {
-                window.location.reload();
-              }, 1000);
-            } else {
-              console.error("ブランチ作成に失敗しました");
+            if (!response.ok) {
+              throw new Error("ブランチ作成に失敗しました");
             }
-          } catch (error) {
-            console.error("ブランチ作成エラー:", error);
           }
-        };
-        
-        // 3秒後に実行して他の初期化処理が完了する時間を確保
-        const timer = setTimeout(() => {
-          createDefaultBranch();
-        }, 3000);
-        
-        return () => clearTimeout(timer);
-      }
+        } catch (error) {
+          console.error("ブランチ確認/作成エラー:", error);
+        }
+      };
+      
+      // 1秒後に実行して他の初期化処理が完了する時間を確保
+      const timer = setTimeout(checkAndCreateBranch, 1000);
+      return () => clearTimeout(timer);
     }
-  }, [presentation, defaultBranch, isAutoRefreshEnabled]);
+  }, [presentation, defaultBranch, isAutoRefreshEnabled, activeSlideId]);
   
   // 3. コミットがあるのにスライドがない場合の対応
   useEffect(() => {
