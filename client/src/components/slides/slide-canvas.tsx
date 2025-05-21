@@ -335,8 +335,8 @@ export default function SlideCanvas({
       
       {/* Slide Canvas and Side Panel */}
       <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-center p-8">
-        <div className="flex w-full max-w-[1400px] h-full">
-          <div className={`flex-1 flex items-center justify-center transition-all ${showSidePanel ? 'pr-4' : ''}`}>
+        <div className="flex w-full h-full">
+          <div className={`flex-1 flex items-center justify-center transition-all ${showSidePanel ? 'pr-0 lg:w-2/3 2xl:w-3/4' : ''}`}>
             <div 
               ref={canvasRef}
               className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} w-full max-w-4xl`}
@@ -347,12 +347,24 @@ export default function SlideCanvas({
           </div>
           
           {showSidePanel && (
-            <div className="w-96 bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 flex flex-col transition-all overflow-hidden">
+            <div className="w-full lg:w-1/3 2xl:w-1/4 min-h-screen bg-white dark:bg-gray-900 border-l border-gray-300 dark:border-gray-700 flex flex-col transition-all overflow-hidden">
               {/* タブ切り替え部分 */}
-              <div className="border-b border-gray-200 dark:border-gray-700">
+              <div className="border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
                 <Tabs defaultValue={activeTab} onValueChange={(val) => setActiveTab(val as 'comments' | 'history' | 'locks' | 'ai')}>
-                  <div className="flex justify-between items-center px-2">
-                    <TabsList className="h-12">
+                  <div className="flex justify-between items-center p-4 border-b border-gray-300 dark:border-gray-700">
+                    <h3 className="font-bold text-xl text-gray-800 dark:text-gray-200">情報パネル</h3>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-9 w-9 p-0 rounded-full"
+                      onClick={() => setShowSidePanel(false)}
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                  
+                  <div className="px-2 pb-1">
+                    <TabsList className="w-full h-12 grid grid-cols-4 bg-gray-100 dark:bg-gray-800">
                       <TabsTrigger value="comments" className="text-sm flex items-center">
                         <FaComments className="mr-1.5 text-sm" />
                         <span>コメント</span>
@@ -370,25 +382,6 @@ export default function SlideCanvas({
                         <span>AI分析</span>
                       </TabsTrigger>
                     </TabsList>
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-8 px-2 text-xs"
-                        onClick={() => window.open('', '_blank')}
-                      >
-                        <FaExpand className="mr-1" />
-                        拡大
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 rounded-full"
-                        onClick={() => setShowSidePanel(false)}
-                      >
-                        ✕
-                      </Button>
-                    </div>
                   </div>
                   
                   <TabsContent value="comments" className="m-0">
@@ -444,7 +437,7 @@ export default function SlideCanvas({
                   </TabsContent>
                   
                   <TabsContent value="ai" className="m-0 p-0">
-                    <div className="h-[calc(100vh-14rem)] overflow-auto px-2 py-2">
+                    <div className="h-[calc(100vh-12rem)] overflow-auto px-3 py-3">
                       {slide && (
                         <AiAnalysisPanel 
                           presentationId={1} 
