@@ -182,3 +182,33 @@ export const diffsRelations = relations(diffs, ({ one }) => ({
   commit: one(commits, { fields: [diffs.commitId], references: [commits.id] }),
   slide: one(slides, { fields: [diffs.slideId], references: [slides.id], relationName: "slideDiffs" }),
 }));
+
+// スナップショットテーブル
+export const snapshots = pgTable("snapshots", {
+  id: text("id").primaryKey(), // ランダムなUUID文字列
+  presentationId: integer("presentation_id").notNull().references(() => presentations.id),
+  commitId: integer("commit_id").notNull().references(() => commits.id),
+  slideId: integer("slide_id").references(() => slides.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  accessCount: integer("access_count").default(0).notNull(),
+  data: jsonb("data"), // プレゼンテーションデータのスナップショット
+});
+
+export const insertSnapshotSchema = createInsertSchema(snapshots).pick({
+  id: true,
+  presentationId: true,
+  commitId: true,
+  slideId: true,
+  expiresAt: true,
+  data: true,
+});
+
+export type InsertSnapshot = z.infer<typeof insertSnapshotSchema>;
+export type Snapshot = typeof snapshots.$inferSelect;
+
+export const snapshotsRelations = relations(snapshots, ({ one }) => ({
+  presentation: one(presentations, { fields: [snapshots.presentationId], references: [presentations.id] }),
+  commit: one(commits, { fields: [snapshots.commitId], references: [commits.id] }),
+  slide: one(slides, { fields: [snapshots.slideId], references: [slides.id] }),
+}));

@@ -87,6 +87,50 @@ export const translations: TranslationType = {
   darkMode: {
     en: 'Dark Mode',
     ja: 'ダークモード'
+  },
+  share: {
+    en: 'Share',
+    ja: '共有'
+  },
+  sharePresentation: {
+    en: 'Share Presentation',
+    ja: 'プレゼンテーションを共有'
+  },
+  expiryDays: {
+    en: 'Expiry',
+    ja: '有効期限'
+  },
+  day: {
+    en: 'Day',
+    ja: '日'
+  },
+  days: {
+    en: 'Days',
+    ja: '日'
+  },
+  generating: {
+    en: 'Generating link...',
+    ja: 'リンクを生成中...'
+  },
+  copied: {
+    en: 'Copied!',
+    ja: 'コピーしました！'
+  },
+  urlCopied: {
+    en: 'URL copied to clipboard',
+    ja: 'URLをクリップボードにコピーしました'
+  },
+  shareError: {
+    en: 'Sharing Failed',
+    ja: '共有に失敗しました'
+  },
+  shareErrorDesc: {
+    en: 'Could not generate a shareable link. Please try again.',
+    ja: '共有リンクを生成できませんでした。もう一度お試しください。'
+  },
+  checkOutPresentation: {
+    en: 'Check out this presentation',
+    ja: 'このプレゼンテーションをご覧ください'
   }
 };
 

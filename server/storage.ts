@@ -1,4 +1,4 @@
-import { User, InsertUser, Presentation, InsertPresentation, Branch, InsertBranch, Commit, InsertCommit, Slide, InsertSlide, Diff, InsertDiff, SlideContent, DiffContent } from "@shared/schema";
+import { User, InsertUser, Presentation, InsertPresentation, Branch, InsertBranch, Commit, InsertCommit, Slide, InsertSlide, Diff, InsertDiff, SlideContent, DiffContent, Snapshot, InsertSnapshot } from "@shared/schema";
 
 export interface IStorage {
   // User operations
@@ -36,6 +36,12 @@ export interface IStorage {
   getDiffs(commitId: number): Promise<Diff[]>;
   getDiff(id: number): Promise<Diff | undefined>;
   createDiff(diff: InsertDiff): Promise<Diff>;
+  
+  // Snapshot operations
+  getSnapshot(id: string): Promise<Snapshot | undefined>;
+  createSnapshot(snapshot: InsertSnapshot): Promise<Snapshot>;
+  updateSnapshotAccessCount(id: string): Promise<Snapshot | undefined>;
+  deleteExpiredSnapshots(): Promise<number>; // 削除された数を返す
 }
 
 export class MemStorage implements IStorage {
