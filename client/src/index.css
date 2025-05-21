@@ -5,10 +5,10 @@
 /* レイアウト構造の全体的な修正 */
 .full-width-container {
   width: 100%;
-  max-width: 100%;
+  max-width: none;
   box-sizing: border-box;
-  padding-right: 0;
-  margin-right: 0;
+  padding: 0;
+  margin: 0;
   overflow: hidden;
   position: relative;
   display: flex;

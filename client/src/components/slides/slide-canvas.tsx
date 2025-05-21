@@ -358,7 +358,7 @@ export default function SlideCanvas({
           <div className="animate-pulse h-6 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
         </div>
         <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-center p-8">
-          <div className="animate-pulse bg-gray-300 dark:bg-gray-700 shadow-lg rounded-sm aspect-w-16 aspect-h-9 w-full max-w-4xl"></div>
+          <div className="animate-pulse bg-gray-300 dark:bg-gray-700 shadow-lg rounded-sm aspect-w-16 aspect-h-9 w-full"></div>
         </div>
       </div>
     );
@@ -551,11 +551,11 @@ export default function SlideCanvas({
       {/* Main Content Area - Flexbox with Slide and Bottom Panel */}
       <div className="flex-1 flex flex-col overflow-hidden slide-canvas-container">
         {/* Slide Canvas */}
-        <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-center p-8">
+        <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-start p-0">
           <div 
             ref={canvasRef}
-            className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} w-full max-w-4xl`}
-            style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'center' }}
+            className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} w-full`}
+            style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'left center' }}
           >
             {renderSlideContent()}
           </div>
