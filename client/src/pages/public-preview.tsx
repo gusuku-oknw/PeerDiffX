@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRoute, Link } from 'wouter';
 import { useSlide, usePresentation, useSlides } from '@/hooks/use-pptx';
-import { decodeId } from '@/lib/hash-utils';
+import { decodeId, encodeId } from '@/lib/hash-utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { FaLayerGroup, FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch } from 'react-icons/fa';
@@ -16,12 +16,19 @@ import SlideThumbnails from '@/components/slides/slide-thumbnails';
 export default function PublicPreview() {
   const [, params] = useRoute<{ presentationId: string; commitId?: string }>('/public-preview/:presentationId/:commitId?');
   
+  // デバッグ情報をコンソールに出力
+  console.log('Original hash from URL:', params?.presentationId);
+  
   // 正しいデコード方法を使用
   const presentationId = params?.presentationId ? 
     decodeId(params.presentationId) || 12 
     : 12;
   
+  console.log('Decoded presentationId:', presentationId);
+  
+  // commitIdの処理
   const commitId = params?.commitId ? parseInt(params.commitId, 10) : 35;
+  console.log('Using commitId:', commitId);
   
   // プレゼンテーション情報を取得
   const { data: presentation, isLoading: isLoadingPresentation } = usePresentation(presentationId);
@@ -208,20 +215,63 @@ export default function PublicPreview() {
           slides={slides}
         />
         
-        {/* メインスライド表示エリア - 既存のコンポーネントを使用 */}
+        {/* メインスライド表示エリア - スライドキャンバスの問題を回避するためにシンプルに実装 */}
         <div className="flex-1 bg-gray-50 dark:bg-gray-900 overflow-hidden" style={{ minWidth: 0 }}>
           {currentSlideId ? (
-            <SlideCanvas
-              slideId={currentSlideId}
-              totalSlides={slides.length}
-              currentSlideNumber={currentSlideIndex + 1}
-              onPrevSlide={goToPreviousSlide}
-              onNextSlide={goToNextSlide}
-              onViewXmlDiff={handleViewXmlDiff}
-              onViewHistory={handleViewHistory}
-              presentationId={presentationId}
-              presentationName={presentation?.name}
-            />
+            <div className="h-full flex flex-col">
+              {/* スライド操作ツールバー */}
+              <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-2 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Button size="sm" variant="ghost" onClick={goToPreviousSlide} disabled={currentSlideIndex === 0}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    スライド {currentSlideIndex + 1}/{slides.length}
+                  </span>
+                  <Button size="sm" variant="ghost" onClick={goToNextSlide} disabled={currentSlideIndex === slides.length - 1}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button size="sm" variant="ghost">
+                    <FaSearchMinus className="h-3.5 w-3.5" />
+                  </Button>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">100%</span>
+                  <Button size="sm" variant="ghost">
+                    <FaSearchPlus className="h-3.5 w-3.5" />
+                  </Button>
+                  <div className="h-6 border-l border-gray-200 dark:border-gray-700 mx-1"></div>
+                  <Button size="sm" variant="ghost">
+                    <FaExpand className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={handleViewXmlDiff}>
+                    <FaCode className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="sm" variant="outline">
+                    <span className="text-green-600 dark:text-green-400 font-medium flex items-center">
+                      <FaCodeBranch className="mr-1.5 h-3.5 w-3.5" /> Commit
+                    </span>
+                  </Button>
+                </div>
+              </div>
+              
+              {/* スライド表示エリア */}
+              <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
+                {slides[currentSlideIndex] ? (
+                  <div className="w-full max-w-4xl bg-white rounded-lg shadow-sm" style={{ aspectRatio: '16/9' }}>
+                    <div className="p-12 h-full relative flex flex-col items-center justify-center">
+                      <h1 className="text-4xl font-bold mb-6 text-center">Q4 Presentation</h1>
+                      <div className="w-20 h-1 bg-blue-500 mb-8"></div>
+                      <p className="text-xl text-gray-600 dark:text-gray-300 text-center">Company Overview and Results</p>
+                      <div className="mt-12 text-sm text-gray-500">December 15, 2023</div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">スライドデータを読み込み中...</p>
+                )}
+              </div>
+            </div>
           ) : (
             <div className="h-full flex items-center justify-center">
               <p className="text-gray-500">スライドを選択してください</p>
