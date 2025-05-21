@@ -259,7 +259,11 @@ export class MemStorage implements IStorage {
   }
   
   // Presentation operations
-  async getPresentations(userId: number): Promise<Presentation[]> {
+  async getPresentations(): Promise<Presentation[]> {
+    return Array.from(this.presentations.values());
+  }
+  
+  async getPresentationsByUserId(userId: number): Promise<Presentation[]> {
     return Array.from(this.presentations.values()).filter(
       (presentation) => presentation.userId === userId,
     );
@@ -304,12 +308,12 @@ export class MemStorage implements IStorage {
     return updatedPresentation;
   }
   
-  async deletePresentation(id: number): Promise<boolean> {
-    return this.presentations.delete(id);
+  async deletePresentation(id: number): Promise<void> {
+    this.presentations.delete(id);
   }
   
   // Branch operations
-  async getBranches(presentationId: number): Promise<Branch[]> {
+  async getBranchesByPresentationId(presentationId: number): Promise<Branch[]> {
     return Array.from(this.branches.values()).filter(
       (branch) => branch.presentationId === presentationId,
     );
@@ -377,12 +381,12 @@ export class MemStorage implements IStorage {
     return updatedBranch;
   }
   
-  async deleteBranch(id: number): Promise<boolean> {
-    return this.branches.delete(id);
+  async deleteBranch(id: number): Promise<void> {
+    this.branches.delete(id);
   }
   
   // Commit operations
-  async getCommits(branchId: number): Promise<Commit[]> {
+  async getCommitsByBranchId(branchId: number): Promise<Commit[]> {
     return Array.from(this.commits.values())
       .filter(commit => commit.branchId === branchId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
@@ -404,7 +408,7 @@ export class MemStorage implements IStorage {
   }
   
   // Slide operations
-  async getSlides(commitId: number): Promise<Slide[]> {
+  async getSlidesByCommitId(commitId: number): Promise<Slide[]> {
     return Array.from(this.slides.values())
       .filter(slide => slide.commitId === commitId)
       .sort((a, b) => a.slideNumber - b.slideNumber);
@@ -434,7 +438,7 @@ export class MemStorage implements IStorage {
   }
   
   // Diff operations
-  async getDiffs(commitId: number): Promise<Diff[]> {
+  async getDiffsByCommitId(commitId: number): Promise<Diff[]> {
     return Array.from(this.diffs.values()).filter(
       diff => diff.commitId === commitId
     );
