@@ -267,15 +267,6 @@ export default function SlideCanvas({
             <FaSearchPlus />
           </Button>
           <div className="border-l border-gray-300 dark:border-gray-600 h-6 mx-1"></div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
-            onClick={toggleAspectRatio}
-            title={`Change to ${aspectRatio === '16:9' ? '4:3' : '16:9'} aspect ratio`}
-          >
-            {aspectRatio === '16:9' ? <FaDesktop /> : <FaTv />}
-          </Button>
           <div className="text-xs text-gray-500 dark:text-gray-400">{aspectRatio}</div>
           <Button 
             variant="ghost" 

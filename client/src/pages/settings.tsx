@@ -31,6 +31,10 @@ export default function SettingsPage() {
       compactView: false,
       animationsEnabled: true,
       highContrastMode: false
+    },
+    presentation: {
+      defaultAspectRatio: '16:9', // デフォルトのアスペクト比
+      defaultZoomLevel: 100      // デフォルトのズームレベル
     }
   });
 
@@ -250,6 +254,75 @@ export default function SettingsPage() {
                     })
                   }
                 />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={handleSave} disabled={isPending}>
+                {isPending ? "保存中..." : "設定を保存"}
+              </Button>
+            </CardFooter>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>プレゼンテーション設定</CardTitle>
+              <CardDescription>
+                スライド表示に関する設定を管理します。
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="aspectRatio">デフォルトのアスペクト比</Label>
+                <Select 
+                  value={settings.presentation.defaultAspectRatio}
+                  onValueChange={(value) => 
+                    setSettings({
+                      ...settings,
+                      presentation: {
+                        ...settings.presentation,
+                        defaultAspectRatio: value
+                      }
+                    })
+                  }
+                >
+                  <SelectTrigger id="aspectRatio">
+                    <SelectValue placeholder="アスペクト比を選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="16:9">ワイドスクリーン (16:9)</SelectItem>
+                    <SelectItem value="4:3">スタンダード (4:3)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  プレゼンテーション表示時のデフォルトアスペクト比を設定します
+                </p>
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label htmlFor="zoomLevel">デフォルトのズームレベル</Label>
+                <div className="flex items-center space-x-2">
+                  <Input 
+                    id="zoomLevel" 
+                    type="number" 
+                    min="50" 
+                    max="200" 
+                    value={settings.presentation.defaultZoomLevel}
+                    className="w-24"
+                    onChange={(e) => 
+                      setSettings({
+                        ...settings,
+                        presentation: {
+                          ...settings.presentation,
+                          defaultZoomLevel: parseInt(e.target.value, 10) || 100
+                        }
+                      })
+                    }
+                  />
+                  <span>%</span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  スライド表示時の初期ズームレベルを設定します (50%〜200%)
+                </p>
               </div>
             </CardContent>
             <CardFooter>

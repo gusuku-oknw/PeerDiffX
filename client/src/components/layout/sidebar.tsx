@@ -31,7 +31,17 @@ export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
         </div>
         
         <div className="mb-6">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 px-3">Branches</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-3">ブランチ</h3>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              title="新しいブランチを作成"
+            >
+              <FaPlus size={12} />
+            </Button>
+          </div>
           <div className="space-y-1">
             {isLoadingBranches ? (
               <div className="animate-pulse space-y-2">
@@ -56,7 +66,7 @@ export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
         </div>
         
         <div className="mb-6">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 px-3">Tools</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 px-3">ツール</h3>
           <div className="space-y-1">
             <button 
               onClick={onToggleVersionPanel}
@@ -65,13 +75,13 @@ export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
               <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
                 <FaHistory className="text-xs" />
               </div>
-              <span>Version History</span>
+              <span>バージョン履歴</span>
             </button>
             <button className="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
               <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900 flex-shrink-0 flex items-center justify-center text-purple-600 dark:text-purple-400 mr-3">
                 <FaComments className="text-xs" />
               </div>
-              <span>Comments</span>
+              <span>コメント</span>
             </button>
             <Link
               href="/settings"
@@ -82,34 +92,6 @@ export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
               </div>
               <span>設定</span>
             </Link>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 px-3">Recent Activities</h3>
-          <div className="space-y-3">
-            <div className="px-3 py-2 text-sm">
-              <div className="flex items-start">
-                <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xs font-semibold mr-2 mt-0.5">
-                  JD
-                </div>
-                <div>
-                  <p className="text-gray-800 dark:text-gray-200">You committed <span className="font-medium">Update slide 3</span></p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">10 minutes ago</p>
-                </div>
-              </div>
-            </div>
-            <div className="px-3 py-2 text-sm">
-              <div className="flex items-start">
-                <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900 flex-shrink-0 flex items-center justify-center text-green-600 dark:text-green-400 text-xs font-semibold mr-2 mt-0.5">
-                  AK
-                </div>
-                <div>
-                  <p className="text-gray-800 dark:text-gray-200">Anna merged <span className="font-medium">feature/charts</span></p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">2 hours ago</p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
