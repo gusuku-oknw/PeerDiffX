@@ -154,45 +154,102 @@ export default function SlideCanvas({
   const renderActiveTabContent = () => {
     switch (activeTab) {
       case 'comments':
-        return <CommentsPanel slideId={slideId} />;
+        return (
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium">スライド {currentSlideNumber} へのコメント</h3>
+              <Button variant="outline" size="sm" className="text-xs">
+                <FaComments className="mr-1.5 h-3 w-3" />
+                新規コメント
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CommentsPanel slideId={slideId} />
+            </div>
+          </div>
+        );
       case 'history':
         return (
           <div className="p-4">
-            <h3 className="text-sm font-medium mb-2">バージョン履歴</h3>
-            {slideId && (
-              <VersionPanel 
-                slideId={slideId} 
-                onViewChanges={(commitId) => console.log('View changes for commit', commitId)} 
-                onRestoreVersion={(commitId) => console.log('Restore version', commitId)}
-                onClose={() => setShowBottomPanel(false)}
-              />
-            )}
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium">バージョン履歴</h3>
+              <div className="flex items-center text-xs text-gray-500">
+                <span>最終更新: 2023年12月15日</span>
+              </div>
+            </div>
+            <div className="max-h-full">
+              {slideId && (
+                <VersionPanel 
+                  slideId={slideId} 
+                  onViewChanges={(commitId) => console.log('View changes for commit', commitId)} 
+                  onRestoreVersion={(commitId) => console.log('Restore version', commitId)}
+                  onClose={() => setShowBottomPanel(false)}
+                />
+              )}
+            </div>
           </div>
         );
       case 'locks':
         return (
           <div className="p-4">
-            <h3 className="text-sm font-medium mb-2">ファイルロック</h3>
-            <div className="space-y-2">
-              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
-                <div className="flex items-center">
-                  <FaLock className="text-yellow-500 mr-2" />
-                  <span className="text-sm">スライド 1</span>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium">ファイルロック状況</h3>
+              <Button variant="outline" size="sm" className="text-xs">
+                <FaLock className="mr-1.5 h-3 w-3" />
+                現在のスライドをロック
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md border border-yellow-300 dark:border-yellow-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">スライド 1</span>
+                  <div className="bg-yellow-100 dark:bg-yellow-900/40 px-2 py-0.5 rounded text-xs text-yellow-700 dark:text-yellow-300">
+                    ロック中
+                  </div>
                 </div>
-                <div className="flex items-center text-xs text-gray-500">
-                  <span>田中さんがロック中</span>
-                  <Button size="sm" variant="ghost" className="ml-2 p-1">
-                    <FaLock className="text-red-500" />
-                  </Button>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center text-xs text-gray-500">
+                    <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xs font-semibold mr-1.5">
+                      T
+                    </div>
+                    <span>田中さん</span>
+                  </div>
+                  <span className="text-xs text-gray-500">10分前〜</span>
                 </div>
               </div>
-              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
-                <div className="flex items-center">
-                  <FaLock className="text-yellow-500 mr-2" />
-                  <span className="text-sm">スライド 3</span>
+              
+              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md border border-yellow-300 dark:border-yellow-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">スライド 3</span>
+                  <div className="bg-yellow-100 dark:bg-yellow-900/40 px-2 py-0.5 rounded text-xs text-yellow-700 dark:text-yellow-300">
+                    ロック中
+                  </div>
                 </div>
-                <div className="flex items-center text-xs text-gray-500">
-                  <span>鈴木さんがロック中</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center text-xs text-gray-500">
+                    <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-600 dark:text-green-400 text-xs font-semibold mr-1.5">
+                      S
+                    </div>
+                    <span>鈴木さん</span>
+                  </div>
+                  <span className="text-xs text-gray-500">2時間前〜</span>
+                </div>
+              </div>
+              
+              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">現在のスライド</span>
+                  <div className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-xs text-gray-700 dark:text-gray-300">
+                    未ロック
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center text-xs text-gray-500">
+                    <span>誰でも編集可能</span>
+                  </div>
+                  <Button size="sm" variant="ghost" className="p-1">
+                    <FaLock className="text-gray-400 h-3 w-3" />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -201,12 +258,20 @@ export default function SlideCanvas({
       case 'ai':
         return (
           <div className="p-4">
-            {slide && (
-              <AiAnalysisPanel 
-                presentationId={1} 
-                commitId={slide.commitId || 1} 
-              />
-            )}
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium">AI分析レポート</h3>
+              <div className="flex items-center text-xs text-gray-500">
+                <span>最終分析: 10分前</span>
+              </div>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-md p-4">
+              {slide && (
+                <AiAnalysisPanel 
+                  presentationId={1} 
+                  commitId={slide.commitId || 1} 
+                />
+              )}
+            </div>
           </div>
         );
       default:
