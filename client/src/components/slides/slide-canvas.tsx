@@ -347,37 +347,48 @@ export default function SlideCanvas({
           </div>
           
           {showSidePanel && (
-            <div className="w-80 bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 flex flex-col transition-all overflow-hidden">
+            <div className="w-96 bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 flex flex-col transition-all overflow-hidden">
               {/* タブ切り替え部分 */}
               <div className="border-b border-gray-200 dark:border-gray-700">
                 <Tabs defaultValue={activeTab} onValueChange={(val) => setActiveTab(val as 'comments' | 'history' | 'locks' | 'ai')}>
                   <div className="flex justify-between items-center px-2">
-                    <TabsList className="h-10">
-                      <TabsTrigger value="comments" className="text-xs flex items-center">
-                        <FaComments className="mr-1 text-xs" />
+                    <TabsList className="h-12">
+                      <TabsTrigger value="comments" className="text-sm flex items-center">
+                        <FaComments className="mr-1.5 text-sm" />
                         <span>コメント</span>
                       </TabsTrigger>
-                      <TabsTrigger value="history" className="text-xs flex items-center">
-                        <FaHistory className="mr-1 text-xs" />
+                      <TabsTrigger value="history" className="text-sm flex items-center">
+                        <FaHistory className="mr-1.5 text-sm" />
                         <span>履歴</span>
                       </TabsTrigger>
-                      <TabsTrigger value="locks" className="text-xs flex items-center">
-                        <FaLock className="mr-1 text-xs" />
+                      <TabsTrigger value="locks" className="text-sm flex items-center">
+                        <FaLock className="mr-1.5 text-sm" />
                         <span>ロック</span>
                       </TabsTrigger>
-                      <TabsTrigger value="ai" className="text-xs flex items-center">
-                        <FaRobot className="mr-1 text-xs" />
+                      <TabsTrigger value="ai" className="text-sm flex items-center">
+                        <FaRobot className="mr-1.5 text-sm" />
                         <span>AI分析</span>
                       </TabsTrigger>
                     </TabsList>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-7 w-7 p-0 rounded-full"
-                      onClick={() => setShowSidePanel(false)}
-                    >
-                      ✕
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 px-2 text-xs"
+                        onClick={() => window.open('', '_blank')}
+                      >
+                        <FaExpand className="mr-1" />
+                        拡大
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 rounded-full"
+                        onClick={() => setShowSidePanel(false)}
+                      >
+                        ✕
+                      </Button>
+                    </div>
                   </div>
                   
                   <TabsContent value="comments" className="m-0">
