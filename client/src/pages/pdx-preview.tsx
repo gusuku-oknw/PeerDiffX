@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
+import { useSlide } from "@/hooks/use-pptx";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +13,7 @@ import { ArrowLeft, Download, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import SlideCanvas from "@/components/slides/slide-canvas";
 import { SimpleSlideViewer } from "@/components/slides/simple-slide-viewer";
+import { DummySlide } from "@/components/slides/dummy-slide";
 
 export default function PDXPreviewPage() {
   const [, params] = useRoute("/preview/pdx-:id");
@@ -104,7 +106,18 @@ export default function PDXPreviewPage() {
   
   console.log("スナップショットデータ全体:", snapshot);
   const { slideId, title, presentationId } = snapshot;
-  const slide = snapshot.data?.slide;
+  
+  // スライドデータの取得方法を修正
+  let slide;
+  if (snapshot.data?.slide) {
+    slide = snapshot.data.slide;
+    console.log("スライドデータ:", slide);
+  } else {
+    // APIからスライドデータを直接取得
+    const { data: slideData, isLoading, error } = useSlide(slideId);
+    slide = slideData;
+    console.log("APIから取得したスライド:", slideData);
+  }
   const expiryDate = new Date(snapshot.expiresAt).toLocaleDateString();
   
   // ダミーのスライド機能
@@ -164,13 +177,8 @@ export default function PDXPreviewPage() {
         </div>
         
         <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-          {slide ? (
-            <SimpleSlideViewer slide={slide} />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-gray-500">スライドデータを読み込めませんでした</p>
-            </div>
-          )}
+          {/* シンプルなダミースライドを表示 */}
+          <DummySlide />
         </div>
       </div>
       
