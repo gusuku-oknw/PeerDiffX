@@ -18,9 +18,8 @@ interface SlideCanvasProps {
   onNextSlide: () => void;
   onViewXmlDiff: () => void;
   onViewHistory?: () => void;
-  shareDialogComponent?: React.ReactNode;
-  presentationId?: number; // プレゼンテーションID（スナップショット機能用）
-  presentationName?: string; // プレゼンテーション名（スナップショット機能用）
+  presentationId?: number; // プレゼンテーションID
+  presentationName?: string; // プレゼンテーション名
 }
 
 export default function SlideCanvas({
@@ -31,7 +30,6 @@ export default function SlideCanvas({
   onNextSlide,
   onViewXmlDiff,
   onViewHistory,
-  shareDialogComponent,
   presentationId,
   presentationName
 }: SlideCanvasProps) {

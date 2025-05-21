@@ -76,14 +76,6 @@ export function SlideControls({
             <AlignJustify className="h-4 w-4 mr-1" /> 詳細
           </Button>
         )}
-        
-        <SnapshotButton 
-          presentationId={presentationId}
-          slideId={slideId}
-          presentationName={presentationName}
-          variant="outline"
-          size="sm"
-        />
       </div>
     </div>
   );
