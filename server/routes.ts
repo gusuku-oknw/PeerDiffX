@@ -70,8 +70,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   apiRouter.post("/api/presentations", async (req: Request, res: Response) => {
     try {
-      // Get user ID from authenticated user
-      const userId = req.user?.id || req.body.userId || 1;
+      // Get user ID from authenticated user - make sure it's a valid number
+      // Convert from string to number if it's a Replit Auth ID
+      let userId = req.user?.id || req.body.userId || '41964833';
+      if (typeof userId === 'string') {
+        try {
+          userId = parseInt(userId);
+        } catch (e) {
+          // Fall back to a default if parsing fails
+          userId = 1;
+        }
+      }
+      
+      console.log("Creating presentation with userId:", userId);
+      
       const presentationData = insertPresentationSchema.parse({
         ...req.body,
         userId
@@ -79,24 +91,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create the presentation
       const presentation = await storage.createPresentation(presentationData);
+      console.log("Created presentation:", presentation.id);
       
       // Create a default branch
+      console.log("Creating branch for presentation:", presentation.id);
       const branch = await storage.createBranch({
         name: "main",
         presentationId: presentation.id,
         isDefault: true
       });
+      console.log("Created branch:", branch.id);
       
       // Create an initial commit
+      console.log("Creating commit for branch:", branch.id);
       const commit = await storage.createCommit({
         message: "Initial commit",
         branchId: branch.id,
-        parentId: null,
-        userId
+        parentId: null, 
+        userId: typeof userId === 'string' ? parseInt(userId) : userId
       });
+      console.log("Created commit:", commit.id);
       
       // Create a welcome slide
-      await storage.createSlide({
+      console.log("Creating slide for commit:", commit.id);
+      const slide = await storage.createSlide({
         commitId: commit.id,
         slideNumber: 1,
         title: "Welcome",
@@ -127,6 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         xmlContent: `<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>${presentation.name.replace('.pptx', '')}</a:t></a:r></a:p></p:txBody></p:sp><p:sp><p:txBody><a:p><a:r><a:t>Created with PeerDiffX</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>`
       });
+      console.log("Created slide:", slide.id);
       
       res.status(201).json(presentation);
     } catch (error) {
