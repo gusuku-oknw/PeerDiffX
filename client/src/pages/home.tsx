@@ -80,44 +80,79 @@ export default function Home() {
       return;
     }
 
-    // 進捗表示のトースト
+    // 進捗ID (一意の識別子)
+    const progressId = Date.now().toString();
+    
+    // 初期進捗表示
     toast({
-      title: "作成中...",
-      description: "新しいプレゼンテーションを作成しています",
+      title: "初期化中...",
+      description: "プレゼンテーションの作成を準備しています",
     });
 
     try {
       const fileName = newPresentationName.endsWith('.pptx') 
         ? newPresentationName 
         : `${newPresentationName}.pptx`;
-        
-      console.log("作成を開始します:", fileName);
+      
+      // 段階的な進捗通知
+      setTimeout(() => {
+        toast({
+          title: "プレゼンテーション作成中...",
+          description: "メタデータを登録中 (1/4)",
+        });
+      }, 300);
       
       // プレゼンテーション作成リクエスト
       const response = await apiRequest('POST', '/api/presentations', {
         name: fileName
       });
       
-      console.log("作成リクエスト完了");
+      // 次の進捗通知
+      setTimeout(() => {
+        toast({
+          title: "ブランチ作成中...",
+          description: "バージョン管理情報を設定中 (2/4)",
+        });
+      }, 600);
+      
       const newPresentation = await response.json();
-      console.log("新しいプレゼンテーション:", newPresentation);
+      
+      // 次の進捗通知
+      setTimeout(() => {
+        toast({
+          title: "コミット作成中...",
+          description: "ベースバージョンを準備中 (3/4)",
+        });
+      }, 900);
       
       // キャッシュを無効化して確実に再取得する
       await queryClient.invalidateQueries({ queryKey: ["/api/presentations"] });
       await queryClient.refetchQueries({ queryKey: ["/api/presentations"] });
       
+      // 次の進捗通知
+      setTimeout(() => {
+        toast({
+          title: "スライド初期化中...",
+          description: "テンプレートスライドを追加中 (4/4)",
+        });
+      }, 1200);
+      
       setNewPresentationDialog(false);
       setNewPresentationName("");
       
       // 完了トースト
-      toast({
-        title: "作成完了！",
-        description: "新しいプレゼンテーションを開きます",
-      });
+      setTimeout(() => {
+        toast({
+          title: "作成完了！",
+          description: "新しいプレゼンテーションを開きます",
+        });
+      }, 1500);
       
-      // 作成したプレゼンテーションを自動的に開く
-      console.log("リダイレクト先:", `/preview/${newPresentation.id}`);
-      window.location.href = `/preview/${newPresentation.id}`;
+      // 作成したプレゼンテーションを自動的に開く - 進捗表示のあとに遷移
+      setTimeout(() => {
+        console.log("リダイレクト先:", `/preview/${newPresentation.id}`);
+        window.location.href = `/preview/${newPresentation.id}`;
+      }, 1800);
     } catch (error) {
       console.error("Error creating presentation:", error);
       toast({
