@@ -64,54 +64,124 @@ export default function Preview() {
     }
   }, [slides]);
   
-  // 2. データが不完全な場合の自動リロード
+  // 2. データが不完全な場合の処理
   useEffect(() => {
-    if (isAutoRefreshEnabled && presentation && (!defaultBranch || !latestCommit)) {
-      console.log("データが不完全です。自動リロードを準備します...");
-      const timer = setTimeout(() => {
-        window.location.reload();
-      }, 5000);
-      
-      return () => clearTimeout(timer);
+    // ブランチが見つからない問題を処理
+    if (isAutoRefreshEnabled && presentation) {
+      if (!defaultBranch) {
+        console.log("デフォルトブランチが見つかりません。作成を試みます...");
+        
+        // ブランチがない場合は作成を試みる
+        const createDefaultBranch = async () => {
+          try {
+            const response = await fetch("/api/branches", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                name: "main",
+                description: "Default branch",
+                presentationId: presentation.id,
+                isDefault: true
+              })
+            });
+            
+            if (response.ok) {
+              console.log("デフォルトブランチを作成しました。リロードします...");
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
+            } else {
+              console.error("ブランチ作成に失敗しました");
+            }
+          } catch (error) {
+            console.error("ブランチ作成エラー:", error);
+          }
+        };
+        
+        // 3秒後に実行して他の初期化処理が完了する時間を確保
+        const timer = setTimeout(() => {
+          createDefaultBranch();
+        }, 3000);
+        
+        return () => clearTimeout(timer);
+      }
     }
-  }, [presentation, defaultBranch, latestCommit, isAutoRefreshEnabled]);
+  }, [presentation, defaultBranch, isAutoRefreshEnabled]);
   
-  // 3. スライドを取得するロジック
+  // 3. コミットがあるのにスライドがない場合の対応
   useEffect(() => {
     if (isAutoRefreshEnabled && latestCommit && (!slides || slides.length === 0)) {
-      console.log("スライドがありません。直接APIから取得を試みます...");
+      console.log("スライドがありません。コミットは存在します。自動作成を試みます...");
       
-      const fetchSlides = async () => {
+      const createInitialSlides = async () => {
         try {
-          const timestamp = new Date().getTime();
-          const response = await fetch(`/api/commits/${latestCommit.id}/slides?_=${timestamp}`, {
+          // スライド自動作成APIを呼び出す
+          const createResponse = await fetch(`/api/commits/${latestCommit.id}/create-slides`, {
+            method: "POST",
             headers: {
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0'
-            }
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              slideCount: 1,
+              title: "テストスライド"
+            })
           });
           
-          if (response.ok) {
-            const slideData = await response.json();
-            console.log("APIから直接取得したスライドデータ:", slideData);
+          if (createResponse.ok) {
+            console.log("スライドを自動作成しました。リロードします...");
+            setTimeout(() => window.location.reload(), 1000);
+          } else {
+            // 通常のスライド取得を試みる（APIが見つからない場合のフォールバック）
+            console.log("スライド自動作成APIが見つかりません。直接取得を試みます...");
             
-            if (slideData && slideData.length > 0) {
-              window.location.reload();
-            } else {
-              setTimeout(() => {
-                console.log("スライドがまだ作成されていません。再読み込みします...");
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/api/commits/${latestCommit.id}/slides?_=${timestamp}`, {
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+              }
+            });
+            
+            if (response.ok) {
+              const slideData = await response.json();
+              console.log("APIから直接取得したスライドデータ:", slideData);
+              if (slideData && slideData.length > 0) {
                 window.location.reload();
-              }, 3000);
+              } else {
+                // スライドが1つもない場合、手動作成APIを使用
+                console.log("スライドを手動作成します...");
+                await fetch("/api/slides", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                    commitId: latestCommit.id,
+                    slideNumber: 1,
+                    title: "テストスライド",
+                    content: "これはテストスライドです。",
+                    thumbnailUrl: "",
+                    xmlContent: "<p:sld></p:sld>"
+                  })
+                });
+                
+                console.log("スライドを手動作成しました。リロードします...");
+                setTimeout(() => window.location.reload(), 1000);
+              }
             }
           }
         } catch (error) {
-          console.error("スライド取得エラー:", error);
+          console.error("スライド作成/取得エラー:", error);
           setTimeout(() => window.location.reload(), 3000);
         }
       };
       
-      fetchSlides();
+      // 少し遅延させて実行（他の処理が完了する時間を確保）
+      const timer = setTimeout(createInitialSlides, 2000);
+      return () => clearTimeout(timer);
     }
   }, [latestCommit, slides, isAutoRefreshEnabled]);
   

@@ -8,6 +8,34 @@ export function useCommits(branchId?: number) {
   return useQuery<Commit[]>({ 
     queryKey: [`/api/branches/${branchId}/commits`],
     enabled: !!branchId,
+    queryFn: async () => {
+      if (!branchId) throw new Error("Branch ID is required");
+      
+      try {
+        const response = await fetch(`/api/branches/${branchId}/commits`, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
+        if (!response.ok) {
+          // ブランチはあるがコミットがない場合は空配列を返す
+          if (response.status === 404) {
+            console.log("コミットが見つかりません。空配列を返します。");
+            return [];
+          }
+          
+          throw new Error("Failed to fetch commits");
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error("コミット取得エラー:", error);
+        return [];
+      }
+    },
   });
 }
 

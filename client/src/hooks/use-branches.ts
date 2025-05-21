@@ -18,11 +18,11 @@ export function useBranches(presentationId?: number) {
  * @param branchId - Specific branch ID to fetch (overrides isDefault)
  */
 export function useBranch(presentationId: number, isDefault?: boolean, branchId?: number) {
-  const { data: branches } = useBranches(presentationId);
+  const { data: branches, isSuccess: branchesLoaded } = useBranches(presentationId);
   
   return useQuery<Branch>({ 
-    queryKey: [branchId ? `/api/branches/${branchId}` : `/api/presentations/${presentationId}/default-branch`],
-    enabled: (!!branchId || (!!presentationId && isDefault === true)),
+    queryKey: [`branch-${presentationId}-${branchId || 'default'}`],
+    enabled: !!presentationId && (!!branchId || isDefault === true),
     // If branch ID is provided, fetch specific branch, otherwise use branches data to find default
     queryFn: async () => {
       if (branchId) {
@@ -31,13 +31,31 @@ export function useBranch(presentationId: number, isDefault?: boolean, branchId?
         });
         if (!res.ok) throw new Error("Failed to fetch branch");
         return res.json();
-      } else if (branches) {
+      } else if (branchesLoaded && branches && branches.length > 0) {
         // Find default branch from already fetched branches
         const defaultBranch = branches.find(branch => branch.isDefault);
         if (defaultBranch) return defaultBranch;
         // If no default branch found, return first branch
         return branches[0];
+      } else if (branchesLoaded && (!branches || branches.length === 0)) {
+        // No branches found for this presentation, return empty placeholder
+        return null;
       }
+      
+      // fallback - attempt direct API call to get branches
+      const res = await fetch(`/api/presentations/${presentationId}/branches`, {
+        credentials: "include"
+      });
+      
+      if (!res.ok) throw new Error("Failed to fetch branches");
+      
+      const fetchedBranches = await res.json();
+      if (fetchedBranches && fetchedBranches.length > 0) {
+        const defaultBranch = fetchedBranches.find((branch: Branch) => branch.isDefault);
+        if (defaultBranch) return defaultBranch;
+        return fetchedBranches[0];
+      }
+      
       throw new Error("No branches found");
     },
   });
