@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useTheme } from "@/components/theme-provider";
+import { useLanguage } from "@/components/i18n/language-context";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,6 +16,7 @@ import { FaCode, FaCodeBranch, FaHistory, FaBars, FaBell, FaSun, FaMoon, FaUploa
 
 export default function Header() {
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { data: presentations } = usePresentations();
   const { data: branches } = useBranches(presentations?.[0]?.id);
@@ -58,35 +60,39 @@ export default function Header() {
             SlideVersionControl
           </Link>
           <div className="hidden md:flex items-center space-x-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="px-3 py-1.5 rounded-md text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                  <span className="font-medium">{defaultBranch ? defaultBranch.name : "main"}</span>
-                  <span className="ml-2 text-xs">▼</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {branches?.map((branch) => (
-                  <DropdownMenuItem key={branch.id} className="cursor-pointer">
-                    {branch.name}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            <Link href={`/branches/${presentations?.[0]?.id}`}>
-              <Button variant="ghost" size="sm" className="flex items-center px-3 py-1.5 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                <FaCodeBranch className="mr-2" />
-                <span>Branches</span>
-              </Button>
-            </Link>
-            
-            <Link href={`/history/${defaultBranch?.id}`}>
-              <Button variant="ghost" size="sm" className="flex items-center px-3 py-1.5 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                <FaHistory className="mr-2" />
-                <span>History</span>
-              </Button>
-            </Link>
+            {branches && branches.length > 0 && (
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="px-3 py-1.5 rounded-md text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                      <span className="font-medium">{defaultBranch ? defaultBranch.name : "main"}</span>
+                      <span className="ml-2 text-xs">▼</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {branches.map((branch) => (
+                      <DropdownMenuItem key={branch.id} className="cursor-pointer">
+                        {branch.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                <Link href={`/branches/${presentations?.[0]?.id}`}>
+                  <Button variant="ghost" size="sm" className="flex items-center px-3 py-1.5 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <FaCodeBranch className="mr-2" />
+                    <span>{t('branches')}</span>
+                  </Button>
+                </Link>
+                
+                <Link href={`/history/${defaultBranch?.id}`}>
+                  <Button variant="ghost" size="sm" className="flex items-center px-3 py-1.5 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <FaHistory className="mr-2" />
+                    <span>{t('history')}</span>
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
         <div className="flex items-center space-x-3">
@@ -138,7 +144,13 @@ export default function Header() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
                 {theme === "light" ? <FaMoon className="mr-2" /> : <FaSun className="mr-2" />}
-                {theme === "light" ? "Dark Mode" : "Light Mode"}
+                {theme === "light" ? t("darkMode") : t("lightMode")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage(language === "ja" ? "en" : "ja")}>
+                <span className="w-5 h-5 inline-flex items-center justify-center mr-2 text-xs font-bold bg-gray-100 dark:bg-gray-700 rounded">
+                  {language === "ja" ? "EN" : "JA"}
+                </span>
+                {language === "ja" ? "English" : "日本語"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

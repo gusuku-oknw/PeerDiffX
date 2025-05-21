@@ -75,6 +75,18 @@ export const translations: TranslationType = {
   backToEditor: {
     en: 'Back to Editor',
     ja: 'エディタに戻る'
+  },
+  uploadPPTX: {
+    en: 'Upload PPTX',
+    ja: 'PPTXをアップロード'
+  },
+  lightMode: {
+    en: 'Light Mode',
+    ja: 'ライトモード'
+  },
+  darkMode: {
+    en: 'Dark Mode',
+    ja: 'ダークモード'
   }
 };
 
