@@ -68,13 +68,15 @@ export type RolePermission = typeof rolePermissions.$inferSelect;
 
 // User schemas 拡張
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+  // Use a text-based id for Replit Auth users (sub claim is a string)
+  id: varchar("id", { length: 255 }).primaryKey().notNull(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password").default(''),
   email: varchar("email", { length: 255 }).unique(),
   firstName: varchar("first_name", { length: 100 }),
   lastName: varchar("last_name", { length: 100 }),
   organization: varchar("organization", { length: 255 }),
+  profileImageUrl: text("profile_image_url"),
   isActive: boolean("is_active").default(true).notNull(),
   roleId: integer("role_id").references(() => roles.id),
   lastLogin: timestamp("last_login"),
@@ -83,12 +85,14 @@ export const users = pgTable("users", {
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
+  id: true,
   username: true,
   password: true,
   email: true,
   firstName: true,
   lastName: true,
   organization: true,
+  profileImageUrl: true,
   roleId: true,
   isActive: true,
   lastLogin: true,

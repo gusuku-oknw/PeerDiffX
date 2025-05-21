@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export class DatabaseStorage implements IStorage {
   // User operations
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
@@ -31,33 +31,39 @@ export class DatabaseStorage implements IStorage {
   }
   
   async upsertUser(userData: Partial<InsertUser>): Promise<User> {
-    // Check if user already exists
-    if (userData.username) {
-      const existingUser = await this.getUserByUsername(userData.username);
-      
-      if (existingUser) {
-        // Update existing user
-        const [updatedUser] = await db
-          .update(users)
-          .set({
-            ...userData,
-            updatedAt: new Date()
-          })
-          .where(eq(users.username, userData.username))
-          .returning();
-        return updatedUser;
-      }
+    if (!userData.id) {
+      throw new Error("User ID is required for upsert operation");
     }
     
-    // Create new user if not exists
-    // Ensure password is set (can be empty for OAuth)
-    const newUserData = {
-      ...userData,
-      password: userData.password || '',  // Default empty password for OAuth users
-    } as InsertUser;
+    const [user] = await db
+      .insert(users)
+      .values({
+        id: userData.id,
+        username: userData.username || userData.id,
+        password: userData.password || '',
+        email: userData.email || null,
+        firstName: userData.firstName || null,
+        lastName: userData.lastName || null,
+        profileImageUrl: userData.profileImageUrl || null,
+        organization: userData.organization || null,
+        roleId: userData.roleId || 2, // Default to regular user role
+        isActive: userData.isActive !== undefined ? userData.isActive : true,
+        lastLogin: new Date()
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          email: userData.email || undefined,
+          firstName: userData.firstName || undefined,
+          lastName: userData.lastName || undefined,
+          profileImageUrl: userData.profileImageUrl || undefined,
+          lastLogin: new Date(),
+        }
+      })
+      .returning();
     
-    const [newUser] = await db.insert(users).values(newUserData).returning();
-    return newUser;
+    return user;
+  }
   }
 
   // Presentation operations
