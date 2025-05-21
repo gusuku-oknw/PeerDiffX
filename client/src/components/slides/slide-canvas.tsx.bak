@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSlide } from "@/hooks/use-pptx";
 import { Button } from "@/components/ui/button";
-import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch, FaLock, FaRobot, FaChevronRight, FaChevronLeft } from "react-icons/fa";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch, FaLock, FaFilter, FaRobot, FaChevronRight, FaChevronLeft } from "react-icons/fa";
 import { CommentsPanel } from "@/components/comments/comments-panel";
 import { AiAnalysisButton } from "@/components/ai/ai-analysis-button";
 import { AiAnalysisPanel } from "@/components/ai/ai-analysis-panel";
@@ -15,7 +16,7 @@ interface SlideCanvasProps {
   onPrevSlide: () => void;
   onNextSlide: () => void;
   onViewXmlDiff: () => void;
-  onViewHistory?: () => void;
+  onViewHistory?: () => void; // オプショナルに変更
   shareDialogComponent?: React.ReactNode;
 }
 
@@ -125,6 +126,8 @@ export default function SlideCanvas({
     }
   };
   
+  // アスペクト比の切り替え機能は設定ページに移動したため、この関数は使用されない
+  
   if (isLoading) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -223,78 +226,6 @@ export default function SlideCanvas({
           </div>
         </div>
       );
-    }
-  };
-  
-  // サイドパネルのコンテンツをレンダリングする関数
-  const renderActivePanelContent = () => {
-    switch (activeTab) {
-      case 'comments':
-        return (
-          <div className="h-full">
-            <CommentsPanel slideId={slideId} />
-          </div>
-        );
-      case 'history':
-        return (
-          <div className="h-full">
-            <div className="p-4">
-              <h3 className="text-sm font-medium mb-2">バージョン履歴</h3>
-              {slideId && (
-                <VersionPanel 
-                  slideId={slideId} 
-                  onViewChanges={(commitId) => console.log('View changes for commit', commitId)} 
-                  onRestoreVersion={(commitId) => console.log('Restore version', commitId)}
-                  onClose={() => setShowSidePanel(false)}
-                />
-              )}
-            </div>
-          </div>
-        );
-      case 'locks':
-        return (
-          <div className="p-4">
-            <h3 className="text-sm font-medium mb-2">ファイルロック</h3>
-            <div className="space-y-2">
-              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
-                <div className="flex items-center">
-                  <FaLock className="text-yellow-500 mr-2" />
-                  <span className="text-sm">スライド 1</span>
-                </div>
-                <div className="flex items-center text-xs text-gray-500">
-                  <span>田中さんがロック中</span>
-                  <Button size="sm" variant="ghost" className="ml-2 p-1">
-                    <FaLock className="text-red-500" />
-                  </Button>
-                </div>
-              </div>
-              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
-                <div className="flex items-center">
-                  <FaLock className="text-yellow-500 mr-2" />
-                  <span className="text-sm">スライド 3</span>
-                </div>
-                <div className="flex items-center text-xs text-gray-500">
-                  <span>鈴木さんがロック中</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      case 'ai':
-        return (
-          <div className="h-full">
-            <div className="h-[calc(100vh-12rem)] overflow-auto px-3 py-3">
-              {slide && (
-                <AiAnalysisPanel 
-                  presentationId={1} 
-                  commitId={slide.commitId || 1} 
-                />
-              )}
-            </div>
-          </div>
-        );
-      default:
-        return null;
     }
   };
   
@@ -416,7 +347,7 @@ export default function SlideCanvas({
           
           {showSidePanel && (
             <div className="w-64 min-h-screen bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col transition-all overflow-hidden z-10">
-              {/* ヘッダー部分 */}
+              {/* 左サイドバーと同じようなヘッダー */}
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-lg font-semibold flex items-center">
@@ -426,7 +357,7 @@ export default function SlideCanvas({
                 </div>
               </div>
               
-              {/* 機能リスト */}
+              {/* 左サイドバーと同じようなツールセクション */}
               <div className="p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 px-3">機能</h3>
                 <div className="space-y-1">
@@ -472,9 +403,81 @@ export default function SlideCanvas({
                 </div>
               </div>
               
-              {/* コンテンツ部分 */}
-              <div className="flex-1 overflow-auto">
-                {renderActivePanelContent()}
+              {/* 隠しタブコンテンツ - カスタム表示のためのコントロール */}
+              <div className="hidden">
+                <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'comments' | 'history' | 'locks' | 'ai')}>
+                  <TabsList>
+                    <TabsTrigger value="comments">コメント</TabsTrigger>
+                    <TabsTrigger value="history">履歴</TabsTrigger>
+                    <TabsTrigger value="locks">ロック</TabsTrigger>
+                    <TabsTrigger value="ai">AI分析</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+                  
+                  <TabsContent value="comments" className="m-0">
+                    <div className="flex-1 overflow-hidden">
+                      <CommentsPanel slideId={slideId} />
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="history" className="m-0">
+                    <div className="flex-1 overflow-hidden">
+                      <div className="p-4">
+                        <h3 className="text-sm font-medium mb-2">バージョン履歴</h3>
+                        {/* VersionPanelのロジック統合 */}
+                        {slideId && (
+                          <VersionPanel 
+                            slideId={slideId} 
+                            onViewChanges={(commitId) => console.log('View changes for commit', commitId)} 
+                            onRestoreVersion={(commitId) => console.log('Restore version', commitId)}
+                            onClose={() => setShowSidePanel(false)}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="locks" className="m-0">
+                    <div className="p-4">
+                      <h3 className="text-sm font-medium mb-2">ファイルロック</h3>
+                      <div className="space-y-2">
+                        <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
+                          <div className="flex items-center">
+                            <FaLock className="text-yellow-500 mr-2" />
+                            <span className="text-sm">スライド 1</span>
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <span>田中さんがロック中</span>
+                            <Button size="sm" variant="ghost" className="ml-2 p-1">
+                              <FaLock className="text-red-500" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
+                          <div className="flex items-center">
+                            <FaLock className="text-yellow-500 mr-2" />
+                            <span className="text-sm">スライド 3</span>
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <span>鈴木さんがロック中</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="ai" className="m-0 p-0">
+                    <div className="h-[calc(100vh-12rem)] overflow-auto px-3 py-3">
+                      {slide && (
+                        <AiAnalysisPanel 
+                          presentationId={1} 
+                          commitId={slide.commitId || 1} 
+                        />
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
           )}
