@@ -548,8 +548,7 @@ export default function SlideCanvas({
               <FaCode className="h-4 w-4" />
             </Button>
             
-            {/* AI分析ボタン */}
-            <AiAnalysisButton presentationId={1} commitId={slide?.commitId || 1} />
+            {/* AI分析ボタン - サイドバーに移動したため削除 */}
           </div>
           
           {/* 右側：パネル操作とコミット */}
