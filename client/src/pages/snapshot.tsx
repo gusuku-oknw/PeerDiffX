@@ -1,299 +1,178 @@
-import React, { useEffect, useState } from 'react';
-import { useRoute } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
-import { FaArrowLeft, FaArrowRight, FaExpand, FaCompress, FaClock } from 'react-icons/fa';
-import { useLanguage } from '@/components/i18n/language-context';
+import { useEffect, useState } from "react";
+import { useRoute } from "wouter";
+import { useSlide } from "@/hooks/use-pptx";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ArrowLeft, Download, ExternalLink } from "lucide-react";
+import { Link } from "wouter";
+import SlideCanvas from "@/components/slides/slide-canvas";
 
-// スナップショットページコンポーネント
 export default function SnapshotPage() {
-  const { t } = useLanguage();
-  const [, params] = useRoute('/snapshot/:id');
-  const { toast } = useToast();
+  const [, params] = useRoute("/snapshot/:id");
+  const snapshotId = params?.id;
+  
   const [snapshot, setSnapshot] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState<string>('');
-
-  // スナップショットデータの取得
+  
   useEffect(() => {
-    const fetchSnapshot = async () => {
-      if (!params?.id) return;
+    async function fetchSnapshot() {
+      if (!snapshotId) {
+        setError("スナップショットIDが見つかりません");
+        setLoading(false);
+        return;
+      }
       
       try {
-        setLoading(true);
-        const response = await fetch(`/api/snapshots/${params.id}`);
-        
-        if (response.status === 404) {
-          setError(t('snapshotNotFound'));
-          return;
-        }
-        
-        if (response.status === 410) {
-          setError(t('snapshotExpired'));
-          return;
-        }
+        const response = await fetch(`/api/snapshots/${snapshotId}`);
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch snapshot: ${response.statusText}`);
+          if (response.status === 404) {
+            setError("スナップショットが見つかりません");
+          } else if (response.status === 410) {
+            setError("このスナップショットは有効期限が切れています");
+          } else {
+            setError("スナップショットの読み込みに失敗しました");
+          }
+          setLoading(false);
+          return;
         }
         
         const data = await response.json();
         setSnapshot(data);
-        
-        // 有効期限の表示を設定
-        updateTimeRemaining(new Date(data.expiresAt));
-        const interval = setInterval(() => {
-          updateTimeRemaining(new Date(data.expiresAt));
-        }, 60000); // 1分ごとに更新
-        
-        return () => clearInterval(interval);
       } catch (err) {
-        console.error('Error fetching snapshot:', err);
-        setError(t('snapshotError'));
+        console.error("スナップショット取得エラー:", err);
+        setError("スナップショットの読み込み中にエラーが発生しました");
       } finally {
         setLoading(false);
       }
-    };
+    }
     
     fetchSnapshot();
-  }, [params?.id, t]);
+  }, [snapshotId]);
   
-  // 有効期限までの残り時間を計算
-  const updateTimeRemaining = (expiresAt: Date) => {
-    const now = new Date();
-    const diff = expiresAt.getTime() - now.getTime();
-    
-    if (diff <= 0) {
-      setTimeRemaining(t('expired'));
-      setError(t('snapshotExpired'));
-      return;
-    }
-    
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
-    if (days > 0) {
-      setTimeRemaining(`${days} ${days === 1 ? t('day') : t('days')} ${hours} ${t('hours')}`);
-    } else {
-      setTimeRemaining(`${hours} ${t('hours')}`);
-    }
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
   
-  // フルスクリーン切り替え
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
-  
-  // スライドナビゲーション
-  const goToNextSlide = () => {
-    if (snapshot?.data?.slides && currentSlideIndex < snapshot.data.slides.length - 1) {
-      setCurrentSlideIndex(currentSlideIndex + 1);
-    }
-  };
-  
-  const goToPrevSlide = () => {
-    if (currentSlideIndex > 0) {
-      setCurrentSlideIndex(currentSlideIndex - 1);
-    }
-  };
-  
-  // キー操作によるナビゲーション
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.key === ' ') {
-        goToNextSlide();
-      } else if (e.key === 'ArrowLeft') {
-        goToPrevSlide();
-      } else if (e.key === 'Escape') {
-        setIsFullscreen(false);
-      } else if (e.key === 'f') {
-        toggleFullscreen();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentSlideIndex, snapshot]);
-
-  // スワイプイベントハンドラー
-  useEffect(() => {
-    let touchStartX = 0;
-    let touchEndX = 0;
-    
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartX = e.touches[0].clientX;
-    };
-    
-    const handleTouchEnd = (e: TouchEvent) => {
-      touchEndX = e.changedTouches[0].clientX;
-      handleSwipe();
-    };
-    
-    const handleSwipe = () => {
-      const swipeDistance = touchEndX - touchStartX;
-      const threshold = 50; // スワイプ検出の閾値
-      
-      if (swipeDistance > threshold) {
-        goToPrevSlide(); // 右にスワイプ
-      } else if (swipeDistance < -threshold) {
-        goToNextSlide(); // 左にスワイプ
-      }
-    };
-    
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchend', handleTouchEnd);
-    
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [currentSlideIndex, snapshot]);
-
-  // クリックによるナビゲーション (左右の領域でクリック)
-  const handleSlideAreaClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isFullscreen) {
-      const slideArea = e.currentTarget;
-      const clickX = e.clientX;
-      const slideWidth = slideArea.clientWidth;
-      
-      if (clickX < slideWidth / 2) {
-        goToPrevSlide();
-      } else {
-        goToNextSlide();
-      }
-    }
-  };
-  
-  // 現在のスライド
-  const currentSlide = snapshot?.data?.slides?.[currentSlideIndex];
-  
-  // エラー表示
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-screen p-4">
-        <div className="bg-red-50 dark:bg-red-900/20 p-8 rounded-lg shadow-lg max-w-md">
-          <h1 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">{error}</h1>
-          <p className="text-gray-700 dark:text-gray-300 mb-6">
-            {t('snapshotErrorDesc')}
-          </p>
-          <Button onClick={() => window.history.back()}>{t('goBack')}</Button>
-        </div>
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6 pb-4 px-6">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="text-red-500 dark:text-red-400 text-4xl mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-center">{error}</h2>
+              <p className="text-center text-gray-500 dark:text-gray-400">
+                このリンクは無効か期限切れです。新しいスナップショットの作成をお願いします。
+              </p>
+              <Link href="/">
+                <Button className="w-full">
+                  <ArrowLeft className="mr-2 h-4 w-4" /> ホームに戻る
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
   
-  // ローディング表示
-  if (loading) {
-    return (
-      <div className="p-8">
-        <Skeleton className="h-12 w-3/4 mb-6" />
-        <Skeleton className="h-96 w-full mb-4" />
-        <div className="flex justify-between">
-          <Skeleton className="h-10 w-20" />
-          <Skeleton className="h-10 w-20" />
-        </div>
-      </div>
-    );
+  if (!snapshot) {
+    return null;
   }
+  
+  const { slideId, title, presentationId } = snapshot;
+  const expiryDate = new Date(snapshot.expiresAt).toLocaleDateString();
+  
+  // ダミーのスライド機能
+  const currentSlideNumber = 1;
+  const totalSlides = 1;
   
   return (
-    <div className={`transition-all duration-300 ${isFullscreen ? 'fixed inset-0 bg-black z-50' : 'p-4'}`}>
-      {/* ヘッダー */}
-      <div className={`flex justify-between items-center mb-4 ${isFullscreen ? 'px-4 py-2 bg-black/50 absolute top-0 left-0 right-0 z-10' : ''}`}>
-        <div>
-          <h1 className={`font-bold ${isFullscreen ? 'text-white text-xl' : 'text-2xl'}`}>
-            {snapshot?.data?.presentation?.name || t('snapshot')}
-          </h1>
-          {!isFullscreen && (
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
-              {snapshot?.data?.commit?.message}
-            </p>
-          )}
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <Link href="/">
+            <Button variant="outline" size="sm" className="mr-4">
+              <ArrowLeft className="h-4 w-4 mr-2" /> ホームに戻る
+            </Button>
+          </Link>
+          <h1 className="text-xl font-bold truncate max-w-[600px]">{title || "共有スナップショット"}</h1>
         </div>
-        <div className="flex items-center space-x-2">
-          {!isFullscreen && (
-            <div className="flex items-center text-sm text-amber-600 dark:text-amber-400">
-              <FaClock className="mr-1" />
-              <span>{t('expiresIn')}: {timeRemaining}</span>
-            </div>
-          )}
-          <Button variant="ghost" size="sm" onClick={toggleFullscreen}>
-            {isFullscreen ? <FaCompress /> : <FaExpand />}
-          </Button>
-        </div>
-      </div>
-      
-      {/* スライド表示 */}
-      <div 
-        className={`relative ${isFullscreen ? 'h-full flex items-center justify-center' : 'aspect-[16/9] bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700'}`}
-        onClick={handleSlideAreaClick}
-      >
-        {currentSlide ? (
-          <div className="w-full h-full flex items-center justify-center p-4">
-            {/* スライドコンテンツの表示 - 実際のアプリではより高度な表示が必要 */}
-            <div className="max-w-full max-h-full overflow-auto" dangerouslySetInnerHTML={{ __html: currentSlide.xmlContent }} />
-          </div>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <p className="text-gray-500">{t('noSlides')}</p>
-          </div>
-        )}
         
-        {/* ナビゲーションボタン */}
-        {isFullscreen && (
-          <>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white"
-              onClick={goToPrevSlide}
-              disabled={currentSlideIndex === 0}
-            >
-              <FaArrowLeft />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white"
-              onClick={goToNextSlide}
-              disabled={!snapshot?.data?.slides || currentSlideIndex >= snapshot.data.slides.length - 1}
-            >
-              <FaArrowRight />
-            </Button>
-          </>
-        )}
+        <div className="flex items-center space-x-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" /> ダウンロード
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>プレゼンテーションをダウンロード</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          {presentationId && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link href={`/preview/${presentationId}`}>
+                    <Button variant="outline" size="sm">
+                      <ExternalLink className="h-4 w-4 mr-2" /> プレゼンテーションを開く
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>プレゼンテーションの詳細を表示</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
+      </header>
+      
+      {/* Content */}
+      <div className="flex-1 flex flex-col overflow-hidden p-4">
+        <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+          スナップショット有効期限: {expiryDate}
+        </div>
+        
+        <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <SlideCanvas
+            slideId={slideId}
+            totalSlides={totalSlides}
+            currentSlideNumber={currentSlideNumber}
+            onPrevSlide={() => {}}
+            onNextSlide={() => {}}
+            onViewXmlDiff={() => {}}
+          />
+        </div>
       </div>
       
-      {/* フッター */}
-      {!isFullscreen && (
-        <div className="flex justify-between mt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToPrevSlide}
-            disabled={currentSlideIndex === 0}
-          >
-            <FaArrowLeft className="mr-2" />
-            {t('previous')}
-          </Button>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {currentSlideIndex + 1} / {snapshot?.data?.slides?.length || 0}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToNextSlide}
-            disabled={!snapshot?.data?.slides || currentSlideIndex >= snapshot.data.slides.length - 1}
-          >
-            {t('next')}
-            <FaArrowRight className="ml-2" />
-          </Button>
-        </div>
-      )}
+      {/* Footer */}
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 text-center text-sm text-gray-500 dark:text-gray-400">
+        PeerDiffX スナップショット | 共有リンクから訪問中
+      </footer>
     </div>
   );
 }

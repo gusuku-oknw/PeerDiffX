@@ -9,6 +9,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import VersionPanel from "@/components/version/version-panel";
 import { SlideControls } from "@/components/slides/slide-controls";
 import { SnapshotButton } from "@/components/share/snapshot-button";
+import { OneClickSnapshot } from "@/components/share/one-click-snapshot";
 
 interface SlideCanvasProps {
   slideId: number;
@@ -527,6 +528,18 @@ export default function SlideCanvas({
           </Button>
           <div className="border-l border-gray-300 dark:border-gray-600 h-6 mx-1"></div>
           <div className="text-xs text-gray-500 dark:text-gray-400">{aspectRatio}</div>
+          
+          {presentationId && (
+            <>
+              <div className="border-l border-gray-300 dark:border-gray-600 h-6 mx-1"></div>
+              <OneClickSnapshot
+                presentationId={presentationId}
+                slideId={slideId}
+                presentationName={presentationName}
+                className="text-xs"
+              />
+            </>
+          )}
           <Button 
             variant="ghost" 
             size="icon" 
