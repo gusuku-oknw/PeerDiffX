@@ -2,18 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-/* レイアウト構造の修正 - 右側の余白を削除 */
-.slide-canvas-container {
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-  flex: 1 1 auto;
-}
-
-/* 全画面表示の修正 */
+/* レイアウト構造の全体的な修正 */
 .flex-1.flex.overflow-hidden {
   width: 100%;
+  max-width: 100vw; /* ビューポート幅を超えないようにする */
   overflow: hidden;
+  position: relative; /* 子要素の絶対位置指定の基準点 */
+  display: flex; /* フレックスボックスを使用 */
+}
+
+/* プレビュー画面のメインレイアウト構造 */
+/* サイドバーとスライドキャンバスを並べて表示 */
+.flex-1.flex.overflow-hidden > div {
+  flex-shrink: 0; /* サイドバーが縮まないようにする */
+}
+
+/* スライドキャンバスコンテナのスタイル */
+.slide-canvas-container {
+  width: 100%;
+  overflow: hidden;
+  flex: 1 0 auto; /* 伸びるが縮まない */
+  max-width: calc(100vw - 260px); /* サイドバーの幅を考慮 */
+}
+
+/* ボトムバーが開いた時のスタイル */
+.slide-canvas-container > div:last-child {
+  flex-shrink: 0; /* 縮まないようにする */
 }
 
 /* ダイアログのサイズと位置を調整 */
