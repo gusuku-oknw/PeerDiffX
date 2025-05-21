@@ -536,7 +536,8 @@ export default function PublicPreview() {
         {slides.length > 0 && currentCommit && (
           <SlideThumbnails 
             commitId={currentCommit.id} 
-            activeSlideId={currentSlideId} 
+            activeSlideId={currentSlideId}
+            slides={slides}
             onSelectSlide={handleSelectSlide} 
           />
         )}

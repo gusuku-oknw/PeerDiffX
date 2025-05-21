@@ -1,20 +1,20 @@
 import { useState, useRef, useEffect } from "react";
-import { useSlides } from "@/hooks/use-pptx";
 import { FaGripLinesVertical } from "react-icons/fa";
 
 interface SlideThumbnailsProps {
   commitId: number;
   activeSlideId?: number;
   onSelectSlide: (slideId: number) => void;
+  slides?: any[]; // 直接スライドデータを受け取るように変更
 }
 
-export default function SlideThumbnails({ commitId, activeSlideId, onSelectSlide }: SlideThumbnailsProps) {
-  const { data: slides, isLoading } = useSlides(commitId);
+export default function SlideThumbnails({ commitId, activeSlideId, onSelectSlide, slides = [] }: SlideThumbnailsProps) {
   const [width, setWidth] = useState(256); // Default width in pixels (w-64 = 16rem = 256px)
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<HTMLDivElement>(null);
   const minWidth = 200; // Minimum width in pixels
   const maxWidth = 500; // Maximum width in pixels
+  const [isLoading, setIsLoading] = useState(false);
   
   // Setup mouse event handlers for resizing
   useEffect(() => {
