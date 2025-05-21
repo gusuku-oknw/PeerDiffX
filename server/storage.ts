@@ -51,6 +51,7 @@ export class MemStorage implements IStorage {
   private commits: Map<number, Commit>;
   private slides: Map<number, Slide>;
   private diffs: Map<number, Diff>;
+  private snapshots: Map<string, Snapshot>;
   
   private userId: number;
   private presentationId: number;
@@ -66,6 +67,7 @@ export class MemStorage implements IStorage {
     this.commits = new Map();
     this.slides = new Map();
     this.diffs = new Map();
+    this.snapshots = new Map();
     
     this.userId = 1;
     this.presentationId = 1;
@@ -432,6 +434,52 @@ export class MemStorage implements IStorage {
     const newDiff: Diff = { ...diff, id };
     this.diffs.set(id, newDiff);
     return newDiff;
+  }
+
+  // スナップショット操作
+  async getSnapshot(id: string): Promise<Snapshot | undefined> {
+    return this.snapshots.get(id);
+  }
+
+  async createSnapshot(snapshot: InsertSnapshot): Promise<Snapshot> {
+    // 現在時刻とexpiresAtを含む完全なスナップショットを作成
+    const newSnapshot: Snapshot = {
+      ...snapshot,
+      createdAt: new Date(),
+      accessCount: 0
+    };
+    
+    this.snapshots.set(snapshot.id, newSnapshot);
+    return newSnapshot;
+  }
+
+  async updateSnapshotAccessCount(id: string): Promise<Snapshot | undefined> {
+    const snapshot = this.snapshots.get(id);
+    if (!snapshot) return undefined;
+    
+    // アクセスカウントを増加
+    const updatedSnapshot = {
+      ...snapshot,
+      accessCount: snapshot.accessCount + 1
+    };
+    
+    this.snapshots.set(id, updatedSnapshot);
+    return updatedSnapshot;
+  }
+
+  async deleteExpiredSnapshots(): Promise<number> {
+    const now = new Date();
+    let deletedCount = 0;
+    
+    // 期限切れのスナップショットを探して削除
+    for (const [id, snapshot] of this.snapshots.entries()) {
+      if (snapshot.expiresAt < now) {
+        this.snapshots.delete(id);
+        deletedCount++;
+      }
+    }
+    
+    return deletedCount;
   }
 }
 

@@ -4,8 +4,9 @@ import { branches, type Branch, type InsertBranch } from "@shared/schema";
 import { commits, type Commit, type InsertCommit } from "@shared/schema";
 import { slides, type Slide, type InsertSlide } from "@shared/schema";
 import { diffs, type Diff, type InsertDiff } from "@shared/schema";
+import { snapshots, type Snapshot, type InsertSnapshot } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, lt } from "drizzle-orm";
 
 import { IStorage } from "./storage";
 
@@ -156,5 +157,39 @@ export class DatabaseStorage implements IStorage {
   async createDiff(diff: InsertDiff): Promise<Diff> {
     const [newDiff] = await db.insert(diffs).values(diff).returning();
     return newDiff;
+  }
+
+  // スナップショット操作
+  async getSnapshot(id: string): Promise<Snapshot | undefined> {
+    const [snapshot] = await db.select().from(snapshots).where(eq(snapshots.id, id));
+    return snapshot || undefined;
+  }
+
+  async createSnapshot(snapshot: InsertSnapshot): Promise<Snapshot> {
+    const [newSnapshot] = await db.insert(snapshots).values(snapshot).returning();
+    return newSnapshot;
+  }
+
+  async updateSnapshotAccessCount(id: string): Promise<Snapshot | undefined> {
+    const snapshot = await this.getSnapshot(id);
+    if (!snapshot) return undefined;
+
+    const [updatedSnapshot] = await db
+      .update(snapshots)
+      .set({ accessCount: snapshot.accessCount + 1 })
+      .where(eq(snapshots.id, id))
+      .returning();
+      
+    return updatedSnapshot || undefined;
+  }
+
+  async deleteExpiredSnapshots(): Promise<number> {
+    const now = new Date();
+    const result = await db
+      .delete(snapshots)
+      .where(lt(snapshots.expiresAt, now))
+      .returning();
+      
+    return result.length;
   }
 }
