@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { SnapshotButton } from "@/components/share/snapshot-button";
 import { 
   ChevronLeft, 
   ChevronRight, 
