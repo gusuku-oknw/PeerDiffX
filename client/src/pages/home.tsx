@@ -80,10 +80,14 @@ export default function Home() {
       return;
     }
 
-    // 進捗表示のトースト
+    // トーストID を生成して進捗表示用に保持
+    const toastId = Date.now().toString();
+    
+    // 進捗表示のトースト (ID付き)
     toast({
-      title: "プレゼンテーション作成中...",
-      description: "新しいプレゼンテーションを作成しています。しばらくお待ちください。",
+      id: toastId,
+      title: "作成中...",
+      description: "新しいプレゼンテーションを作成しています",
     });
 
     try {
@@ -91,12 +95,16 @@ export default function Home() {
         ? newPresentationName 
         : `${newPresentationName}.pptx`;
         
+      console.log("作成を開始します:", fileName);
+      
       // プレゼンテーション作成リクエスト
       const response = await apiRequest('POST', '/api/presentations', {
         name: fileName
       });
       
+      console.log("作成リクエスト完了");
       const newPresentation = await response.json();
+      console.log("新しいプレゼンテーション:", newPresentation);
       
       // キャッシュを無効化して確実に再取得する
       await queryClient.invalidateQueries({ queryKey: ["/api/presentations"] });
@@ -105,15 +113,15 @@ export default function Home() {
       setNewPresentationDialog(false);
       setNewPresentationName("");
       
+      // 完了トースト
       toast({
-        title: "プレゼンテーション作成完了",
-        description: "新しいプレゼンテーションが作成されました",
+        title: "作成完了！",
+        description: "新しいプレゼンテーションを開きます",
       });
       
       // 作成したプレゼンテーションを自動的に開く
-      setTimeout(() => {
-        window.location.href = `/preview?id=${newPresentation.id}`;
-      }, 500);
+      console.log("リダイレクト先:", `/preview?id=${newPresentation.id}`);
+      window.location.href = `/preview?id=${newPresentation.id}`;
     } catch (error) {
       console.error("Error creating presentation:", error);
       toast({
