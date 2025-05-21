@@ -32,12 +32,15 @@ body, html {
 }
 
 /* スライドキャンバスコンテナのスタイル */
-.slide-canvas-container {
-  width: 100%;
-  overflow: hidden;
-  flex: 1 0 auto; /* 伸びるが縮まない */
-  display: flex;
-  flex-direction: column;
+@layer utilities {
+  .slide-canvas-container {
+    @apply flex-1;        /* ← Tailwind の flex-grow で全幅を埋める */
+    width: 100%;          /* 念のため */
+    min-width: 0;         /* Chrome でのはみ出し対策 */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 /* ボトムパネルのスタイル */

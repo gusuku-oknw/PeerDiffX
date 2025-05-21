@@ -33,15 +33,8 @@ export default function SlideCanvas({
   presentationId,
   presentationName
 }: SlideCanvasProps) {
-  // CSSで右側の余白を防ぐため、スタイルをセット
-  useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty('--slide-canvas-width', '100%');
-
-    return () => {
-      root.style.removeProperty('--slide-canvas-width');
-    };
-  }, []);
+  // CSSで右側の余白を防ぐ
+  // NOTE: スタイル変数は削除し、代わりにTailwindクラスで制御する
   const { data: slide, isLoading } = useSlide(slideId);
   const [presentationSettings] = useLocalStorage('presentation_settings', {
     defaultAspectRatio: '16:9',
