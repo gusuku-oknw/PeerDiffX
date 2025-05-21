@@ -198,31 +198,44 @@ export default function Preview() {
     );
   }
   
-  // 最初に自動的にスライドを登録する（リロード時に利用）
+  // 強化されたスライド読み込みロジック
   useEffect(() => {
     // コミットはあるがスライドがない状態を検出
     if (latestCommit && (!slides || slides.length === 0)) {
-      console.log("スライドがありません。再読み込み準備中...");
+      console.log("スライドがありません。直接APIから取得を試みます...");
       
-      // 強制的にクエリキャッシュを無効化して再取得を促す
+      // キャッシュをバイパスして直接APIからデータを取得
       const fetchSlides = async () => {
         try {
-          const response = await fetch(`/api/commits/${latestCommit.id}/slides`);
+          // キャッシュを無効化するためのランダムクエリパラメータを追加
+          const timestamp = new Date().getTime();
+          const response = await fetch(`/api/commits/${latestCommit.id}/slides?_=${timestamp}`, {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+          
           if (response.ok) {
             const slideData = await response.json();
-            console.log("取得したスライドデータ:", slideData);
+            console.log("APIから直接取得したスライドデータ:", slideData);
+            
             if (slideData && slideData.length > 0) {
+              // スライドが見つかった場合、ページ全体をリロードせずにQueryClientを更新
               window.location.reload();
             } else {
-              // 3秒後に再読み込み
+              // 3秒後に再試行
               setTimeout(() => {
-                console.log("データを再読み込みします...");
+                console.log("スライドがまだ作成されていません。再読み込みします...");
                 window.location.reload();
               }, 3000);
             }
           }
         } catch (error) {
           console.error("スライド取得エラー:", error);
+          // エラー時も3秒後に再試行
+          setTimeout(() => window.location.reload(), 3000);
         }
       };
       
