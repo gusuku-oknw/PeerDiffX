@@ -80,12 +80,8 @@ export default function Home() {
       return;
     }
 
-    // トーストID を生成して進捗表示用に保持
-    const toastId = Date.now().toString();
-    
-    // 進捗表示のトースト (ID付き)
+    // 進捗表示のトースト
     toast({
-      id: toastId,
       title: "作成中...",
       description: "新しいプレゼンテーションを作成しています",
     });
@@ -120,8 +116,8 @@ export default function Home() {
       });
       
       // 作成したプレゼンテーションを自動的に開く
-      console.log("リダイレクト先:", `/preview?id=${newPresentation.id}`);
-      window.location.href = `/preview?id=${newPresentation.id}`;
+      console.log("リダイレクト先:", `/preview/${newPresentation.id}`);
+      window.location.href = `/preview/${newPresentation.id}`;
     } catch (error) {
       console.error("Error creating presentation:", error);
       toast({
