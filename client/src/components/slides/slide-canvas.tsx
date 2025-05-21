@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSlide } from "@/hooks/use-pptx";
 import { Button } from "@/components/ui/button";
-import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaDesktop, FaTv } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaDesktop, FaTv, FaComments } from "react-icons/fa";
+import { CommentsPanel } from "@/components/comments/comments-panel";
 
 interface SlideCanvasProps {
   slideId: number;
@@ -30,6 +31,7 @@ export default function SlideCanvas({
   const [zoomLevel, setZoomLevel] = useState(100);
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '4:3'>('16:9'); // Default to 16:9 widescreen
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   
   const handleZoomIn = () => {
@@ -303,6 +305,17 @@ export default function SlideCanvas({
             <FaHistory className={`mr-2 ${versionPanelVisible ? 'text-white' : 'text-gray-500'}`} />
             <span>History</span>
           </Button>
+          
+          <Button 
+            variant={showComments ? "default" : "outline"}
+            size="sm" 
+            className={`ml-2 px-3 py-1.5 rounded-md border ${showComments ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'} text-sm flex items-center transition-colors`}
+            onClick={() => setShowComments(!showComments)}
+          >
+            <FaComments className={`mr-2 ${showComments ? 'text-white' : 'text-gray-500'}`} />
+            <span>コメント</span>
+          </Button>
+          
           {shareDialogComponent && (
             <div className="ml-2">
               {shareDialogComponent}
@@ -314,14 +327,37 @@ export default function SlideCanvas({
         </div>
       </div>
       
-      {/* Slide Canvas */}
+      {/* Slide Canvas and Comments Panel */}
       <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-center p-8">
-        <div 
-          ref={canvasRef}
-          className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} w-full max-w-4xl`}
-          style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'center' }}
-        >
-          {renderSlideContent()}
+        <div className="flex w-full max-w-[1400px] h-full">
+          <div className={`flex-1 flex items-center justify-center transition-all ${showComments ? 'pr-4' : ''}`}>
+            <div 
+              ref={canvasRef}
+              className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} w-full max-w-4xl`}
+              style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'center' }}
+            >
+              {renderSlideContent()}
+            </div>
+          </div>
+          
+          {showComments && (
+            <div className="w-80 bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 flex flex-col transition-all overflow-hidden">
+              <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex justify-between items-center">
+                <h3 className="text-sm font-medium">スライドのコメント</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 w-7 p-0 rounded-full"
+                  onClick={() => setShowComments(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <CommentsPanel slideId={slideId} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
