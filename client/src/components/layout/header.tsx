@@ -13,6 +13,7 @@ import { usePresentations } from "@/hooks/use-pptx";
 import { useBranches } from "@/hooks/use-branches";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { FaCode, FaCodeBranch, FaHistory, FaBars, FaBell, FaSun, FaMoon, FaUpload, FaSignOutAlt, FaUser, FaCog } from "react-icons/fa";
+import { CreditIndicator } from "@/components/ui/credit-indicator";
 
 export default function Header() {
   const { theme, setTheme } = useTheme();
