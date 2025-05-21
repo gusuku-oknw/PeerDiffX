@@ -198,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const commit = await storage.createCommit({
         message: "Initial upload",
         branchId: branch.id,
-        userId,
+        userId: String(userId),
         parentId: null
       });
       
