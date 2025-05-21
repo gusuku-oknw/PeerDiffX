@@ -88,24 +88,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   apiRouter.post("/api/presentations", async (req: Request, res: Response) => {
     try {
-      // Get user ID from authenticated user - make sure it's a valid number
-      // Convert from string to number if it's a Replit Auth ID
-      let userId = req.user?.id || req.body.userId || '41964833';
-      if (typeof userId === 'string') {
-        try {
-          userId = parseInt(userId);
-        } catch (e) {
-          // Fall back to a default if parsing fails
-          userId = 1;
-        }
-      }
+      // ユーザーIDを取得（認証済みユーザーまたはリクエストボディから）
+      const userId = req.user?.id || req.body.userId || '41964833';
+      const userIdStr = String(userId);
       
-      console.log("Creating presentation with userId:", userId);
+      console.log("Creating presentation with userId:", userIdStr);
       
-      // Ensure userId is always a string
+      // ユーザーIDは常に文字列として保存
       const presentationData = insertPresentationSchema.parse({
         ...req.body,
-        userId: String(userId)
+        userId: userIdStr
       });
       
       // Create the presentation
