@@ -19,9 +19,16 @@ export default function PublicPreview() {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
-  // Extract IDs from URL parameters
+  // Extract IDs from URL parameters and ensure they are valid numbers
   const presentationId = params?.presentationId ? parseInt(params.presentationId) : 0;
   const commitId = params?.commitId ? parseInt(params.commitId) : undefined;
+  
+  // Debug the route parameters
+  useEffect(() => {
+    console.log('Route params:', params);
+    console.log('Parsed presentationId:', presentationId);
+    console.log('Parsed commitId:', commitId);
+  }, [params, presentationId, commitId]);
   
   // Fetch presentation data
   const { 
@@ -255,15 +262,27 @@ export default function PublicPreview() {
     );
   }
   
+  // ログ出力を追加
+  useEffect(() => {
+    if (commit?.id) {
+      console.log('Current commit:', commit);
+      console.log('Loaded slides:', slides);
+      console.log('Current slide index:', currentSlideIndex);
+      if (slides.length > 0 && currentSlideIndex < slides.length) {
+        console.log('Current slide:', slides[currentSlideIndex]);
+      }
+    }
+  }, [commit, slides, currentSlideIndex]);
+
   // Return UI for empty slides
-  if (!slides.length) {
+  if (commit?.id && slides.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
         <Alert className="max-w-2xl">
           <FileCode className="h-4 w-4" />
           <AlertTitle>スライドがありません</AlertTitle>
           <AlertDescription>
-            このプレゼンテーションにはスライドが含まれていません。
+            このプレゼンテーションのコミット (ID: {commit.id}) にはスライドが含まれていません。
           </AlertDescription>
         </Alert>
         <div className="mt-6">
@@ -311,10 +330,10 @@ export default function PublicPreview() {
           className={`relative ${isFullscreen ? 'w-full h-full' : 'w-full max-w-4xl aspect-[16/9]'} bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden`}
           onClick={toggleFullscreen}
         >
-          {currentSlide ? (
+          {slides && slides.length > 0 && currentSlideIndex < slides.length ? (
             <div className="w-full h-full transition-opacity duration-300 ease-in-out">
               <SlideViewer 
-                slide={currentSlide} 
+                slide={slides[currentSlideIndex]} 
                 aspectRatio={isFullscreen ? undefined : "16:9"} 
               />
               <div className="absolute bottom-3 right-3 text-xs bg-black/30 text-white px-2 py-1 rounded">
@@ -323,7 +342,14 @@ export default function PublicPreview() {
             </div>
           ) : (
             <div className="flex items-center justify-center h-full p-8 text-muted-foreground">
-              <p className="text-center">スライドデータの読み込み中、または表示可能なスライドがありません</p>
+              <div className="text-center">
+                <div className="mb-4">スライドデータの読み込み中、または表示可能なスライドがありません</div>
+                {commit && (
+                  <div className="text-sm text-gray-500">
+                    コミットID: {commit.id} / スライド数: {slides ? slides.length : 0}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

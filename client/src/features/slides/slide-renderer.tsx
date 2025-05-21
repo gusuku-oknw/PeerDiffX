@@ -24,6 +24,15 @@ export interface Slide {
  */
 // This component will be our main export for rendering slide content
 export function SlideContent({ slide }: { slide: Slide }): JSX.Element {
+  // Safety check - make sure slide is defined
+  if (!slide) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-4">
+        <div className="text-muted-foreground">スライドが読み込めませんでした</div>
+      </div>
+    );
+  }
+
   // First try to render using XML content if available
   if (slide.xmlContent) {
     return <XmlSlideRenderer slide={slide} />;
@@ -40,7 +49,7 @@ export function SlideContent({ slide }: { slide: Slide }): JSX.Element {
             : renderStructuredContent(slide.content)}
         </div>
       )}
-      {(!slide.content || Object.keys(slide.content).length === 0) && !slide.title && (
+      {(!slide.content || (typeof slide.content === 'object' && Object.keys(slide.content).length === 0)) && !slide.title && (
         <div className="text-muted-foreground">No content available</div>
       )}
     </div>

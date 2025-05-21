@@ -1,0 +1,61 @@
+home.tsx:222 
+            
+            
+           DELETE https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/api/presentations/12 500 (Internal Server Error)
+handleDeletePresentation @ home.tsx:222
+callCallback2 @ chunk-RPCDYKBN.js?v=8e0f28fd:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=8e0f28fd:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=8e0f28fd:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=8e0f28fd:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=8e0f28fd:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=8e0f28fd:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=8e0f28fd:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=8e0f28fd:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=8e0f28fd:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=8e0f28fd:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=8e0f28fd:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=8e0f28fd:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=8e0f28fd:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=8e0f28fd:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=8e0f28fd:5449Understand this error
+home.tsx:252 Error deleting presentation: Error: Failed to delete: 500 Internal Server Error
+    at handleDeletePresentation (home.tsx:231:15)
+handleDeletePresentation @ home.tsx:252
+await in handleDeletePresentation
+callCallback2 @ chunk-RPCDYKBN.js?v=8e0f28fd:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=8e0f28fd:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=8e0f28fd:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=8e0f28fd:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=8e0f28fd:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=8e0f28fd:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=8e0f28fd:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=8e0f28fd:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=8e0f28fd:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=8e0f28fd:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=8e0f28fd:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=8e0f28fd:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=8e0f28fd:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=8e0f28fd:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=8e0f28fd:5449Understand this error
+home.tsx:222 
+            
+            
+           DELETE https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/api/presentations/12 500 (Internal Server Error)
+handleDeletePresentation @ home.tsx:222
+callCallback2 @ chunk-RPCDYKBN.js?v=8e0f28fd:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=8e0f28fd:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=8e0f28fd:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=8e0f28fd:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=8e0f28fd:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=8e0f28fd:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=8e0f28fd:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=8e0f28fd:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=8e0f28fd:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=8e0f28fd:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=8e0f28fd:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=8e0f28fd:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=8e0f28fd:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=8e0f28fd:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=8e0f28fd:5449Understand this error
+home.tsx:252 Error deleting presentation: Error: Failed to delete: 500 Internal Server Error
+    at handleDeletePresentation (home.tsx:231:15)
