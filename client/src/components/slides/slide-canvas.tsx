@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch, FaLock, FaFilter } from "react-icons/fa";
 import { CommentsPanel } from "@/components/comments/comments-panel";
 import { AiAnalysisButton } from "@/components/ai/ai-analysis-button";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useLocalStorage } from "../../hooks/use-local-storage";
 import VersionPanel from "@/components/version/version-panel";
 
 interface SlideCanvasProps {
