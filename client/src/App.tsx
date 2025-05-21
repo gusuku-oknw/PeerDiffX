@@ -20,6 +20,7 @@ function Router() {
       <Route path="/diff/:baseCommitId/:compareCommitId" component={DiffView} />
       <Route path="/history/:branchId" component={History} />
       <Route path="/branches/:presentationId" component={Branches} />
+      <Route path="/snapshot/:id" component={lazy(() => import("@/pages/snapshot"))} />
       <Route component={NotFound} />
     </Switch>
   );

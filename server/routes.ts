@@ -8,6 +8,7 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import crypto from "crypto";
 
 // Set up multer for file uploads
 const upload = multer({ dest: os.tmpdir() });
@@ -287,6 +288,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error comparing commits:", error);
       res.status(500).json({ message: "Failed to compare commits" });
+    }
+  });
+
+  // スナップショット操作のエンドポイント
+  apiRouter.post("/api/snapshots", async (req: Request, res: Response) => {
+    try {
+      const { presentationId, commitId, slideId, expiryDays } = req.body;
+      
+      if (!presentationId || !commitId || !expiryDays) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      // 有効期限の計算
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + parseInt(expiryDays));
+      
+      // UUIDを生成
+      const id = crypto.randomUUID();
+      
+      // ベースとなるデータの取得
+      const presentation = await storage.getPresentation(presentationId);
+      const commit = await storage.getCommit(commitId);
+      const slides = await storage.getSlides(commitId);
+      
+      if (!presentation || !commit || !slides.length) {
+        return res.status(404).json({ error: "Presentation, commit, or slides not found" });
+      }
+      
+      // 特定のスライドのみを表示する場合
+      const filteredSlides = slideId 
+        ? slides.filter(slide => slide.id === slideId)
+        : slides;
+      
+      if (slideId && filteredSlides.length === 0) {
+        return res.status(404).json({ error: "Slide not found" });
+      }
+      
+      // スナップショットデータの作成
+      const snapshotData = {
+        presentation: {
+          name: presentation.name,
+        },
+        commit: {
+          message: commit.message,
+          createdAt: commit.createdAt,
+        },
+        slides: filteredSlides.map(slide => ({
+          slideNumber: slide.slideNumber,
+          title: slide.title,
+          content: slide.content,
+          thumbnail: slide.thumbnail,
+          xmlContent: slide.xmlContent,
+        })),
+      };
+      
+      // スナップショットの保存
+      const snapshot = await storage.createSnapshot({
+        id,
+        presentationId,
+        commitId,
+        slideId: slideId || null,
+        expiresAt,
+        data: snapshotData,
+      });
+      
+      res.status(201).json({ id: snapshot.id, expiresAt: snapshot.expiresAt });
+    } catch (error) {
+      console.error("Error creating snapshot:", error);
+      res.status(500).json({ error: "Failed to create snapshot" });
+    }
+  });
+  
+  apiRouter.get("/api/snapshots/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const snapshot = await storage.getSnapshot(id);
+      
+      if (!snapshot) {
+        return res.status(404).json({ error: "Snapshot not found" });
+      }
+      
+      // 期限切れチェック
+      if (snapshot.expiresAt < new Date()) {
+        return res.status(410).json({ error: "Snapshot has expired" });
+      }
+      
+      // アクセスカウントを更新
+      await storage.updateSnapshotAccessCount(id);
+      
+      res.json(snapshot);
+    } catch (error) {
+      console.error("Error retrieving snapshot:", error);
+      res.status(500).json({ error: "Failed to retrieve snapshot" });
+    }
+  });
+  
+  // 期限切れのスナップショットをクリーンアップ
+  apiRouter.delete("/api/snapshots/cleanup", async (req: Request, res: Response) => {
+    try {
+      const deletedCount = await storage.deleteExpiredSnapshots();
+      res.json({ deletedCount });
+    } catch (error) {
+      console.error("Error cleaning up snapshots:", error);
+      res.status(500).json({ error: "Failed to clean up snapshots" });
     }
   });
 
