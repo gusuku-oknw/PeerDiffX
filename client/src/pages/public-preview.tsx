@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { decodeId } from "@/lib/hash-utils";
-import { renderSlideContent, Slide } from "../features/slides/slide-renderer";
+import { SlideViewer, type Slide } from "../features/slides/slide-renderer";
 
 /**
  * Public preview page component
@@ -234,7 +234,7 @@ export default function PublicPreview() {
         >
           {currentSlide && (
             <div className="w-full h-full">
-              {renderSlideContent(currentSlide)}
+              <SlideViewer slide={currentSlide} />
             </div>
           )}
         </div>
