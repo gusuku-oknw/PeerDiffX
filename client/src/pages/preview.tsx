@@ -113,74 +113,111 @@ export default function Preview() {
   // 3. コミットがあるのにスライドがない場合の対応
   useEffect(() => {
     if (isAutoRefreshEnabled && latestCommit && (!slides || slides.length === 0)) {
-      console.log("スライドがありません。コミットは存在します。自動作成を試みます...");
+      console.log("スライドがありません。コミットは存在します。スライドチェック...");
       
-      const createInitialSlides = async () => {
+      const checkAndCreateSlides = async () => {
         try {
-          // スライド自動作成APIを呼び出す
-          const createResponse = await fetch(`/api/commits/${latestCommit.id}/create-slides`, {
-            method: "POST",
+          // まず、キャッシュを回避してスライドデータを再度取得する
+          console.log("スライドを再確認中...");
+          const timestamp = new Date().getTime();
+          const checkResponse = await fetch(`/api/commits/${latestCommit.id}/slides?nocache=${timestamp}`, {
             headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              slideCount: 1,
-              title: "テストスライド"
-            })
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
           });
           
-          if (createResponse.ok) {
-            console.log("スライドを自動作成しました。リロードします...");
-            setTimeout(() => window.location.reload(), 1000);
-          } else {
-            // 通常のスライド取得を試みる（APIが見つからない場合のフォールバック）
-            console.log("スライド自動作成APIが見つかりません。直接取得を試みます...");
+          if (checkResponse.ok) {
+            const slideData = await checkResponse.json();
+            console.log("再確認したスライドデータ:", slideData);
             
-            const timestamp = new Date().getTime();
-            const response = await fetch(`/api/commits/${latestCommit.id}/slides?_=${timestamp}`, {
+            // スライドが既に存在する場合は、再ロードするだけ
+            if (slideData && slideData.length > 0) {
+              console.log("スライドが見つかりました。表示を更新します...");
+              // スライドが見つかったのでstateを更新するだけ
+              return;
+            }
+            
+            // スライドが本当に存在しない場合のみ、作成処理に進む
+            console.log("スライドが確実に存在しません。作成処理に進みます...");
+            
+            // スライド自動作成APIを呼び出す
+            const createResponse = await fetch(`/api/commits/${latestCommit.id}/create-slides`, {
+              method: "POST",
               headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-              }
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                slideCount: 1,
+                title: "Welcome"
+              })
             });
             
-            if (response.ok) {
-              const slideData = await response.json();
-              console.log("APIから直接取得したスライドデータ:", slideData);
-              if (slideData && slideData.length > 0) {
-                window.location.reload();
-              } else {
-                // スライドが1つもない場合、手動作成APIを使用
-                console.log("スライドを手動作成します...");
-                await fetch("/api/slides", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json"
+            if (createResponse.ok) {
+              console.log("スライドを自動作成しました。");
+              // ここでリロードしなくてもuseQueryによってデータが再取得される
+            } else {
+              // 通常のスライド作成APIを使用
+              console.log("スライド作成APIを使用します...");
+              
+              const defaultContent = {
+                elements: [
+                  {
+                    id: "title1",
+                    type: "text",
+                    x: 100,
+                    y: 100,
+                    width: 600,
+                    height: 100,
+                    content: "テスト",
+                    style: { 
+                      fontSize: 32, 
+                      fontWeight: "bold", 
+                      color: "#333333" 
+                    }
                   },
-                  body: JSON.stringify({
-                    commitId: latestCommit.id,
-                    slideNumber: 1,
-                    title: "テストスライド",
-                    content: "これはテストスライドです。",
-                    thumbnailUrl: "",
-                    xmlContent: "<p:sld></p:sld>"
-                  })
-                });
-                
-                console.log("スライドを手動作成しました。リロードします...");
-                setTimeout(() => window.location.reload(), 1000);
-              }
+                  {
+                    id: "subtitle1",
+                    type: "text",
+                    x: 100,
+                    y: 220,
+                    width: 600,
+                    height: 50,
+                    content: "Created with PeerDiffX",
+                    style: { 
+                      fontSize: 24, 
+                      color: "#666666" 
+                    }
+                  }
+                ],
+                background: "#ffffff"
+              };
+
+              await fetch("/api/slides", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  commitId: latestCommit.id,
+                  slideNumber: 1,
+                  title: "Welcome",
+                  content: defaultContent,
+                  xmlContent: "<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>テスト</a:t></a:r></a:p></p:txBody></p:sp><p:sp><p:txBody><a:p><a:r><a:t>Created with PeerDiffX</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>"
+                })
+              });
+              
+              console.log("スライドを手動作成しました。再取得します...");
             }
           }
         } catch (error) {
-          console.error("スライド作成/取得エラー:", error);
-          setTimeout(() => window.location.reload(), 3000);
+          console.error("スライド確認/作成エラー:", error);
         }
       };
       
       // 少し遅延させて実行（他の処理が完了する時間を確保）
-      const timer = setTimeout(createInitialSlides, 2000);
+      const timer = setTimeout(checkAndCreateSlides, 2000);
       return () => clearTimeout(timer);
     }
   }, [latestCommit, slides, isAutoRefreshEnabled]);

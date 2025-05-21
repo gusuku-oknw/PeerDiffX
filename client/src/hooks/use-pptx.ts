@@ -44,9 +44,13 @@ export function useCommit(commitId: number) {
  * Hook to fetch slides for a commit
  */
 export function useSlides(commitId?: number) {
-  return useQuery<Slide[]>({ 
-    queryKey: [`/api/commits/${commitId}/slides`],
+  return useQuery<Slide[]>({
+    queryKey: ['/api/commits', commitId, 'slides'],
     enabled: !!commitId,
+    staleTime: 30000, // 30秒間はデータを新鮮と見なす
+    refetchOnWindowFocus: false, // ウィンドウフォーカス時に自動的に再取得しない
+    refetchOnMount: true, // コンポーネントがマウントされたときに再取得する
+    retry: 3, // 失敗時に3回まで再試行
   });
 }
 
