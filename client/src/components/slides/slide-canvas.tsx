@@ -551,11 +551,11 @@ export default function SlideCanvas({
       {/* Main Content Area - Flexbox with Slide and Bottom Panel */}
       <div className="flex-1 flex flex-col overflow-hidden slide-canvas-container">
         {/* Slide Canvas */}
-        <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-start p-0">
+        <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-center p-4">
           <div 
             ref={canvasRef}
-            className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} max-w-[90%]`}
-            style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'left center', marginLeft: '20px' }}
+            className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} w-full`}
+            style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'center' }}
           >
             {renderSlideContent()}
           </div>
