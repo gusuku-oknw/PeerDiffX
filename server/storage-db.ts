@@ -97,16 +97,17 @@ export class DatabaseStorage implements IStorage {
   
   // Commit operations
   async getCommits(branchId: number): Promise<Commit[]> {
-    return await db
+    const results = await db
       .select()
       .from(commits)
       .where(eq(commits.branchId, branchId))
       .orderBy(desc(commits.createdAt));
+    return results as Commit[];
   }
 
   async getCommit(id: number): Promise<Commit | undefined> {
-    const [commit] = await db.select().from(commits).where(eq(commits.id, id));
-    return commit || undefined;
+    const result = await db.select().from(commits).where(eq(commits.id, id));
+    return result[0] as Commit | undefined;
   }
 
   async createCommit(commit: InsertCommit): Promise<Commit> {
