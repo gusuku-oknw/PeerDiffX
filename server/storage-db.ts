@@ -1,32 +1,17 @@
 import { 
-  users, 
-  presentations, 
-  branches, 
-  commits, 
-  slides, 
-  diffs, 
-  snapshots,
-  comments,
-  type User,
-  type InsertUser,
-  type Presentation,
-  type InsertPresentation,
-  type Branch,
-  type InsertBranch,
-  type Commit,
-  type InsertCommit,
-  type Slide,
-  type InsertSlide,
-  type Diff,
-  type InsertDiff,
-  type Snapshot,
-  type InsertSnapshot,
-  type Comment,
-  type InsertComment
-} from "@shared/schema";
+  users, type User, type InsertUser,
+  presentations, type Presentation, type InsertPresentation,
+  branches, type Branch, type InsertBranch,
+  commits, type Commit, type InsertCommit,
+  slides, type Slide, type InsertSlide,
+  diffs, type Diff, type InsertDiff,
+  snapshots, type Snapshot, type InsertSnapshot,
+  comments, type Comment, type InsertComment
+} from "../shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql, lt, isNull } from "drizzle-orm";
+import { eq, and, desc, lt, isNull } from "drizzle-orm";
 import { IStorage } from "./storage";
+import { v4 as uuidv4 } from 'uuid';
 
 export class DatabaseStorage implements IStorage {
   // User operations
@@ -44,7 +29,7 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.insert(users).values(userData).returning();
     return user;
   }
-  
+
   // Presentation operations
   async getPresentations(): Promise<Presentation[]> {
     return await db.select().from(presentations);
@@ -65,18 +50,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePresentation(id: number, updates: Partial<InsertPresentation>): Promise<Presentation | undefined> {
-    const [presentation] = await db
+    const [updatedPresentation] = await db
       .update(presentations)
-      .set(updates)
+      .set({ ...updates, updatedAt: new Date() })
       .where(eq(presentations.id, id))
       .returning();
-    return presentation;
+    return updatedPresentation;
   }
 
   async deletePresentation(id: number): Promise<void> {
     await db.delete(presentations).where(eq(presentations.id, id));
   }
-  
+
   // Branch operations
   async getBranchesByPresentationId(presentationId: number): Promise<Branch[]> {
     return await db
@@ -104,23 +89,45 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createBranch(branchData: InsertBranch): Promise<Branch> {
+    // If this is the default branch, make sure no other branches for this presentation are default
+    if (branchData.isDefault) {
+      await db
+        .update(branches)
+        .set({ isDefault: false })
+        .where(eq(branches.presentationId, branchData.presentationId));
+    }
+    
     const [branch] = await db.insert(branches).values(branchData).returning();
     return branch;
   }
 
   async updateBranch(id: number, updates: Partial<InsertBranch>): Promise<Branch | undefined> {
-    const [branch] = await db
+    // If this branch is being set as default, unset other default branches
+    if (updates.isDefault) {
+      const [branch] = await db.select().from(branches).where(eq(branches.id, id));
+      if (branch) {
+        await db
+          .update(branches)
+          .set({ isDefault: false })
+          .where(and(
+            eq(branches.presentationId, branch.presentationId),
+            eq(branches.isDefault, true)
+          ));
+      }
+    }
+
+    const [updatedBranch] = await db
       .update(branches)
-      .set(updates)
+      .set({ ...updates, updatedAt: new Date() })
       .where(eq(branches.id, id))
       .returning();
-    return branch;
+    return updatedBranch;
   }
 
   async deleteBranch(id: number): Promise<void> {
     await db.delete(branches).where(eq(branches.id, id));
   }
-  
+
   // Commit operations
   async getCommitsByBranchId(branchId: number): Promise<Commit[]> {
     return await db
@@ -136,20 +143,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLatestCommit(branchId: number): Promise<Commit | undefined> {
-    const [commit] = await db
+    const [latestCommit] = await db
       .select()
       .from(commits)
       .where(eq(commits.branchId, branchId))
       .orderBy(desc(commits.createdAt))
       .limit(1);
-    return commit;
+    return latestCommit;
   }
 
   async createCommit(commitData: InsertCommit): Promise<Commit> {
     const [commit] = await db.insert(commits).values(commitData).returning();
     return commit;
   }
-  
+
   // Slide operations
   async getSlidesByCommitId(commitId: number): Promise<Slide[]> {
     return await db
@@ -170,18 +177,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSlide(id: number, updates: Partial<InsertSlide>): Promise<Slide | undefined> {
-    const [slide] = await db
+    const [updatedSlide] = await db
       .update(slides)
       .set(updates)
       .where(eq(slides.id, id))
       .returning();
-    return slide;
+    return updatedSlide;
   }
 
   async deleteSlide(id: number): Promise<void> {
     await db.delete(slides).where(eq(slides.id, id));
   }
-  
+
   // Diff operations
   async getDiffsByCommitId(commitId: number): Promise<Diff[]> {
     return await db
@@ -199,7 +206,7 @@ export class DatabaseStorage implements IStorage {
     const [diff] = await db.insert(diffs).values(diffData).returning();
     return diff;
   }
-  
+
   // Snapshot operations
   async getSnapshot(id: string): Promise<Snapshot | undefined> {
     const [snapshot] = await db.select().from(snapshots).where(eq(snapshots.id, id));
@@ -207,45 +214,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSnapshot(snapshotData: InsertSnapshot): Promise<Snapshot> {
-    const [snapshot] = await db.insert(snapshots).values({
+    // Generate a UUID if not provided
+    const snapshotWithId = {
       ...snapshotData,
-      data: snapshotData.data || {}
-    }).returning();
+      id: snapshotData.id || uuidv4()
+    };
+    
+    const [snapshot] = await db.insert(snapshots).values(snapshotWithId).returning();
     return snapshot;
   }
 
   async updateSnapshotAccessCount(id: string): Promise<Snapshot | undefined> {
     const [snapshot] = await db
+      .select()
+      .from(snapshots)
+      .where(eq(snapshots.id, id));
+    
+    if (!snapshot) return undefined;
+    
+    const [updatedSnapshot] = await db
       .update(snapshots)
       .set({
-        accessCount: sql`${snapshots.accessCount} + 1`
+        accessCount: snapshot.accessCount + 1
       })
       .where(eq(snapshots.id, id))
       .returning();
-    return snapshot;
+    
+    return updatedSnapshot;
   }
 
   async deleteExpiredSnapshots(): Promise<number> {
     const now = new Date();
     const result = await db
       .delete(snapshots)
-      .where(lt(snapshots.expiresAt, now));
+      .where(lt(snapshots.expiresAt, now))
+      .returning();
     
-    // For PostgreSQL, deletedCount is available in the result
-    return Number(result.count) || 0;
+    return result.length;
   }
-  
+
   // Comment operations
   async getComments(slideId: number): Promise<Comment[]> {
     return await db
       .select()
       .from(comments)
-      .where(
-        and(
-          eq(comments.slideId, slideId),
-          isNull(comments.parentId)
-        )
-      )
+      .where(and(
+        eq(comments.slideId, slideId),
+        isNull(comments.parentId)
+      ))
       .orderBy(comments.createdAt);
   }
 
@@ -260,12 +276,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateComment(id: number, updates: Partial<InsertComment>): Promise<Comment | undefined> {
-    const [comment] = await db
+    const [updatedComment] = await db
       .update(comments)
-      .set(updates)
+      .set({ ...updates, updatedAt: new Date() })
       .where(eq(comments.id, id))
       .returning();
-    return comment;
+    return updatedComment;
   }
 
   async deleteComment(id: number): Promise<void> {
