@@ -1,4 +1,4 @@
-import { User, InsertUser, Presentation, InsertPresentation, Branch, InsertBranch, Commit, InsertCommit, Slide, InsertSlide, Diff, InsertDiff, SlideContent, DiffContent, Snapshot, InsertSnapshot } from "@shared/schema";
+import { User, InsertUser, Presentation, InsertPresentation, Branch, InsertBranch, Commit, InsertCommit, Slide, InsertSlide, Diff, InsertDiff, SlideContent, DiffContent, Snapshot, InsertSnapshot, Comment, InsertComment } from "@shared/schema";
 
 export interface IStorage {
   // User operations
@@ -42,6 +42,14 @@ export interface IStorage {
   createSnapshot(snapshot: InsertSnapshot): Promise<Snapshot>;
   updateSnapshotAccessCount(id: string): Promise<Snapshot | undefined>;
   deleteExpiredSnapshots(): Promise<number>; // 削除された数を返す
+  
+  // Comment operations
+  getComments(slideId: number): Promise<Comment[]>;
+  getComment(id: number): Promise<Comment | undefined>;
+  createComment(comment: InsertComment): Promise<Comment>;
+  updateComment(id: number, comment: Partial<Comment>): Promise<Comment | undefined>;
+  deleteComment(id: number): Promise<boolean>;
+  getReplies(commentId: number): Promise<Comment[]>;
 }
 
 export class MemStorage implements IStorage {

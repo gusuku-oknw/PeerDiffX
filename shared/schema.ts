@@ -212,3 +212,45 @@ export const snapshotsRelations = relations(snapshots, ({ one }) => ({
   commit: one(commits, { fields: [snapshots.commitId], references: [commits.id] }),
   slide: one(slides, { fields: [snapshots.slideId], references: [slides.id] }),
 }));
+
+// コメント機能のスキーマ
+export const comments = pgTable("comments", {
+  id: serial("id").primaryKey(),
+  slideId: integer("slide_id").notNull().references(() => slides.id),
+  userId: integer("user_id").references(() => users.id),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  positionX: integer("position_x").notNull(),
+  positionY: integer("position_y").notNull(),
+  resolved: boolean("resolved").default(false),
+  parentId: integer("parent_id").references(({ table }) => table.id),
+});
+
+export const insertCommentSchema = createInsertSchema(comments).pick({
+  slideId: true,
+  userId: true,
+  content: true,
+  positionX: true,
+  positionY: true,
+  parentId: true,
+});
+
+export type InsertComment = z.infer<typeof insertCommentSchema>;
+export type Comment = typeof comments.$inferSelect;
+
+export const commentsRelations = relations(comments, ({ one, many }) => ({
+  slide: one(slides, {
+    fields: [comments.slideId],
+    references: [slides.id],
+  }),
+  user: one(users, {
+    fields: [comments.userId],
+    references: [users.id],
+  }),
+  parent: one(comments, {
+    fields: [comments.parentId],
+    references: [comments.id],
+  }),
+  replies: many(comments),
+}));
