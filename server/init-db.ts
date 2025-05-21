@@ -57,32 +57,44 @@ export async function initializeDatabase() {
     
     const viewPresentationPermission = {
       name: 'view_presentation',
-      description: 'Can view presentations'
+      description: 'Can view presentations',
+      resource: 'presentation',
+      action: 'view'
     };
     
     const editPresentationPermission = {
       name: 'edit_presentation', 
-      description: 'Can edit presentations'
+      description: 'Can edit presentations',
+      resource: 'presentation',
+      action: 'edit'
     };
     
     const createPresentationPermission = {
       name: 'create_presentation',
-      description: 'Can create new presentations'
+      description: 'Can create new presentations',
+      resource: 'presentation',
+      action: 'create'
     };
     
     const deletePresentationPermission = {
       name: 'delete_presentation',
-      description: 'Can delete presentations'
+      description: 'Can delete presentations',
+      resource: 'presentation',
+      action: 'delete'
     };
     
     const commentPermission = {
       name: 'comment',
-      description: 'Can add comments to slides'
+      description: 'Can add comments to slides',
+      resource: 'slide',
+      action: 'comment'
     };
     
     const manageUsersPermission = {
       name: 'manage_users',
-      description: 'Can manage users in the system'
+      description: 'Can manage users in the system',
+      resource: 'user',
+      action: 'manage'
     };
     
     // Insert permissions
