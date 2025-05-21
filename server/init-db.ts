@@ -510,7 +510,15 @@ export async function initializeDatabase() {
 }
 
 // If this file is run directly, execute the initialization
-if (require.main === module) {
+// ESモジュール対応
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// メインモジュールとして実行された場合
+if (import.meta.url === `file://${__filename}`) {
   initializeDatabase()
     .then(() => {
       console.log('Database initialization complete.');

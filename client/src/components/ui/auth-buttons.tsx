@@ -1,28 +1,34 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Link } from "wouter";
+import { LogOut, Settings, User } from "lucide-react";
 
 export function AuthButtons() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const { toast } = useToast();
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
 
   const handleLogin = () => {
+    setIsAuthLoading(true);
     window.location.href = "/api/login";
   };
 
   const handleLogout = () => {
+    setIsAuthLoading(true);
     window.location.href = "/api/logout";
   };
 
   if (isLoading) {
-    return <Button variant="ghost" disabled>Loading...</Button>;
+    return <Button variant="ghost" size="sm" disabled>読み込み中...</Button>;
   }
 
   if (isAuthenticated) {
@@ -31,24 +37,42 @@ export function AuthButtons() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
             <Avatar className="h-8 w-8">
-              {user.profileImageUrl ? (
-                <AvatarImage src={user.profileImageUrl} alt={user.username} />
-              ) : (
-                <AvatarFallback>
-                  {user.firstName?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase() || 'U'}
-                </AvatarFallback>
-              )}
+              <AvatarImage src={user?.profileImageUrl || ""} alt="プロフィール" />
+              <AvatarFallback>
+                {user?.firstName?.charAt(0) || ""}
+                {user?.lastName?.charAt(0) || ""}
+              </AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem className="font-medium">
-            {user.firstName && user.lastName 
-              ? `${user.firstName} ${user.lastName}` 
-              : user.username}
-          </DropdownMenuItem>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user?.email}
+              </p>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <Link href="/profile">
+            <DropdownMenuItem>
+              <User className="mr-2 h-4 w-4" />
+              <span>プロフィール</span>
+            </DropdownMenuItem>
+          </Link>
+          <Link href="/settings">
+            <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>設定</span>
+            </DropdownMenuItem>
+          </Link>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>
-            Sign out
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>ログアウト</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -56,8 +80,20 @@ export function AuthButtons() {
   }
 
   return (
-    <Button onClick={handleLogin}>
-      Sign in
-    </Button>
+    <div className="flex items-center gap-2">
+      <Link href="/signup">
+        <Button variant="ghost" size="sm" disabled={isAuthLoading}>
+          サインアップ
+        </Button>
+      </Link>
+      <Button 
+        variant="default" 
+        size="sm"
+        disabled={isAuthLoading}
+        onClick={handleLogin}
+      >
+        {isAuthLoading ? "読み込み中..." : "ログイン"}
+      </Button>
+    </div>
   );
 }
