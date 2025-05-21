@@ -1,0 +1,95 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+preview.tsx:56 スライド読み込み状態: undefined
+preview.tsx:162 Warning: React has detected a change in the order of Hooks called by Preview. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks
+
+   Previous render            Next render
+   ------------------------------------------------------
+1. useContext                 useContext
+2. useContext                 useContext
+3. useSyncExternalStore       useSyncExternalStore
+4. useRef                     useRef
+5. useInsertionEffect         useInsertionEffect
+6. useContext                 useContext
+7. useContext                 useContext
+8. useContext                 useContext
+9. useEffect                  useEffect
+10. useState                  useState
+11. useCallback               useCallback
+12. useSyncExternalStore      useSyncExternalStore
+13. useEffect                 useEffect
+14. useContext                useContext
+15. useContext                useContext
+16. useContext                useContext
+17. useEffect                 useEffect
+18. useState                  useState
+19. useCallback               useCallback
+20. useSyncExternalStore      useSyncExternalStore
+21. useEffect                 useEffect
+22. useContext                useContext
+23. useContext                useContext
+24. useContext                useContext
+25. useEffect                 useEffect
+26. useState                  useState
+27. useCallback               useCallback
+28. useSyncExternalStore      useSyncExternalStore
+29. useEffect                 useEffect
+30. useContext                useContext
+31. useContext                useContext
+32. useContext                useContext
+33. useEffect                 useEffect
+34. useState                  useState
+35. useCallback               useCallback
+36. useSyncExternalStore      useSyncExternalStore
+37. useEffect                 useEffect
+38. useContext                useContext
+39. useContext                useContext
+40. useContext                useContext
+41. useEffect                 useEffect
+42. useState                  useState
+43. useCallback               useCallback
+44. useSyncExternalStore      useSyncExternalStore
+45. useEffect                 useEffect
+46. useState                  useState
+47. useState                  useState
+48. useState                  useState
+49. useState                  useState
+50. useEffect                 useEffect
+51. undefined                 useEffect
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    at Preview (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/pages/preview.tsx?t=1747840472451:32:22)
+    at Route (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=2fec0807:323:16)
+    at Switch (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=2fec0807:379:17)
+    at Router
+    at div
+    at div
+    at Provider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…unner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=2fec0807:38:15)
+    at TooltipProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…rkspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=2fec0807:61:5)
+    at LanguageProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/i18n/language-context.tsx:190:36)
+    at QueryClientProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=2fec0807:2805:3)
+    at App
+    at ThemeProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/theme-provider.tsx:25:3)
+chunk-RPCDYKBN.js?v=2fec0807:11678 Uncaught Error: Rendered more hooks than during the previous render.
+    at Preview (preview.tsx:162:3)
+chunk-RPCDYKBN.js?v=2fec0807:11678 Uncaught Error: Rendered more hooks than during the previous render.
+    at Preview (preview.tsx:162:3)
+chunk-RPCDYKBN.js?v=2fec0807:14032 The above error occurred in the <Preview> component:
+
+    at Preview (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/pages/preview.tsx?t=1747840472451:32:22)
+    at Route (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=2fec0807:323:16)
+    at Switch (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=2fec0807:379:17)
+    at Router
+    at div
+    at div
+    at Provider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…unner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=2fec0807:38:15)
+    at TooltipProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…rkspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=2fec0807:61:5)
+    at LanguageProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/i18n/language-context.tsx:190:36)
+    at QueryClientProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=2fec0807:2805:3)
+    at App
+    at ThemeProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/theme-provider.tsx:25:3)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+chunk-RPCDYKBN.js?v=2fec0807:11678 Uncaught Error: Rendered more hooks than during the previous render.
+    at Preview (preview.tsx:162:3)
+

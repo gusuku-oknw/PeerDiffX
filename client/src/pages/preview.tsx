@@ -14,6 +14,19 @@ import { decodeId } from "@/lib/hash-utils";
 export default function Preview() {
   const [, params] = useRoute("/preview/:id");
   
+  // すべてのstate変数を最初に宣言
+  const [activeSlideId, setActiveSlideId] = useState<number | null>(null);
+  const [showDiffViewer, setShowDiffViewer] = useState(false);
+  const [showVersionPanel, setShowVersionPanel] = useState(true);
+  const [diffViewerData, setDiffViewerData] = useState({
+    slideNumber: 0,
+    beforeCommitId: 0,
+    afterCommitId: 0,
+    beforeCommitTime: "",
+    afterCommitTime: ""
+  });
+  const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
+  
   // URL hash parameter から presentation ID を復元
   let presentationId = 0;
   
@@ -33,6 +46,7 @@ export default function Preview() {
     console.error("Failed to decode presentation ID:", error);
   }
   
+  // すべてのデータ取得処理を一箇所にまとめる
   const { data: presentation, isLoading: isLoadingPresentation } = usePresentation(presentationId);
   const { data: defaultBranch, isLoading: isLoadingBranch } = useBranch(presentationId, true);
   const { data: commits, isLoading: isLoadingCommits } = useCommits(defaultBranch?.id);
@@ -40,27 +54,79 @@ export default function Preview() {
   const latestCommit = commits?.[0];
   const { data: slides, isLoading: isLoadingSlides } = useSlides(latestCommit?.id);
   
-  const [activeSlideId, setActiveSlideId] = useState<number | null>(null);
-  const [showDiffViewer, setShowDiffViewer] = useState(false);
-  const [showVersionPanel, setShowVersionPanel] = useState(true);
-  const [diffViewerData, setDiffViewerData] = useState({
-    slideNumber: 0,
-    beforeCommitId: 0,
-    afterCommitId: 0,
-    beforeCommitTime: "",
-    afterCommitTime: ""
-  });
-  
-  // 強化された初期スライド設定ロジック
+  // すべてのuseEffectを集約
+  // 1. スライドが読み込まれたら、最初のスライドをアクティブにする
   useEffect(() => {
     console.log("スライド読み込み状態:", slides);
-    // データがロードされたらすぐにアクティブスライドを設定
     if (slides && slides.length > 0) {
       console.log("スライドが見つかりました、ID設定:", slides[0].id);
       setActiveSlideId(slides[0].id);
     }
   }, [slides]);
   
+  // 2. データが不完全な場合の自動リロード
+  useEffect(() => {
+    if (isAutoRefreshEnabled && presentation && (!defaultBranch || !latestCommit)) {
+      console.log("データが不完全です。自動リロードを準備します...");
+      const timer = setTimeout(() => {
+        window.location.reload();
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [presentation, defaultBranch, latestCommit, isAutoRefreshEnabled]);
+  
+  // 3. スライドを取得するロジック
+  useEffect(() => {
+    if (isAutoRefreshEnabled && latestCommit && (!slides || slides.length === 0)) {
+      console.log("スライドがありません。直接APIから取得を試みます...");
+      
+      const fetchSlides = async () => {
+        try {
+          const timestamp = new Date().getTime();
+          const response = await fetch(`/api/commits/${latestCommit.id}/slides?_=${timestamp}`, {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+          
+          if (response.ok) {
+            const slideData = await response.json();
+            console.log("APIから直接取得したスライドデータ:", slideData);
+            
+            if (slideData && slideData.length > 0) {
+              window.location.reload();
+            } else {
+              setTimeout(() => {
+                console.log("スライドがまだ作成されていません。再読み込みします...");
+                window.location.reload();
+              }, 3000);
+            }
+          }
+        } catch (error) {
+          console.error("スライド取得エラー:", error);
+          setTimeout(() => window.location.reload(), 3000);
+        }
+      };
+      
+      fetchSlides();
+    }
+  }, [latestCommit, slides, isAutoRefreshEnabled]);
+  
+  // 4. デバッグ用に状態をログ出力
+  useEffect(() => {
+    console.log("現在の状態:", {
+      presentationId,
+      defaultBranch,
+      latestCommit,
+      slides: slides?.length,
+      activeSlideId
+    });
+  }, [presentationId, defaultBranch, latestCommit, slides, activeSlideId]);
+  
+  // イベントハンドラの定義
   const handleSelectSlide = (slideId: number) => {
     setActiveSlideId(slideId);
   };
@@ -94,7 +160,6 @@ export default function Preview() {
   };
   
   const handleViewHistory = () => {
-    // Toggle version panel
     setShowVersionPanel(true);
   };
   
@@ -117,7 +182,6 @@ export default function Preview() {
   };
   
   const handleRestoreVersion = (commitId: number) => {
-    // In a real app, would implement restore functionality
     console.log("Restore to commit:", commitId);
   };
   
@@ -136,7 +200,11 @@ export default function Preview() {
     }
   };
   
-  if (isLoadingPresentation || isLoadingBranch || isLoadingCommits || isLoadingSlides) {
+  // ローディング状態の判定
+  const isLoading = isLoadingPresentation || isLoadingBranch || isLoadingCommits || isLoadingSlides;
+
+  // ローディング表示
+  if (isLoading) {
     return (
       <div className="flex-1 flex overflow-hidden">
         <div className="w-64 bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4">
@@ -158,20 +226,7 @@ export default function Preview() {
     );
   }
   
-  // 自動リフレッシュと初期化ロジックをすべてのレンダリングパスで実行
-  useEffect(() => {
-    // データが不完全な場合の自動リロード
-    if (presentation && (!defaultBranch || !latestCommit)) {
-      console.log("データが不完全です。自動リロードを準備します...");
-      const timer = setTimeout(() => {
-        window.location.reload();
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [presentation, defaultBranch, latestCommit]);
-  
-  // Check if we're missing the presentation entirely
+  // プレゼンテーションが存在しない場合
   if (!presentation) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -188,62 +243,7 @@ export default function Preview() {
     );
   }
   
-  // 強化されたスライド読み込みロジック
-  useEffect(() => {
-    // コミットはあるがスライドがない状態を検出
-    if (latestCommit && (!slides || slides.length === 0)) {
-      console.log("スライドがありません。直接APIから取得を試みます...");
-      
-      // キャッシュをバイパスして直接APIからデータを取得
-      const fetchSlides = async () => {
-        try {
-          // キャッシュを無効化するためのランダムクエリパラメータを追加
-          const timestamp = new Date().getTime();
-          const response = await fetch(`/api/commits/${latestCommit.id}/slides?_=${timestamp}`, {
-            headers: {
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0'
-            }
-          });
-          
-          if (response.ok) {
-            const slideData = await response.json();
-            console.log("APIから直接取得したスライドデータ:", slideData);
-            
-            if (slideData && slideData.length > 0) {
-              // スライドが見つかった場合、ページ全体をリロードせずにQueryClientを更新
-              window.location.reload();
-            } else {
-              // 3秒後に再試行
-              setTimeout(() => {
-                console.log("スライドがまだ作成されていません。再読み込みします...");
-                window.location.reload();
-              }, 3000);
-            }
-          }
-        } catch (error) {
-          console.error("スライド取得エラー:", error);
-          // エラー時も3秒後に再試行
-          setTimeout(() => window.location.reload(), 3000);
-        }
-      };
-      
-      fetchSlides();
-    }
-  }, [latestCommit, slides]);
-  
-  // デバッグ用に状態をログ出力
-  useEffect(() => {
-    console.log("現在の状態:", {
-      presentationId,
-      defaultBranch,
-      latestCommit,
-      slides: slides?.length,
-      activeSlideId
-    });
-  }, [presentationId, defaultBranch, latestCommit, slides, activeSlideId]);
-
+  // メインコンテンツを返す
   return (
     <div className="flex-1 flex overflow-hidden">
       <Sidebar onToggleVersionPanel={toggleVersionPanel} />
@@ -251,7 +251,7 @@ export default function Preview() {
       {activeSlideId ? (
         <>
           <SlideThumbnails 
-            commitId={latestCommit.id} 
+            commitId={latestCommit?.id} 
             activeSlideId={activeSlideId} 
             onSelectSlide={handleSelectSlide} 
           />
@@ -268,7 +268,7 @@ export default function Preview() {
             shareDialogComponent={
               <ShareDialog 
                 presentationId={presentationId} 
-                commitId={latestCommit.id} 
+                commitId={latestCommit?.id} 
                 slideId={activeSlideId} 
               />
             }
@@ -284,16 +284,13 @@ export default function Preview() {
           )}
         </>
       ) : (
-        // アクティブスライドがない場合は自動的にリロード
+        // アクティブスライドがない場合は読み込み中表示
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center p-8">
-            <h2 className="text-2xl font-bold mb-4">プレゼンテーションを読み込み中...</h2>
+            <h2 className="text-2xl font-bold mb-4">スライドを読み込み中...</h2>
             <div className="flex justify-center">
               <div className="animate-spin h-10 w-10 border-4 border-blue-500 rounded-full border-t-transparent"></div>
             </div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">
-              3秒後に自動的にリロードします
-            </p>
           </div>
         </div>
       )}
