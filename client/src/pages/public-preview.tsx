@@ -415,8 +415,8 @@ export default function PublicPreview() {
   
   // メインコンテンツのレンダリング - PeerDiffXの元のUIスタイル
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 pt-0 overflow-hidden">
-      {/* ヘッダー部分 */}
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 pt-0">
+      {/* ヘッダー部分 - シンプル化 */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
         <div className="flex items-center">
           <Link href="/" className="mr-4 flex items-center">
@@ -430,24 +430,6 @@ export default function PublicPreview() {
           </div>
         </div>
         <div className="flex space-x-2">
-          <Button 
-            onClick={toggleShareModal}
-            size="sm" 
-            variant="outline"
-            className="text-xs"
-          >
-            共有
-          </Button>
-          <Button 
-            asChild 
-            size="sm" 
-            variant="outline"
-          >
-            <Link href="/settings">
-              <Settings className="mr-1.5 h-3.5 w-3.5" />
-              設定
-            </Link>
-          </Button>
           <Button asChild size="sm" variant="ghost">
             <Link href="/">
               <Home className="mr-1.5 h-3.5 w-3.5" />
@@ -457,124 +439,61 @@ export default function PublicPreview() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden h-full">
-        {/* サイドバー部分 */}
+      {/* メインコンテンツ - シンプルな2カラムレイアウト */}
+      <div className="flex h-[calc(100vh-60px)]">
+        {/* サムネイル表示部分のみ */}
         <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
           <div className="p-4">
-            <div className="mb-6">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 px-3">プレゼンテーション情報</h3>
-              <div className="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-md mb-3">
-                <h4 className="font-medium text-sm mb-1">{presentation?.name || 'Loading...'}</h4>
-                {presentation?.description && (
-                  <p className="text-xs text-gray-600 dark:text-gray-400">{presentation.description}</p>
-                )}
-                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  最終更新: {presentation?.updatedAt ? new Date(presentation.updatedAt).toLocaleDateString('ja-JP') : '---'}
-                </div>
-              </div>
-              
-              {/* AI分析ボタン - サイドバーに追加（ダイアログ型に変更） */}
-              <button 
-                onClick={() => setIsAiDialogOpen(true)}
-                className="flex items-center w-full px-3 py-2 mt-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-              >
-                <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
-                  <FaRobot className="text-xs" />
-                </div>
-                <span>AI分析</span>
-              </button>
-            </div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4">スライド一覧</h3>
             
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-3">ブランチ</h3>
-              </div>
-              <div className="space-y-1">
-                {isLoadingBranches ? (
-                  <div className="animate-pulse space-y-2">
-                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            {slides.length > 0 ? (
+              <div className="space-y-2">
+                {slides.map(slide => (
+                  <div 
+                    key={slide.id}
+                    className={`p-2 rounded-md cursor-pointer ${currentSlideId === slide.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-500' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                    onClick={() => handleSelectSlide(slide.id)}
+                  >
+                    <div className="w-full rounded-md overflow-hidden border border-gray-200 dark:border-gray-700 mb-1 aspect-video bg-white">
+                      {slide.thumbnail ? (
+                        <img src={slide.thumbnail} alt={`スライド ${slide.slideNumber}`} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800 text-gray-400">
+                          <div className="text-xs">{slide.slideNumber}</div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-xs truncate">{slide.title || `スライド ${slide.slideNumber}`}</div>
                   </div>
-                ) : (
-                  branches?.map((branch: any) => (
-                    <Link 
-                      key={branch.id} 
-                      href={`/public-preview/${presentationId}/${commits?.find((c: any) => c.branchId === branch.id)?.id || ''}`}
-                      className={`flex items-center px-3 py-2 rounded-md ${branch.isDefault ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'}`}
-                    >
-                      <div className={`w-4 h-4 rounded-full mr-3 flex-shrink-0 ${branch.name === 'main' ? 'bg-blue-500' : branch.name.startsWith('feature') ? 'bg-green-500' : 'bg-purple-500'}`}></div>
-                      <span className={branch.isDefault ? 'font-medium' : ''}>
-                        {branch.name}
-                      </span>
-                    </Link>
-                  ))
-                )}
+                ))}
               </div>
-            </div>
-            
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-3">コミット履歴</h3>
+            ) : (
+              <div className="py-4 px-2 text-center text-gray-500 text-sm">
+                スライドがありません
               </div>
-              <div className="space-y-1">
-                {isLoadingCommits ? (
-                  <div className="animate-pulse space-y-2">
-                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                  </div>
-                ) : (
-                  commits?.map((commit: any, index: number) => (
-                    <Link 
-                      key={commit.id} 
-                      href={`/public-preview/${presentationId}/${commit.id}`}
-                      className={`flex items-center px-3 py-2 rounded-md text-sm ${commit.id === currentCommit?.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-500' : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'}`}
-                    >
-                      <div className="flex flex-col">
-                        <span className={commit.id === currentCommit?.id ? 'font-medium' : ''}>
-                          {commit.message || `Commit #${index + 1}`}
-                        </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(commit.createdAt).toLocaleDateString('ja-JP')}
-                        </span>
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </div>
-            </div>
+            )}
           </div>
         </div>
-      
-        {/* サムネイル表示部分 */}
-        {slides.length > 0 && currentCommit && (
-          <SlideThumbnails 
-            commitId={currentCommit.id} 
-            activeSlideId={currentSlideId}
-            slides={slides}
-            onSelectSlide={handleSelectSlide} 
-          />
-        )}
         
-        {/* スライドキャンバス部分 */}
+        {/* スライドキャンバス部分のみ */}
         {currentSlideId ? (
-          <SlideCanvas 
-            slideId={currentSlideId}
-            totalSlides={slides.length}
-            currentSlideNumber={currentSlide?.slideNumber || 1}
-            onPrevSlide={goToPreviousSlide}
-            onNextSlide={goToNextSlide}
-            onViewXmlDiff={() => handleOpenBottomPanel('xml')}
-            onViewHistory={() => handleOpenBottomPanel('history')}
-            presentationId={presentationId}
-            presentationName={presentation?.name}
-          />
+          <div className="flex-1 flex">
+            <SlideCanvas 
+              slideId={currentSlideId}
+              totalSlides={slides.length}
+              currentSlideNumber={currentSlide?.slideNumber || 1}
+              onPrevSlide={goToPreviousSlide}
+              onNextSlide={goToNextSlide}
+              onViewXmlDiff={() => {}}
+              presentationId={presentationId}
+              presentationName={presentation?.name}
+            />
+          </div>
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center p-8">
-              <h2 className="text-2xl font-bold mb-4">スライドの読み込み中...</h2>
-              <div className="flex justify-center">
-                <div className="animate-spin h-10 w-10 border-4 border-blue-500 rounded-full border-t-transparent"></div>
-              </div>
+              <h2 className="text-2xl font-bold mb-4">スライドを選択してください</h2>
+              <p className="text-gray-500">左側のサムネイルからスライドを選択すると、ここに表示されます</p>
             </div>
           </div>
         )}
