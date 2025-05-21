@@ -77,6 +77,8 @@ export function ShareDialog({ presentationId, commitId, slideId, onClose }: Shar
     setIsOpen(open);
     if (open && !shareUrl) {
       generateShareableLink();
+    } else if (!open && onClose) {
+      onClose();
     }
   };
   

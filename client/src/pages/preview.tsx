@@ -6,6 +6,7 @@ import SlideCanvas from "@/components/slides/slide-canvas";
 import VersionPanel from "@/components/version/version-panel";
 import DiffViewer from "@/components/diff/diff-viewer";
 import { ShareButton } from "@/components/share/ShareButton";
+import { OneClickSnapshotButton } from "@/components/share/one-click-snapshot-button";
 import { Button } from "@/components/ui/button";
 import { decodeId } from "@/lib/hash-utils";
 import { usePresentationState } from "@/features/presentation/use-presentation-state";
@@ -163,10 +164,11 @@ export default function Preview() {
             presentationId={presentationId}
             presentationName={presentation?.name}
             shareDialogComponent={
-              <ShareDialog 
+              <ShareButton
                 presentationId={presentationId} 
                 commitId={latestCommit?.id} 
-                slideId={activeSlideId} 
+                slideId={activeSlideId}
+                presentationName={presentation?.name}
               />
             }
           />
