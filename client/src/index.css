@@ -2,12 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-/* スライドキャンバスのレイアウト修正 */
+/* レイアウト構造の修正 - 右側の余白を削除 */
 .slide-canvas-container {
   width: 100%;
   max-width: 100%;
   overflow: hidden;
-  flex: 1;
+  flex: 1 1 auto;
+}
+
+/* 全画面表示の修正 */
+.flex-1.flex.overflow-hidden {
+  width: 100%;
+  overflow: hidden;
 }
 
 /* ダイアログのサイズと位置を調整 */
