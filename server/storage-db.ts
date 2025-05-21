@@ -9,7 +9,7 @@ import {
   presentationAccess
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, and, desc, lt, isNull } from "drizzle-orm";
+import { eq, and, desc, lt, isNull, or, inArray } from "drizzle-orm";
 import { IStorage } from "./storage";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -96,14 +96,24 @@ export class DatabaseStorage implements IStorage {
 
   async deletePresentation(id: number): Promise<boolean> {
     try {
+      console.log(`Deleting presentation with ID: ${id}`);
+      
       // トランザクションを使って、すべての関連データを順番に削除する
       await db.transaction(async (tx) => {
         // まず、この発表に関連するブランチを取得
         const relatedBranches = await tx.select().from(branches).where(eq(branches.presentationId, id));
+        console.log(`Found ${relatedBranches.length} branches to delete`);
+        
+        // すべてのコミットIDを収集（diff削除で必要）
+        const allCommitIds: number[] = [];
         
         for (const branch of relatedBranches) {
           // ブランチに関連するコミットを取得
           const relatedCommits = await tx.select().from(commits).where(eq(commits.branchId, branch.id));
+          console.log(`Branch ${branch.id}: Found ${relatedCommits.length} commits to delete`);
+          
+          // コミットIDを収集
+          allCommitIds.push(...relatedCommits.map(commit => commit.id));
           
           for (const commit of relatedCommits) {
             // コメントの削除 (もし存在するなら)
@@ -114,13 +124,19 @@ export class DatabaseStorage implements IStorage {
             
             // スライドの削除
             await tx.delete(slides).where(eq(slides.commitId, commit.id));
-            
-            // Diffの削除
-            await tx.delete(diffs).where(eq(diffs.commitId, commit.id));
           }
           
-          // コミットの削除
+          // コミットの削除（diffはまだ削除しない）
           await tx.delete(commits).where(eq(commits.branchId, branch.id));
+        }
+        
+        // 収集したすべてのコミットIDに関連するdiffを削除
+        // Diffs table uses commitId field
+        if (allCommitIds.length > 0) {
+          for (const commitId of allCommitIds) {
+            await tx.delete(diffs).where(eq(diffs.commitId, commitId));
+          }
+          console.log(`Deleted diffs related to ${allCommitIds.length} commits`);
         }
         
         // ブランチの削除
@@ -128,17 +144,22 @@ export class DatabaseStorage implements IStorage {
         
         // スナップショット機能削除済み
         
-        // アクセス権の削除
-        await tx.delete(presentationAccess).where(eq(presentationAccess.presentationId, id));
+        // アクセス権の削除（存在する場合）
+        try {
+          await tx.delete(presentationAccess).where(eq(presentationAccess.presentationId, id));
+        } catch (e) {
+          console.log('No presentation access to delete, continuing...');
+        }
         
         // 最後にプレゼンテーション自体を削除
         await tx.delete(presentations).where(eq(presentations.id, id));
+        console.log(`Presentation ${id} deleted successfully`);
       });
       
       return true;
     } catch (error) {
       console.error(`Error during presentation deletion (ID: ${id}):`, error);
-      return false;
+      throw error; // エラーを再スローして適切なエラーハンドリングを可能に
     }
   }
 
