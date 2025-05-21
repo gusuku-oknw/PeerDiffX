@@ -1,0 +1,83 @@
+name: Branch Protection Configuration
+
+# This workflow ensures branch naming conventions are followed
+# and that protected branches remain secure
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+  push:
+    branches:
+      - main
+      - 'release/**'
+
+jobs:
+  validate-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name
+        if: github.event_name == 'pull_request'
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+          
+          # Define valid branch naming patterns
+          if [[ ! $BRANCH_NAME =~ ^(feature|fix|docs|chore|refactor|test|style)/[a-z0-9]+-[a-z0-9-]+$ ]]; then
+            echo "Error: Branch name '$BRANCH_NAME' does not follow naming convention"
+            echo "Branch names should follow: <type>/<issue-id>-<short-description>"
+            echo "Example: feature/123-add-xml-parser"
+            echo "Allowed types: feature, fix, docs, chore, refactor, test, style"
+            exit 1
+          fi
+          
+          echo "Branch name $BRANCH_NAME is valid"
+
+  validate-commit-messages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Check Conventional Commits
+        if: github.event_name == 'pull_request'
+        run: |
+          # Get commits in this PR
+          PR_COMMITS=$(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+          
+          # Define valid commit message pattern
+          PATTERN='^(feat|fix|docs|style|refactor|perf|test|chore)(\([a-z-]+\))?: .{1,100}$'
+          
+          INVALID_COMMITS=0
+          
+          for COMMIT in $PR_COMMITS
+          do
+            MESSAGE=$(git log --format=%s -n 1 $COMMIT)
+            if ! [[ $MESSAGE =~ $PATTERN ]]; then
+              echo "Invalid commit message: $MESSAGE"
+              echo "Commit messages must follow the Conventional Commits standard:"
+              echo "<type>[(scope)]: <description>"
+              echo "Example: feat(diff): add XML diff parser"
+              INVALID_COMMITS=$((INVALID_COMMITS + 1))
+            fi
+          done
+          
+          if [ $INVALID_COMMITS -gt 0 ]; then
+            echo "Found $INVALID_COMMITS commit messages that don't follow convention"
+            exit 1
+          fi
+          
+          echo "All commit messages follow the Conventional Commits standard"
+
+  prevent-direct-push:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    steps:
+      - name: Check if push is from PR merge
+        run: |
+          # This step will only run for pushes to main or release/* branches
+          # Verify this is a merge commit from a PR, not a direct push
+          if [[ "${{ github.event.head_commit.message }}" != *"Merge pull request"* ]]; then
+            echo "Error: Direct pushes to protected branches are not allowed"
+            echo "Please create a pull request instead"
+            exit 1
+          fi

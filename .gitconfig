@@ -1,0 +1,23 @@
+[diff "xml"]
+    textconv = xmllint --format --recover --encode UTF-8 --noblanks
+
+[diff "xml-slide"]
+    textconv = xmllint --format --recover --encode UTF-8 --noblanks
+    xfuncname = "^[ \t]*(<sl:slide.*>|<p:sp>|<p:txBody>)"
+
+[diff "xml-chart"]
+    textconv = xmllint --format --recover --encode UTF-8 --noblanks
+    xfuncname = "^[ \t]*(<c:chart.*>|<c:ser>|<c:tx>)"
+
+[diff "xml-diagram"]
+    textconv = xmllint --format --recover --encode UTF-8 --noblanks
+    xfuncname = "^[ \t]*(<dgm:.*>|<dgm:pt>)"
+
+[core]
+    attributesFile = .gitattributes
+
+[lfs]
+    lockVerify = true
+
+[lfs "track"]
+    lockable = true

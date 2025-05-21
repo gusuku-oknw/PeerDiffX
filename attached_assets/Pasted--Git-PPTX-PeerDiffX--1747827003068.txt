@@ -1,0 +1,95 @@
+以下では、Git 管理に関する具体的な制約とそれぞれのベストプラクティスをまとめます。制約を設定することで、PPTX 差分管理システムとしての PeerDiffX リポジトリの健全性と使いやすさを担保できます。
+
+## 要約
+
+Git 管理の制約としては、①大容量ファイル管理（Git LFS 制限、リポジトリサイズ制限）、②ブランチ命名・保護ルール、③コミットメッセージ規約、④差分表示／マージ運用（.gitattributes 設定、ファイルロック）、⑤アクセス権限と保護されたブランチ、⑥CI 要件、といった要素が必要です。これらを適切に設定することで、バイナリである PPTX の差分管理やチームの共同作業を円滑かつ安全に行えます。
+
+---
+
+## 1. 大容量ファイル管理の制約
+
+### 1.1 Git LFS の導入
+
+* `.pptx` ファイルは Git LFS で管理し、通常の Git 管理下には置かないよう必須化します ([GitHub Docs][1])。
+* Git LFS のロック機能を有効化し、同一ファイルへの同時編集を防止します ([Stack Overflow][2])。
+
+### 1.2 リポジトリサイズとファイルサイズ制限
+
+* GitHub の推奨リポジトリサイズは 1 GB 未満、最大でも 5 GB 以下とし、1 ファイルあたり 100 MB 未満を厳守します ([GitHub Docs][3])([Reddit][4])。
+* それ以上の大容量ファイルは外部ストレージ（S3 など）へのアップロードを促す仕組みを導入します。
+
+---
+
+## 2. ブランチ運用の制約
+
+### 2.1 命名規則
+
+* `feature/<issue-id>-<short-description>`、`fix/<issue-id>-<short-description>` など、**小文字かつハイフン区切り**を必須とします ([Medium][5])。
+* 命名ルールを逸脱したブランチの作成は CI で検出し、マージ不可とします。
+
+### 2.2 保護されたブランチ
+
+* `main` および `release/*` ブランチを保護ブランチに設定し、直接プッシュ・強制プッシュを禁止します ([GitHub Docs][6])。
+* プルリクエスト（PR）経由のみマージ可能とし、必須のステータスチェック（テスト・Lint）を設定します ([DEV Community][7])。
+
+---
+
+## 3. コミットメッセージ規約
+
+### 3.1 Conventional Commits の採用
+
+* `<type>(<scope>): <description>` の形式を徹底します。例: `feat(diff): add XML diff parser` ([conventionalcommits.org][8])。
+* CI でメッセージ形式チェックを実装し、規約違反のコミットはマージ不可とします。
+
+---
+
+## 4. 差分表示とマージの制約
+
+### 4.1 `.gitattributes` 設定
+
+* `*.pptx filter=lfs diff=lfs` を設定し、差分プレビュー時に Git LFS 経由で適切に扱う ([Qiita][9])。
+* 必要に応じて `linguist-generated` 属性で自動生成ファイルをレビュー差分から除外します。
+
+### 4.2 ファイルロック
+
+* PPTX の主要ファイルは作業前に `git lfs lock` を行う手順を必須化し、同時編集による衝突を防ぎます ([Stack Overflow][2])。
+
+---
+
+## 5. アクセス権限と保護
+
+### 5.1 リポジトリアクセス制御
+
+* 学生・開発者・運営のロールを細分化し、\*\*権限に応じて「閲覧のみ」「プッシュ可」「ブランチ設定可」\*\*を設定します。
+* OAuth SSO／組織管理と連携し、大学メールアドレスでのアクセスを必須化します。
+
+### 5.2 監査ログ
+
+* すべてのプッシュ・マージ・LFS ロック操作をログに記録し、定期的に監査する仕組みを導入します。
+
+---
+
+## 6. CI／CD 要件
+
+### 6.1 ステータスチェック
+
+* LFS ファイルの追跡検証、コミットメッセージ形式チェック、ブランチ命名チェックを CI パイプラインに組み込みます。
+* 自動テストで XML レベル差分抽出のサンプル検証を実施し、重大な差分検出ロジックの破壊を検出します。
+
+### 6.2 リリースプロセス
+
+* タグ付け（`vX.Y.Z`）を SemVer に従って実施し、Release ブランチからのみタグを打てるように制限します。
+
+---
+
+これらの制約をリポジトリに組み込むことで、PeerDiffX の Git 管理は堅牢かつ一貫性のあるものとなり、大規模なチームでもスムーズな共同作業が可能になります。
+
+[1]: https://docs.github.com/en/repositories/working-with-files/managing-large-files/configuring-git-large-file-storage?utm_source=chatgpt.com "Configuring Git Large File Storage - GitHub Docs"
+[2]: https://stackoverflow.com/questions/119444/locking-binary-files-using-git-version-control-system?utm_source=chatgpt.com "Locking binary files using git version control system"
+[3]: https://docs.github.com/repositories/working-with-files/managing-large-files/about-large-files-on-github?utm_source=chatgpt.com "About large files on GitHub"
+[4]: https://www.reddit.com/r/github/comments/xn8y97/is_there_a_limit_to_how_big_a_github_repo_can_be/?utm_source=chatgpt.com "Is there a limit to how big a github repo can be? - Reddit"
+[5]: https://medium.com/%40abhay.pixolo/naming-conventions-for-git-branches-a-cheatsheet-8549feca2534?utm_source=chatgpt.com "Naming conventions for Git Branches — a Cheatsheet - Medium"
+[6]: https://docs.github.com/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches?utm_source=chatgpt.com "About protected branches - GitHub Docs"
+[7]: https://dev.to/n3wt0n/best-practices-for-branch-protection-2pe3?utm_source=chatgpt.com "Best Practices for Branch Protection - DEV Community"
+[8]: https://www.conventionalcommits.org/en/v1.0.0/?utm_source=chatgpt.com "Conventional Commits"
+[9]: https://qiita.com/bicstone/items/6f22697d6fdf35f97b42?utm_source=chatgpt.com ".gitattributes をもっと活用して GitHub 上での開発体験を向上 ..."
