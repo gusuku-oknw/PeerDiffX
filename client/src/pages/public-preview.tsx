@@ -28,8 +28,23 @@ export default function PublicPreview() {
     data: presentation = {},
     isLoading: isLoadingPresentation,
     error: presentationError
-  } = useQuery<{name?: string}>({
-    queryKey: ['/api/presentations', presentationId]
+  } = useQuery<{name?: string, description?: string}>({
+    queryKey: ['/api/presentations', presentationId],
+    queryFn: async () => {
+      if (!presentationId) return {};
+      
+      console.log(`Fetching presentation: ${presentationId}`);
+      const response = await fetch(`/api/presentations/${presentationId}`);
+      
+      if (!response.ok) {
+        console.error('Failed to fetch presentation:', response.status, response.statusText);
+        throw new Error("プレゼンテーションの取得に失敗しました");
+      }
+      
+      return response.json();
+    },
+    enabled: !!presentationId,
+    staleTime: 60000 // キャッシュを1分間保持
   });
   
   // Fetch commit data (either specified commit or latest)
@@ -37,34 +52,67 @@ export default function PublicPreview() {
     data: commit,
     isLoading: isLoadingCommit,
     error: commitError
-  } = useQuery<{id: number, message?: string}>({
-    queryKey: ['/api/preview/commit', presentationId, commitId],
+  } = useQuery<{id: number, message?: string, branchId: number, userId: string, createdAt: string}>({
+    queryKey: ['/api/commits', presentationId, commitId],
     queryFn: async () => {
-      if (commitId) {
-        // Fetch specific commit
-        const response = await fetch(`/api/commits/${commitId}`);
-        if (!response.ok) throw new Error("指定されたコミットが見つかりませんでした");
-        return response.json();
-      } else {
-        // Fetch latest commit from default branch
-        const branchesResponse = await fetch(`/api/presentations/${presentationId}/branches`);
-        if (!branchesResponse.ok) throw new Error("ブランチ情報の取得に失敗しました");
+      try {
+        console.log(`Fetching commit data - presentationId: ${presentationId}, commitId: ${commitId || 'latest'}`);
         
-        const branches = await branchesResponse.json();
-        const defaultBranch = branches.find((b: any) => b.isDefault) || branches[0];
-        
-        if (!defaultBranch) throw new Error("ブランチが見つかりませんでした");
-        
-        const commitsResponse = await fetch(`/api/branches/${defaultBranch.id}/commits`);
-        if (!commitsResponse.ok) throw new Error("コミット情報の取得に失敗しました");
-        
-        const commits = await commitsResponse.json();
-        if (!commits.length) throw new Error("コミットが見つかりませんでした");
-        
-        return commits[0]; // Latest commit
+        if (commitId) {
+          // Fetch specific commit
+          const response = await fetch(`/api/commits/${commitId}`);
+          if (!response.ok) {
+            console.error(`Failed to fetch commit ${commitId}:`, response.status);
+            throw new Error("指定されたコミットが見つかりませんでした");
+          }
+          const data = await response.json();
+          console.log(`Retrieved commit: ${commitId}`, data);
+          return data;
+        } else {
+          // Fetch latest commit from default branch
+          console.log(`Fetching branches for presentation: ${presentationId}`);
+          const branchesResponse = await fetch(`/api/presentations/${presentationId}/branches`);
+          if (!branchesResponse.ok) {
+            console.error(`Failed to fetch branches:`, branchesResponse.status);
+            throw new Error("ブランチ情報の取得に失敗しました");
+          }
+          
+          const branches = await branchesResponse.json();
+          console.log(`Retrieved ${branches.length} branches`);
+          
+          // Find default branch or use first branch
+          const defaultBranch = branches.find((b: any) => b.isDefault) || branches[0];
+          
+          if (!defaultBranch) {
+            console.error('No branches found');
+            throw new Error("ブランチが見つかりませんでした");
+          }
+          
+          console.log(`Using branch: ${defaultBranch.id} (${defaultBranch.name})`);
+          const commitsResponse = await fetch(`/api/branches/${defaultBranch.id}/commits`);
+          if (!commitsResponse.ok) {
+            console.error(`Failed to fetch commits:`, commitsResponse.status);
+            throw new Error("コミット情報の取得に失敗しました");
+          }
+          
+          const commits = await commitsResponse.json();
+          console.log(`Retrieved ${commits.length} commits`);
+          
+          if (!commits.length) {
+            console.error('No commits found');
+            throw new Error("コミットが見つかりませんでした");
+          }
+          
+          console.log(`Using latest commit: ${commits[0].id}`);
+          return commits[0]; // Latest commit
+        }
+      } catch (error) {
+        console.error('Error fetching commit data:', error);
+        throw error;
       }
     },
-    enabled: !!presentationId
+    enabled: !!presentationId,
+    staleTime: 30000
   });
   
   // Fetch slides for the current commit
@@ -75,22 +123,45 @@ export default function PublicPreview() {
   } = useQuery<Slide[]>({
     queryKey: ['/api/commits', commit?.id, 'slides'],
     queryFn: async () => {
-      if (!commit?.id) return [];
-      
-      console.log(`Fetching slides for commit: ${commit.id}`);
-      const response = await fetch(`/api/commits/${commit.id}/slides`);
-      
-      if (!response.ok) {
-        console.error('Failed to fetch slides:', response.status, response.statusText);
-        throw new Error("スライドの取得に失敗しました");
+      try {
+        if (!commit?.id) {
+          console.warn('No commit ID available, skipping slide fetch');
+          return [];
+        }
+        
+        console.log(`Fetching slides for commit: ${commit.id}`);
+        const response = await fetch(`/api/commits/${commit.id}/slides`);
+        
+        if (!response.ok) {
+          console.error('Failed to fetch slides:', response.status, response.statusText);
+          throw new Error("スライドの取得に失敗しました");
+        }
+        
+        const data = await response.json();
+        console.log(`Retrieved ${data.length} slides for commit ${commit.id}:`, data);
+        
+        if (data.length === 0) {
+          console.warn(`No slides found for commit ${commit.id}`);
+        }
+        
+        // 確実にSlideの型にフォーマットして返す
+        return data.map((slide: any) => ({
+          id: slide.id,
+          commitId: slide.commitId,
+          slideNumber: slide.slideNumber,
+          title: slide.title || null,
+          content: slide.content || {},
+          thumbnail: slide.thumbnail || null,
+          xmlContent: slide.xmlContent || null
+        }));
+      } catch (error) {
+        console.error('Error fetching slides:', error);
+        throw error;
       }
-      
-      const data = await response.json();
-      console.log(`Retrieved ${data.length} slides`);
-      return data;
     },
     enabled: !!commit?.id,
-    staleTime: 30000 // キャッシュを30秒間保持
+    staleTime: 30000,
+    retry: 1
   });
   
   // Navigate to previous slide
@@ -240,9 +311,19 @@ export default function PublicPreview() {
           className={`relative ${isFullscreen ? 'w-full h-full' : 'w-full max-w-4xl aspect-[16/9]'} bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden`}
           onClick={toggleFullscreen}
         >
-          {currentSlide && (
-            <div className="w-full h-full">
-              <SlideViewer slide={currentSlide} />
+          {currentSlide ? (
+            <div className="w-full h-full transition-opacity duration-300 ease-in-out">
+              <SlideViewer 
+                slide={currentSlide} 
+                aspectRatio={isFullscreen ? undefined : "16:9"} 
+              />
+              <div className="absolute bottom-3 right-3 text-xs bg-black/30 text-white px-2 py-1 rounded">
+                {currentSlideIndex + 1} / {slides.length}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full p-8 text-muted-foreground">
+              <p className="text-center">スライドデータの読み込み中、または表示可能なスライドがありません</p>
             </div>
           )}
         </div>
