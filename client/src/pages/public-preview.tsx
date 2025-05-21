@@ -73,16 +73,24 @@ export default function PublicPreview() {
     isLoading: isLoadingSlides,
     error: slidesError
   } = useQuery<Slide[]>({
-    queryKey: ['/api/preview/slides', commit?.id],
+    queryKey: ['/api/commits', commit?.id, 'slides'],
     queryFn: async () => {
       if (!commit?.id) return [];
       
+      console.log(`Fetching slides for commit: ${commit.id}`);
       const response = await fetch(`/api/commits/${commit.id}/slides`);
-      if (!response.ok) throw new Error("スライドの取得に失敗しました");
       
-      return response.json();
+      if (!response.ok) {
+        console.error('Failed to fetch slides:', response.status, response.statusText);
+        throw new Error("スライドの取得に失敗しました");
+      }
+      
+      const data = await response.json();
+      console.log(`Retrieved ${data.length} slides`);
+      return data;
     },
-    enabled: !!commit?.id
+    enabled: !!commit?.id,
+    staleTime: 30000 // キャッシュを30秒間保持
   });
   
   // Navigate to previous slide
