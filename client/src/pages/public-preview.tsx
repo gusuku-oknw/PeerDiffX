@@ -5,9 +5,10 @@ import { decodeId, encodeId } from '@/lib/hash-utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { FaLayerGroup, FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch } from 'react-icons/fa';
-import { Home, Settings, ChevronRight, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { Home, Settings, ChevronRight, ChevronLeft, ChevronDown, ChevronUp, GitCompare, History } from 'lucide-react';
 import SlideCanvas from '@/components/slides/slide-canvas';
 import SlideThumbnails from '@/components/slides/slide-thumbnails';
+import { SlideControls } from '@/components/slides/slide-controls';
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -281,36 +282,61 @@ export default function PublicPreview() {
         <div className="flex-1 bg-gray-50 dark:bg-gray-900 overflow-hidden" style={{ minWidth: 0 }}>
           {currentSlideId ? (
             <div className="h-full flex flex-col">
-              {/* スライド操作ツールバー */}
+              {/* スライド操作ツールバー - 既存のSlideControlsコンポーネントを使用 */}
               <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-2 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Button size="sm" variant="ghost" onClick={goToPreviousSlide} disabled={currentSlideIndex === 0}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    スライド {currentSlideIndex + 1}/{slides.length}
-                  </span>
-                  <Button size="sm" variant="ghost" onClick={goToNextSlide} disabled={currentSlideIndex === slides.length - 1}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                {/* 左側：スライドナビゲーション */}
+                <div className="flex items-center space-x-2 mr-auto">
+                  <div className="flex items-center space-x-1 mr-4">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={goToPreviousSlide}
+                      disabled={currentSlideIndex <= 0}
+                      title="前のスライド"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    
+                    <div className="text-sm font-medium mx-2">
+                      {currentSlideIndex + 1} / {slides.length || 1}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={goToNextSlide}
+                      disabled={currentSlideIndex >= (slides.length - 1)}
+                      title="次のスライド"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" onClick={handleViewHistory} title="履歴を表示">
+                      <History className="h-4 w-4 mr-1" /> 履歴
+                    </Button>
+                    
+                    <Button variant="outline" size="sm" onClick={handleViewXmlDiff} title="差分を表示">
+                      <GitCompare className="h-4 w-4 mr-1" /> 差分
+                    </Button>
+                  </div>
                 </div>
                 
+                {/* 右側：追加のアクション */}
                 <div className="flex items-center space-x-2">
                   <Button size="sm" variant="ghost">
-                    <FaSearchMinus className="h-3.5 w-3.5" />
+                    <FaSearchMinus className="h-3.5 w-3.5 mr-1" /> 縮小
                   </Button>
                   <span className="text-sm text-gray-600 dark:text-gray-400">100%</span>
                   <Button size="sm" variant="ghost">
-                    <FaSearchPlus className="h-3.5 w-3.5" />
+                    <FaSearchPlus className="h-3.5 w-3.5 mr-1" /> 拡大
                   </Button>
                   <div className="h-6 border-l border-gray-200 dark:border-gray-700 mx-1"></div>
                   <Button size="sm" variant="ghost">
                     <FaExpand className="h-3.5 w-3.5" />
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={handleViewXmlDiff}>
-                    <FaCode className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" className="ml-2">
                     <span className="text-green-600 dark:text-green-400 font-medium flex items-center">
                       <FaCodeBranch className="mr-1.5 h-3.5 w-3.5" /> Commit
                     </span>
@@ -335,22 +361,25 @@ export default function PublicPreview() {
                   <div className="w-full max-w-4xl bg-white rounded-lg shadow-sm" style={{ aspectRatio: '16/9' }}>
                     <div className="p-8 h-full relative">
                       <h2 className="text-3xl font-bold">{slides[currentSlideIndex].title || 'タイトルなし'}</h2>
-                      {slides[currentSlideIndex].content && slides[currentSlideIndex].content.elements && 
-                        slides[currentSlideIndex].content.elements.map((element: any, idx: number) => (
-                          element.type === 'text' && (
-                            <p key={idx} style={{
-                              position: 'absolute',
-                              left: `${element.x}px`,
-                              top: `${element.y}px`,
-                              color: element.style?.color || '#000',
-                              fontSize: `${element.style?.fontSize || 16}px`,
-                              fontWeight: element.style?.fontWeight || 'normal',
-                            }}>
-                              {element.content}
-                            </p>
-                          )
-                        ))
-                      }
+                      {slides[currentSlideIndex].content && 
+                       typeof slides[currentSlideIndex].content === 'object' &&
+                       'elements' in slides[currentSlideIndex].content &&
+                       Array.isArray(slides[currentSlideIndex].content.elements) &&
+                       slides[currentSlideIndex].content.elements.map((element: any, idx: number) => (
+                         element.type === 'text' && (
+                           <p key={idx} style={{
+                             position: 'absolute',
+                             left: `${element.x}px`,
+                             top: `${element.y}px`,
+                             color: element.style?.color || '#000',
+                             fontSize: `${element.style?.fontSize || 16}px`,
+                             fontWeight: element.style?.fontWeight || 'normal',
+                           }}>
+                             {element.content}
+                           </p>
+                         )
+                       ))
+                     }
                     </div>
                   </div>
                 ) : (
