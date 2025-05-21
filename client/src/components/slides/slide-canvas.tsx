@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSlide } from "@/hooks/use-pptx";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch, FaLock, FaFilter } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch, FaLock, FaFilter, FaRobot } from "react-icons/fa";
 import { CommentsPanel } from "@/components/comments/comments-panel";
 import { AiAnalysisButton } from "@/components/ai/ai-analysis-button";
+import { AiAnalysisPanel } from "@/components/ai/ai-analysis-panel";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import VersionPanel from "@/components/version/version-panel";
 
@@ -40,7 +41,7 @@ export default function SlideCanvas({
   );
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showSidePanel, setShowSidePanel] = useState(false);
-  const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'locks'>('comments');
+  const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'locks' | 'ai'>('comments');
   const canvasRef = useRef<HTMLDivElement>(null);
   
   const handleZoomIn = () => {
@@ -349,7 +350,7 @@ export default function SlideCanvas({
             <div className="w-80 bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 flex flex-col transition-all overflow-hidden">
               {/* タブ切り替え部分 */}
               <div className="border-b border-gray-200 dark:border-gray-700">
-                <Tabs defaultValue={activeTab} onValueChange={(val) => setActiveTab(val as 'comments' | 'history' | 'locks')}>
+                <Tabs defaultValue={activeTab} onValueChange={(val) => setActiveTab(val as 'comments' | 'history' | 'locks' | 'ai')}>
                   <div className="flex justify-between items-center px-2">
                     <TabsList className="h-10">
                       <TabsTrigger value="comments" className="text-xs flex items-center">
@@ -363,6 +364,10 @@ export default function SlideCanvas({
                       <TabsTrigger value="locks" className="text-xs flex items-center">
                         <FaLock className="mr-1 text-xs" />
                         <span>ロック</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="ai" className="text-xs flex items-center">
+                        <FaRobot className="mr-1 text-xs" />
+                        <span>AI分析</span>
                       </TabsTrigger>
                     </TabsList>
                     <Button 
@@ -423,6 +428,20 @@ export default function SlideCanvas({
                             <span>鈴木さんがロック中</span>
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="ai" className="m-0 p-0">
+                    <div className="overflow-auto">
+                      {slide && (
+                        <AiAnalysisPanel 
+                          presentationId={slide.presentationId || 1} 
+                          commitId={slide.commitId || 1} 
+                        />
+                      )}
+                    </div>
+                  </TabsContent>
                       </div>
                     </div>
                   </TabsContent>
