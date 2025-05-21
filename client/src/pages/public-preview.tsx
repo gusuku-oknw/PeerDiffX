@@ -1,26 +1,42 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { FileCode, AlertTriangle, ChevronLeft, ChevronRight, Maximize, Home, Copy, Shield } from "lucide-react";
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Maximize, 
+  Home, 
+  Copy, 
+  History, 
+  Code, 
+  Layers, 
+  FileSearch, 
+  GitBranch
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { decodeId } from "@/lib/hash-utils";
 import { SlideViewer } from "../features/slides/slide-renderer";
 import { Share } from "@/components/ui/share";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 /**
- * 公開プレビューページ - デザインを保持しつつフック問題を修正したバージョン
+ * 公開プレビューページ - 元のPeerDiffXデザインに合わせた高度なUIに修正
  */
 export default function PublicPreview() {
   // 基本的な状態の設定 - 必ずフックをコンポーネントのトップレベルで定義
   const [, params] = useRoute("/public-preview/:presentationId/:commitId?");
   const { toast } = useToast();
+  const [currentTab, setCurrentTab] = useState("slide");
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
   
   // URLパラメータからID情報を取得（エンコードIDにも対応）
   const rawPresentationId = params?.presentationId;
@@ -106,70 +122,69 @@ export default function PublicPreview() {
     }
   }, [presentation, presentationId, toast]);
   
-  // コミット情報の取得
+  // ブランチ情報の取得
   const {
-    data: commit,
-    isLoading: isLoadingCommit,
-    error: commitError
+    data: branches = [],
+    isLoading: isLoadingBranches,
+    error: branchesError
   } = useQuery({
-    queryKey: ['/api/commits', presentationId, commitId],
+    queryKey: ['/api/branches', presentationId],
     queryFn: async () => {
-      if (!presentationId) return null;
-      
-      console.log(`Fetching commit data - presentationId: ${presentationId}, commitId: ${commitId || 'latest'}`);
+      if (!presentationId) return [];
       
       try {
-        // ブランチ情報を取得
-        const branchResponse = await fetch(`/api/presentations/${presentationId}/branches`);
+        const response = await fetch(`/api/presentations/${presentationId}/branches`);
         
-        if (!branchResponse.ok) {
+        if (!response.ok) {
           throw new Error("Failed to fetch branches");
         }
         
-        const branches = await branchResponse.json();
-        console.log(`Retrieved ${branches.length} branches`);
-        
-        // デフォルトブランチか最初のブランチを使用
-        const defaultBranch = branches.find((branch: any) => branch.isDefault) || branches[0];
-        if (!defaultBranch) {
-          throw new Error("No branches found for this presentation");
-        }
-        
-        console.log(`Using branch: ${defaultBranch.id} (${defaultBranch.name})`);
-        
-        // コミット情報の取得
-        const commitsResponse = await fetch(`/api/branches/${defaultBranch.id}/commits`);
-        
-        if (!commitsResponse.ok) {
-          throw new Error("Failed to fetch commits");
-        }
-        
-        const commits = await commitsResponse.json();
-        console.log(`Retrieved ${commits.length} commits`);
-        
-        if (commits.length === 0) {
-          throw new Error("No commits found for this branch");
-        }
-        
-        // 指定されたコミットか最新コミットを返す
-        if (commitId) {
-          const requestedCommit = commits.find((c: any) => c.id === commitId);
-          if (!requestedCommit) {
-            throw new Error(`Commit with ID ${commitId} not found`);
-          }
-          return requestedCommit;
-        } else {
-          console.log(`Using latest commit: ${commits[0].id}`);
-          return commits[0];
-        }
+        const data = await response.json();
+        console.log(`Retrieved ${data.length} branches`);
+        return data;
       } catch (error) {
-        console.error('Error fetching commit:', error);
+        console.error('Error fetching branches:', error);
         throw error;
       }
     },
-    enabled: !!presentationId,
-    retry: 1
+    enabled: !!presentationId
   });
+  
+  // デフォルトブランチを見つける
+  const defaultBranch = branches.find(b => b.isDefault) || branches[0];
+  
+  // コミット情報の取得
+  const {
+    data: commits = [],
+    isLoading: isLoadingCommits,
+    error: commitsError
+  } = useQuery({
+    queryKey: ['/api/commits', defaultBranch?.id],
+    queryFn: async () => {
+      if (!defaultBranch?.id) return [];
+      
+      try {
+        const response = await fetch(`/api/branches/${defaultBranch.id}/commits`);
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch commits");
+        }
+        
+        const data = await response.json();
+        console.log(`Retrieved ${data.length} commits`);
+        return data;
+      } catch (error) {
+        console.error('Error fetching commits:', error);
+        throw error;
+      }
+    },
+    enabled: !!defaultBranch?.id
+  });
+  
+  // 現在のコミットを決定
+  const currentCommit = commitId 
+    ? commits.find(c => c.id === commitId) 
+    : commits[0];
   
   // スライド情報の取得
   const {
@@ -177,21 +192,21 @@ export default function PublicPreview() {
     isLoading: isLoadingSlides,
     error: slidesError 
   } = useQuery({
-    queryKey: ['/api/slides', commit?.id],
+    queryKey: ['/api/slides', currentCommit?.id],
     queryFn: async () => {
-      if (!commit?.id) return [];
+      if (!currentCommit?.id) return [];
       
-      console.log(`Fetching slides for commit: ${commit.id}`);
+      console.log(`Fetching slides for commit: ${currentCommit.id}`);
       
       try {
-        const response = await fetch(`/api/commits/${commit.id}/slides`);
+        const response = await fetch(`/api/commits/${currentCommit.id}/slides`);
         
         if (!response.ok) {
           throw new Error("Failed to fetch slides");
         }
         
         const slidesData = await response.json();
-        console.log(`Retrieved ${slidesData.length} slides for commit ${commit.id}:`, slidesData);
+        console.log(`Retrieved ${slidesData.length} slides for commit ${currentCommit.id}:`, slidesData);
         
         return slidesData;
       } catch (error) {
@@ -199,7 +214,7 @@ export default function PublicPreview() {
         throw error;
       }
     },
-    enabled: !!commit?.id,
+    enabled: !!currentCommit?.id,
   });
   
   // ナビゲーション関数
@@ -249,28 +264,29 @@ export default function PublicPreview() {
   
   // デバッグ情報のログ
   useEffect(() => {
-    if (commit?.id) {
-      console.log('Current commit:', commit);
+    if (currentCommit?.id) {
+      console.log('Current commit:', currentCommit);
       console.log('Loaded slides:', slides);
       console.log('Current slide index:', currentSlideIndex);
       if (slides.length > 0 && currentSlideIndex < slides.length) {
         console.log('Current slide:', slides[currentSlideIndex]);
       }
     }
-  }, [commit, slides, currentSlideIndex]);
+  }, [currentCommit, slides, currentSlideIndex]);
   
   // 現在のスライド取得
   const currentSlide = slides[currentSlideIndex];
   
   // ローディング状態の結合
-  const isLoading = isLoadingPresentation || isLoadingCommit || isLoadingSlides;
+  const isLoading = isLoadingPresentation || isLoadingBranches || isLoadingCommits || isLoadingSlides;
   
   // エラー表示
-  if (presentationError || commitError || slidesError) {
-    const error = presentationError || commitError || slidesError;
+  if (presentationError || branchesError || commitsError || slidesError) {
+    const error = presentationError || branchesError || commitsError || slidesError;
     console.error('Preview error:', { 
       presentationError, 
-      commitError, 
+      branchesError,
+      commitsError, 
       slidesError,
       message: error?.message 
     });
@@ -278,7 +294,6 @@ export default function PublicPreview() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
         <Alert variant="destructive" className="max-w-2xl">
-          <AlertTriangle className="h-4 w-4" />
           <AlertTitle>プレビューの読み込みエラー</AlertTitle>
           <AlertDescription>
             {error?.message || "プレゼンテーションの読み込み中にエラーが発生しました。"}
@@ -305,25 +320,33 @@ export default function PublicPreview() {
   // ローディング表示
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="max-w-4xl w-full space-y-6">
-            <Skeleton className="h-12 w-3/4 mx-auto" />
-            
-            <div className="aspect-[16/9] bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="animate-pulse">
-                  <div className="flex flex-col items-center">
-                    <Skeleton className="h-16 w-16 rounded-full" />
-                    <Skeleton className="h-6 w-48 mt-4" />
-                  </div>
-                </div>
-              </div>
+      <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900">
+        {/* サイドバー部分のスケルトン */}
+        <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4">
+          <Skeleton className="h-8 w-32 mb-4" />
+          <Skeleton className="h-5 w-full mb-3" />
+          <Skeleton className="h-5 w-24 mb-6" />
+          
+          <Skeleton className="h-6 w-20 mb-2" />
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
+          </div>
+        </div>
+        
+        {/* メインコンテンツのスケルトン */}
+        <div className="flex-1 flex flex-col">
+          <div className="h-12 border-b border-gray-200 dark:border-gray-700 flex items-center px-4">
+            <Skeleton className="h-6 w-40" />
+            <div className="ml-auto flex space-x-2">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-8 w-8 rounded-full" />
             </div>
-            
-            <div className="flex justify-center space-x-4">
-              <Skeleton className="h-10 w-24" />
-              <Skeleton className="h-10 w-24" />
+          </div>
+          
+          <div className="flex-1 flex justify-center items-center p-8">
+            <div className="aspect-[16/9] w-full max-w-4xl">
+              <Skeleton className="w-full h-full rounded-lg" />
             </div>
           </div>
         </div>
@@ -332,14 +355,14 @@ export default function PublicPreview() {
   }
   
   // スライドがない場合
-  if (commit?.id && slides.length === 0) {
+  if (currentCommit?.id && slides.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
         <Alert className="max-w-2xl">
-          <FileCode className="h-4 w-4" />
+          <FileSearch className="h-4 w-4" />
           <AlertTitle>スライドがありません</AlertTitle>
           <AlertDescription>
-            このプレゼンテーションのコミット (ID: {commit.id}) にはスライドが含まれていません。
+            このプレゼンテーションのコミット (ID: {currentCommit.id}) にはスライドが含まれていません。
           </AlertDescription>
         </Alert>
         <div className="mt-6">
@@ -359,112 +382,402 @@ export default function PublicPreview() {
     ? `${window.location.origin}/public-preview/${presentationId}${commitId ? `/${commitId}` : ''}`
     : '';
   
-  // メインプレビュー画面
-  return (
-    <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-black' : 'min-h-screen'} flex flex-col bg-gray-50 dark:bg-gray-900`}>
-      <div className="w-full max-w-7xl mx-auto p-4 flex-1 flex flex-col">
-        {/* プレゼンテーションタイトル（フルスクリーン時は非表示） */}
-        {!isFullscreen && (
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold truncate">{presentation.name}</h1>
-            <p className="text-muted-foreground">{presentation.description}</p>
+  // スライドのサムネイル生成
+  const renderSlideThumbnails = () => {
+    return slides.map((slide, index) => (
+      <div 
+        key={slide.id}
+        className={`relative p-2 border cursor-pointer transition-all ${currentSlideIndex === index ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
+        onClick={() => setCurrentSlideIndex(index)}
+      >
+        <div className="aspect-[16/9] bg-white dark:bg-gray-900 overflow-hidden">
+          <div className="scale-[0.25] origin-top-left w-[400%] h-[400%]">
+            <SlideViewer slide={slide} hideControls />
           </div>
-        )}
-        
-        {/* メインコンテンツ */}
-        <div className="flex-1 flex flex-col items-center justify-center">
-          {/* スライド表示エリア */}
-          <div 
-            className={`relative ${isFullscreen ? 'w-full h-full' : 'w-full max-w-4xl aspect-[16/9]'} bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden`}
-            onClick={toggleFullscreen}
+        </div>
+        <div className="mt-1 text-xs text-center text-gray-700 dark:text-gray-300 truncate">
+          {slide.title || `スライド ${slide.slideNumber}`}
+        </div>
+        <Badge 
+          variant="outline" 
+          className="absolute top-1 left-1"
+        >
+          {slide.slideNumber}
+        </Badge>
+      </div>
+    ));
+  };
+  
+  // 履歴表示機能
+  const renderCommitHistory = () => {
+    return (
+      <div className="space-y-4">
+        {commits.map((commit, index) => (
+          <Card key={commit.id} className="shadow-sm">
+            <CardHeader className="py-3 px-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-sm font-medium">{commit.message}</CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(commit.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <Badge variant={index === 0 ? "default" : "outline"} className="text-xs">
+                  {index === 0 ? "最新" : `${index + 1}つ前`}
+                </Badge>
+              </div>
+            </CardHeader>
+            {index === 0 && index < commits.length - 1 && (
+              <CardContent className="py-3 px-4">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.location.href = `/public-preview/${presentationId}/${commits[1].id}`}
+                >
+                  前のバージョンと比較
+                </Button>
+              </CardContent>
+            )}
+          </Card>
+        ))}
+      </div>
+    );
+  };
+  
+  // ブランチ表示機能
+  const renderBranches = () => {
+    return (
+      <div className="space-y-4">
+        {branches.map((branch) => (
+          <Card 
+            key={branch.id} 
+            className={`shadow-sm ${branch.id === defaultBranch?.id ? 'border-blue-500' : ''}`}
           >
-            {slides && slides.length > 0 && currentSlideIndex < slides.length ? (
-              <div className="w-full h-full transition-opacity duration-300 ease-in-out">
-                <SlideViewer 
-                  slide={slides[currentSlideIndex]} 
-                  aspectRatio={isFullscreen ? undefined : "16:9"} 
-                />
-                <div className="absolute bottom-3 right-3 text-xs bg-black/30 text-white px-2 py-1 rounded">
-                  {currentSlideIndex + 1} / {slides.length}
+            <CardHeader className="py-3 px-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-sm font-medium">
+                    <GitBranch className="inline-block h-4 w-4 mr-1" />
+                    {branch.name}
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    {branch.description || '説明なし'}
+                  </p>
+                </div>
+                {branch.isDefault && (
+                  <Badge variant="default" className="text-xs">
+                    デフォルト
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+  
+  // XMLのレンダリング
+  const renderXmlView = () => {
+    if (!currentSlide?.xmlContent) return <div className="p-4 text-muted-foreground">XMLデータがありません</div>;
+    
+    return (
+      <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-md overflow-auto font-mono text-sm">
+        <pre className="whitespace-pre-wrap">{currentSlide.xmlContent}</pre>
+      </div>
+    );
+  };
+  
+  // フルスクリーン時のシンプル表示
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+        <div className="w-full h-full relative">
+          {slides && slides.length > 0 && currentSlideIndex < slides.length && (
+            <div className="w-full h-full">
+              <SlideViewer slide={slides[currentSlideIndex]} aspectRatio={undefined} />
+              
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/30 text-white px-4 py-2 rounded-full backdrop-blur-sm">
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={goToPreviousSlide}
+                    disabled={currentSlideIndex === 0}
+                    className="text-white hover:bg-white/20"
+                  >
+                    <ChevronLeft className="mr-1" /> 前へ
+                  </Button>
+                  
+                  <span className="text-sm">
+                    {currentSlideIndex + 1} / {slides.length}
+                  </span>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={goToNextSlide}
+                    disabled={currentSlideIndex === slides.length - 1}
+                    className="text-white hover:bg-white/20"
+                  >
+                    次へ <ChevronRight className="ml-1" />
+                  </Button>
+                  
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleFullscreen}
+                    className="text-white hover:bg-white/20"
+                  >
+                    <Maximize className="mr-1" /> 戻る
+                  </Button>
                 </div>
               </div>
-            ) : (
-              <div className="flex items-center justify-center h-full p-8 text-muted-foreground">
-                <div className="text-center">
-                  <div className="mb-4">スライドデータの読み込み中、または表示可能なスライドがありません</div>
-                  {commit && (
-                    <div className="text-sm text-gray-500">
-                      コミットID: {commit.id} / スライド数: {slides ? slides.length : 0}
-                    </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  
+  // 通常表示のメインコンテンツ（PeerDiffX UIデザイン）
+  return (
+    <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900">
+      {/* サイドバー部分 */}
+      {showSidebar && (
+        <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+          {/* サイドバーヘッダー */}
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-bold">PeerDiffX</h2>
+            <p className="text-xs text-muted-foreground">Presentation Version Control</p>
+          </div>
+          
+          {/* プレゼンテーション情報 */}
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-semibold mb-1">{presentation.name}</h3>
+            <p className="text-xs text-muted-foreground">
+              {presentation.description || 'No description'}
+            </p>
+          </div>
+          
+          {/* ナビゲーションメニュー */}
+          <div className="p-4 flex-1">
+            <div className="text-sm font-medium mb-2">ブランチ</div>
+            {branches.map(branch => (
+              <div key={branch.id} className="mb-2">
+                <div className={`flex items-center p-2 rounded-md text-sm ${branch.id === defaultBranch?.id ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+                  <GitBranch className="h-4 w-4 mr-2" />
+                  {branch.name}
+                  {branch.isDefault && (
+                    <Badge variant="outline" className="ml-auto text-[10px]">
+                      デフォルト
+                    </Badge>
                   )}
                 </div>
               </div>
-            )}
-          </div>
-          
-          {/* ナビゲーションコントロール */}
-          <div className={`mt-6 flex items-center space-x-4 ${isFullscreen ? 'absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/30 p-2 rounded-full' : ''}`}>
-            <Button
-              variant="outline"
-              size={isFullscreen ? "sm" : "default"}
-              onClick={goToPreviousSlide}
-              disabled={currentSlideIndex === 0}
-            >
-              <ChevronLeft className="mr-1" /> 前へ
-            </Button>
+            ))}
             
-            <Button
-              variant="outline"
-              size={isFullscreen ? "sm" : "default"}
-              onClick={goToNextSlide}
-              disabled={currentSlideIndex === slides.length - 1}
-            >
-              次へ <ChevronRight className="ml-1" />
-            </Button>
+            <Separator className="my-4" />
             
-            <Button variant="ghost" size={isFullscreen ? "sm" : "default"} onClick={toggleFullscreen}>
-              <Maximize className="h-4 w-4" />
-              <span className="ml-2">{isFullscreen ? '通常表示' : '全画面表示'}</span>
-            </Button>
-            
-            {/* 共有・情報エリア（フルスクリーン時は非表示） */}
-            {!isFullscreen && (
-              <>
-                <Button variant="ghost" onClick={toggleShareModal}>
-                  <Copy className="mr-2 h-4 w-4" />
-                  共有
-                </Button>
-                {!presentation.isPublic && (
-                  <div className="ml-auto flex items-center text-sm text-muted-foreground">
-                    <Shield className="mr-1 h-3 w-3" />
-                    非公開プレゼンテーション
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-          
-          {/* 下部の追加情報（フルスクリーン時は非表示） */}
-          {!isFullscreen && (
-            <div className="mt-8 w-full max-w-4xl">
-              <Card className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="text-md font-medium">{commit ? commit.message : 'N/A'}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        コミットID: {commit ? commit.id : 'N/A'} | 
-                        作成日: {commit ? new Date(commit.createdAt).toLocaleDateString() : 'N/A'}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm">スライド数: {slides.length}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="text-sm font-medium mb-2">ツール</div>
+            <div className="space-y-1">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full justify-start"
+                onClick={toggleShareModal}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                共有
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full justify-start"
+                asChild
+              >
+                <Link href="/">
+                  <Home className="h-4 w-4 mr-2" />
+                  ホームに戻る
+                </Link>
+              </Button>
             </div>
-          )}
+          </div>
+        </div>
+      )}
+      
+      {/* メインコンテンツエリア */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* トップヘッダー部分 */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-12 flex items-center px-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="mr-2"
+            onClick={() => setShowSidebar(prev => !prev)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <h2 className="text-lg font-semibold truncate">
+            {presentation.name}
+          </h2>
+          
+          <div className="ml-auto flex items-center space-x-2">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={toggleShareModal}
+            >
+              <Copy className="h-4 w-4 mr-1" />
+              共有
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleFullscreen}
+            >
+              <Maximize className="h-4 w-4 mr-1" />
+              全画面
+            </Button>
+          </div>
+        </div>
+        
+        {/* スライドとサイドパネル */}
+        <div className="flex-1 flex">
+          {/* 左側スライドサムネイル部分 */}
+          <div className="w-60 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto hidden md:block">
+            <div className="p-3">
+              <div className="text-sm font-medium mb-2">スライド</div>
+              <div className="grid grid-cols-1 gap-2">
+                {renderSlideThumbnails()}
+              </div>
+            </div>
+          </div>
+          
+          {/* 中央スライド表示部分 */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* スライド数と現在位置 */}
+            <div className="flex items-center justify-between bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2">
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={goToPreviousSlide}
+                  disabled={currentSlideIndex === 0}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <span className="text-sm">
+                  スライド {currentSlideIndex + 1}/{slides.length}
+                </span>
+                
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={goToNextSlide}
+                  disabled={currentSlideIndex === slides.length - 1}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <div className="w-auto">
+                  <div className="flex h-8 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+                    <button
+                      className={`text-xs h-7 px-2 flex items-center rounded-sm ${currentTab === "slide" ? "bg-background text-foreground" : ""}`}
+                      onClick={() => setCurrentTab("slide")}
+                    >
+                      <Layers className="h-3 w-3 mr-1" />
+                      スライド
+                    </button>
+                    <button
+                      className={`text-xs h-7 px-2 flex items-center rounded-sm ${currentTab === "history" ? "bg-background text-foreground" : ""}`}
+                      onClick={() => setCurrentTab("history")}
+                    >
+                      <History className="h-3 w-3 mr-1" />
+                      履歴
+                    </button>
+                    <button
+                      className={`text-xs h-7 px-2 flex items-center rounded-sm ${currentTab === "xml" ? "bg-background text-foreground" : ""}`}
+                      onClick={() => setCurrentTab("xml")}
+                    >
+                      <Code className="h-3 w-3 mr-1" />
+                      XML
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* タブコンテンツ */}
+            <div className="flex-1 overflow-hidden">
+              {/* スライドタブ */}
+              {currentTab === "slide" && (
+                <div className="h-full flex flex-col">
+                  <div className="flex-1 flex justify-center items-center bg-gray-100 dark:bg-gray-900 p-4 overflow-auto">
+                    <div className="aspect-[16/9] w-full max-w-4xl bg-white dark:bg-gray-800 shadow-md rounded-md overflow-hidden">
+                      {currentSlide && (
+                        <SlideViewer 
+                          slide={currentSlide} 
+                          aspectRatio="16:9" 
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* 履歴タブ */}
+              {currentTab === "history" && (
+                <div className="h-full overflow-auto p-4">
+                  <Card className="shadow-sm mb-4">
+                    <CardHeader className="py-3 px-4">
+                      <CardTitle className="text-base">コミット履歴</CardTitle>
+                    </CardHeader>
+                    <CardContent className="py-3 px-4">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        このプレゼンテーションの変更履歴を表示しています
+                      </p>
+                      {renderCommitHistory()}
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="shadow-sm">
+                    <CardHeader className="py-3 px-4">
+                      <CardTitle className="text-base">ブランチ</CardTitle>
+                    </CardHeader>
+                    <CardContent className="py-3 px-4">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        このプレゼンテーションの作業ブランチ一覧
+                      </p>
+                      {renderBranches()}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+              
+              {/* XMLタブ */}
+              {currentTab === "xml" && (
+                <div className="h-full overflow-auto p-4">
+                  <Card className="shadow-sm">
+                    <CardHeader className="py-3 px-4">
+                      <CardTitle className="text-base">XMLデータ</CardTitle>
+                    </CardHeader>
+                    <CardContent className="py-3 px-4">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        現在のスライドのXML構造を表示しています
+                      </p>
+                      {renderXmlView()}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
       
