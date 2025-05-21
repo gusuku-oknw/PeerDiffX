@@ -339,8 +339,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Presentation not found" });
       }
       
+      // Log the deletion attempt for debugging
+      console.log(`Attempting to delete presentation: ${id}`);
+      
       // Delete the presentation
       await storage.deletePresentation(id);
+      
+      // Double-check deletion
+      const checkDeleted = await storage.getPresentation(id);
+      console.log("After deletion check:", checkDeleted ? "Still exists" : "Successfully deleted");
+      
+      // Return success response
       res.status(200).json({ message: "Presentation deleted successfully" });
     } catch (error) {
       console.error("Error deleting presentation:", error);
