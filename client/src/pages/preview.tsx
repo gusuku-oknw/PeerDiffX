@@ -202,12 +202,31 @@ export default function Preview() {
   useEffect(() => {
     // コミットはあるがスライドがない状態を検出
     if (latestCommit && (!slides || slides.length === 0)) {
-      const timer = setTimeout(() => {
-        console.log("データを再読み込みします...");
-        window.location.reload();
-      }, 3000);
+      console.log("スライドがありません。再読み込み準備中...");
       
-      return () => clearTimeout(timer);
+      // 強制的にクエリキャッシュを無効化して再取得を促す
+      const fetchSlides = async () => {
+        try {
+          const response = await fetch(`/api/commits/${latestCommit.id}/slides`);
+          if (response.ok) {
+            const slideData = await response.json();
+            console.log("取得したスライドデータ:", slideData);
+            if (slideData && slideData.length > 0) {
+              window.location.reload();
+            } else {
+              // 3秒後に再読み込み
+              setTimeout(() => {
+                console.log("データを再読み込みします...");
+                window.location.reload();
+              }, 3000);
+            }
+          }
+        } catch (error) {
+          console.error("スライド取得エラー:", error);
+        }
+      };
+      
+      fetchSlides();
     }
   }, [latestCommit, slides]);
   
