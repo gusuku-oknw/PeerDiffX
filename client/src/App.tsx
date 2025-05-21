@@ -15,8 +15,6 @@ import Preview from "@/pages/preview";
 import DiffView from "@/pages/diff-view";
 import History from "@/pages/history";
 import Branches from "@/pages/branches";
-import SnapshotPage from "@/pages/snapshot";
-import PDXPreviewPage from "@/pages/pdx-preview";
 import SettingsPage from "@/pages/settings";
 import AdminDashboard from "@/pages/admin/dashboard";
 
@@ -31,7 +29,7 @@ function Router() {
       <Route path="/diff/:baseCommitId/:compareCommitId" component={DiffView} />
       <Route path="/history/:branchId" component={History} />
       <Route path="/branches/:presentationId" component={Branches} />
-      <Route path="/preview/pdx-:id" component={PDXPreviewPage} />
+      {/* スナップショット機能は削除 */}
       <Route path="/settings" component={SettingsPage} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route component={NotFound} />
