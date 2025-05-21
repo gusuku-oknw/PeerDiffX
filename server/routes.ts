@@ -345,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Use our dedicated deletion script
+  // Simplified presentation deletion using database cascade constraints
   apiRouter.delete("/api/presentations/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -358,17 +358,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Processing delete request for presentation ID: ${id}`);
       
-      // Use our dedicated deletion script
-      const { deletePresentationById } = require('./scripts/delete-presentation');
-      const success = await deletePresentationById(id);
+      // Use direct database deletion with cascade constraints
+      await db.delete(presentations).where(eq(presentations.id, id));
+      console.log(`Successfully deleted presentation with ID: ${id}`);
       
-      if (success) {
-        // Return success response
-        res.status(200).json({ message: "Presentation deleted successfully" });
-      } else {
-        // If deletion failed
-        res.status(500).json({ message: "Failed to delete presentation" });
-      }
+      // Return success response
+      res.status(200).json({ message: "Presentation deleted successfully" });
     } catch (error) {
       console.error("Error deleting presentation:", error);
       res.status(500).json({ message: "Failed to delete presentation" });
