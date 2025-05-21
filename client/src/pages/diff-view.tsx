@@ -1,226 +1,292 @@
-import { useState, useEffect } from "react";
-import { useRoute, Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { FaCode, FaColumns, FaArrowLeft } from "react-icons/fa";
-import { useCommit, useSlides } from "@/hooks/use-pptx";
-import XMLDiffViewer from "@/components/diff/xml-diff-viewer";
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import XMLDiffViewer from '@/components/diff-view/xml-diff-viewer';
+import { queryClient } from '@/lib/queryClient';
+import { extractXmlFromPptx, extractAllSlides } from '@/lib/pptx-extractor';
+import { DiffContent } from '@shared/schema';
+import { generateStructuredDiff } from '@/lib/advanced-xml-diff';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  GitCompare, 
+  FileText, 
+  AlertTriangle,
+  Download 
+} from 'lucide-react';
 
-export default function DiffView() {
-  const [, params] = useRoute("/diff/:baseCommitId/:compareCommitId");
-  const baseCommitId = parseInt(params?.baseCommitId || "0");
-  const compareCommitId = parseInt(params?.compareCommitId || "0");
+const DiffView: React.FC = () => {
+  const [location, setLocation] = useLocation();
+  const [selectedSlideIndex, setSelectedSlideIndex] = useState<number>(1);
+  const [oldXml, setOldXml] = useState<string>('');
+  const [newXml, setNewXml] = useState<string>('');
+  const [diffContent, setDiffContent] = useState<DiffContent | undefined>();
+  const [slideCount, setSlideCount] = useState<number>(0);
   
-  const [viewMode, setViewMode] = useState<'visual' | 'xml'>('visual');
-  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  // URLからコミットIDを取得
+  const searchParams = new URLSearchParams(window.location.search);
+  const baseCommitId = searchParams.get('baseCommitId');
+  const compareCommitId = searchParams.get('compareCommitId');
   
-  const { data: baseCommit, isLoading: isLoadingBaseCommit } = useCommit(baseCommitId);
-  const { data: compareCommit, isLoading: isLoadingCompareCommit } = useCommit(compareCommitId);
+  // コミット情報の取得
+  const { data: baseCommit, isLoading: isLoadingBase } = useQuery({
+    queryKey: ['/api/commits', baseCommitId],
+    enabled: !!baseCommitId,
+  });
   
-  const { data: baseSlides, isLoading: isLoadingBaseSlides } = useSlides(baseCommitId);
-  const { data: compareSlides, isLoading: isLoadingCompareSlides } = useSlides(compareCommitId);
+  const { data: compareCommit, isLoading: isLoadingCompare } = useQuery({
+    queryKey: ['/api/commits', compareCommitId],
+    enabled: !!compareCommitId,
+  });
+  
+  // スライドデータの取得
+  const { data: baseSlides, isLoading: isLoadingBaseSlides } = useQuery({
+    queryKey: ['/api/commits', baseCommitId, 'slides'],
+    enabled: !!baseCommitId,
+  });
+  
+  const { data: compareSlides, isLoading: isLoadingCompareSlides } = useQuery({
+    queryKey: ['/api/commits', compareCommitId, 'slides'],
+    enabled: !!compareCommitId,
+  });
+  
+  // 差分データの取得
+  const { data: diffData, isLoading: isLoadingDiff } = useQuery({
+    queryKey: ['/api/compare', baseCommitId, compareCommitId],
+    enabled: !!baseCommitId && !!compareCommitId,
+  });
   
   useEffect(() => {
-    // Set the first slide as active by default
-    if (baseSlides && baseSlides.length > 0) {
-      setActiveSlideIndex(0);
+    if (baseSlides && compareSlides) {
+      // スライド数を設定
+      setSlideCount(Math.max(baseSlides.length, compareSlides.length));
+      
+      // 現在選択されているスライドのXMLを設定
+      updateSelectedSlideXml();
     }
-  }, [baseSlides]);
+  }, [baseSlides, compareSlides, selectedSlideIndex]);
   
-  const isLoading = isLoadingBaseCommit || isLoadingCompareCommit || isLoadingBaseSlides || isLoadingCompareSlides;
+  useEffect(() => {
+    if (oldXml && newXml) {
+      // XMLの差分を計算
+      try {
+        const structuredDiff = generateStructuredDiff(oldXml, newXml);
+        setDiffContent(structuredDiff);
+      } catch (error) {
+        console.error('XML差分生成エラー:', error);
+        setDiffContent(undefined);
+      }
+    }
+  }, [oldXml, newXml]);
   
-  const formatDate = (date: Date | string) => {
-    return new Date(date).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const updateSelectedSlideXml = () => {
+    if (!baseSlides || !compareSlides) return;
+    
+    const baseSlide = baseSlides.find(slide => slide.slideNumber === selectedSlideIndex);
+    const compareSlide = compareSlides.find(slide => slide.slideNumber === selectedSlideIndex);
+    
+    setOldXml(baseSlide?.xmlContent || '');
+    setNewXml(compareSlide?.xmlContent || '');
   };
   
-  const getActiveSlides = () => {
-    if (!baseSlides || !compareSlides || baseSlides.length === 0 || compareSlides.length === 0) {
-      return { baseSlide: null, compareSlide: null };
+  const handlePreviousSlide = () => {
+    if (selectedSlideIndex > 1) {
+      setSelectedSlideIndex(selectedSlideIndex - 1);
     }
-    
-    const baseSlide = baseSlides[activeSlideIndex];
-    
-    // Find matching slide in compareSlides by slideNumber
-    const compareSlide = compareSlides.find(slide => slide.slideNumber === baseSlide.slideNumber) || compareSlides[0];
-    
-    return { baseSlide, compareSlide };
   };
   
-  const { baseSlide, compareSlide } = getActiveSlides();
+  const handleNextSlide = () => {
+    if (selectedSlideIndex < slideCount) {
+      setSelectedSlideIndex(selectedSlideIndex + 1);
+    }
+  };
+  
+  const handleBackToHistory = () => {
+    // 履歴ページに戻る
+    setLocation('/history');
+  };
+  
+  const isLoading = isLoadingBase || isLoadingCompare || isLoadingBaseSlides || isLoadingCompareSlides || isLoadingDiff;
   
   if (isLoading) {
     return (
-      <div className="container mx-auto p-8 max-w-7xl">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64"></div>
-          <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+      <div className="container mx-auto p-4">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       </div>
     );
   }
   
-  if (!baseCommit || !compareCommit || !baseSlides || !compareSlides) {
+  if (!baseCommit || !compareCommit) {
     return (
-      <div className="container mx-auto p-8 max-w-7xl">
-        <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-lg shadow">
-          <h2 className="text-2xl font-bold mb-4">Commits Not Found</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            The specified commits could not be found or do not contain any slides.
-          </p>
-          <Link href="/">
-            <Button>Return to Home</Button>
-          </Link>
+      <div className="container mx-auto p-4">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>エラー</AlertTitle>
+          <AlertDescription>
+            比較するコミットが見つかりませんでした。パラメータを確認してください。
+          </AlertDescription>
+        </Alert>
+        <div className="mt-4">
+          <Button onClick={handleBackToHistory}>
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            履歴ページに戻る
+          </Button>
         </div>
       </div>
     );
   }
   
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <div className="mb-6">
-        <Link href={`/history/${baseCommit.branchId}`}>
-          <Button variant="outline" className="mb-4">
-            <FaArrowLeft className="mr-2" />
-            Back to History
+    <div className="container mx-auto p-4">
+      <div className="flex flex-col mb-6">
+        <div className="flex items-center mb-4">
+          <Button variant="outline" size="sm" onClick={handleBackToHistory}>
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            履歴に戻る
           </Button>
-        </Link>
-        <h1 className="text-2xl font-bold mb-2">Comparing Changes</h1>
-        <div className="flex flex-col md:flex-row md:items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-          <div>
-            <span className="font-medium">Base:</span>{" "}
-            <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-              {baseCommit.message} ({formatDate(baseCommit.createdAt)})
-            </span>
-          </div>
-          <div className="hidden md:block">→</div>
-          <div>
-            <span className="font-medium">Compare:</span>{" "}
-            <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 px-2 py-1 rounded">
-              {compareCommit.message} ({formatDate(compareCommit.createdAt)})
-            </span>
-          </div>
+          <h1 className="text-2xl font-bold ml-4">コミット比較</h1>
         </div>
-      </div>
-      
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden mb-6">
-        <div className="p-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex flex-wrap justify-between items-center gap-4">
-          <div className="flex items-center space-x-4">
-            <div>
-              <label className="text-sm font-medium mr-2">Slide:</label>
-              <select 
-                className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm"
-                value={activeSlideIndex}
-                onChange={(e) => setActiveSlideIndex(parseInt(e.target.value))}
-              >
-                {baseSlides.map((slide, index) => (
-                  <option key={slide.id} value={index}>
-                    Slide {slide.slideNumber}: {slide.title}
-                  </option>
-                ))}
-              </select>
+        
+        <Card className="mb-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">比較情報</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="border p-3 rounded-md bg-slate-50 dark:bg-slate-900">
+                <div className="text-sm font-medium mb-1">ベースコミット</div>
+                <div className="text-xs text-muted-foreground mb-1">#{baseCommit.id}</div>
+                <div className="text-sm font-semibold">{baseCommit.message}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {new Date(baseCommit.createdAt).toLocaleString()}
+                </div>
+              </div>
+              <div className="border p-3 rounded-md bg-slate-50 dark:bg-slate-900">
+                <div className="text-sm font-medium mb-1">比較コミット</div>
+                <div className="text-xs text-muted-foreground mb-1">#{compareCommit.id}</div>
+                <div className="text-sm font-semibold">{compareCommit.message}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {new Date(compareCommit.createdAt).toLocaleString()}
+                </div>
+              </div>
             </div>
+          </CardContent>
+        </Card>
+        
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handlePreviousSlide}
+              disabled={selectedSlideIndex <= 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              前のスライド
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleNextSlide}
+              disabled={selectedSlideIndex >= slideCount}
+            >
+              次のスライド
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
           </div>
-          
-          <div className="flex items-center space-x-3">
-            <Button
-              variant={viewMode === 'xml' ? 'secondary' : 'outline'}
-              onClick={() => setViewMode('xml')}
-              className="flex items-center"
-              size="sm"
-            >
-              <FaCode className="mr-2" />
-              <span>XML</span>
-            </Button>
-            <Button
-              variant={viewMode === 'visual' ? 'secondary' : 'outline'}
-              onClick={() => setViewMode('visual')}
-              className="flex items-center"
-              size="sm"
-            >
-              <FaColumns className="mr-2" />
-              <span>Visual</span>
-            </Button>
+          <div className="text-sm">
+            スライド {selectedSlideIndex} / {slideCount}
           </div>
         </div>
         
-        {viewMode === 'visual' ? (
-          <div className="flex flex-col md:flex-row">
-            <div className="w-full md:w-1/2 border-r border-gray-200 dark:border-gray-700 p-4">
-              <div className="text-sm font-medium mb-2 text-gray-500">Before</div>
-              {baseSlide && (
-                <div className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded p-4">
-                  <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">{baseSlide.title}</h2>
-                  {baseSlide.slideNumber === 2 && (
-                    <ul className="space-y-3">
-                      <li className="flex items-start">
-                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mt-2 mr-3"></span>
-                        <span>XML-level diff extraction from PPTX files</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mt-2 mr-3"></span>
-                        <span>Git-like branch and merge management</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mt-2 mr-3"></span>
-                        <span>Browser-based preview</span>
-                      </li>
-                    </ul>
-                  )}
+        <XMLDiffViewer 
+          oldXml={oldXml} 
+          newXml={newXml} 
+          diffContent={diffContent}
+          title={`スライド ${selectedSlideIndex} の変更`}
+          diffType="structured"
+          onRefresh={updateSelectedSlideXml}
+        />
+        
+        {/* スライドのサムネイル表示（将来的な拡張機能） */}
+        {/* <div className="grid grid-cols-2 gap-4 mt-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">ベースバージョン</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {baseSlides && baseSlides.find(s => s.slideNumber === selectedSlideIndex)?.thumbnail ? (
+                <img 
+                  src={baseSlides.find(s => s.slideNumber === selectedSlideIndex)?.thumbnail || ''} 
+                  alt={`ベーススライド ${selectedSlideIndex}`}
+                  className="w-full border rounded-md"
+                />
+              ) : (
+                <div className="w-full h-32 bg-slate-100 dark:bg-slate-800 flex items-center justify-center border rounded-md">
+                  <FileText className="h-8 w-8 text-slate-400" />
                 </div>
               )}
-            </div>
-            
-            <div className="w-full md:w-1/2 p-4">
-              <div className="text-sm font-medium mb-2 text-gray-500">After</div>
-              {compareSlide && (
-                <div className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded p-4">
-                  <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">{compareSlide.title}</h2>
-                  {compareSlide.slideNumber === 2 && (
-                    <ul className="space-y-3">
-                      <li className="flex items-start">
-                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mt-2 mr-3"></span>
-                        <span>XML-level diff extraction from PPTX files</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mt-2 mr-3"></span>
-                        <span>Git-like branch and merge management</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mt-2 mr-3"></span>
-                        <span>Browser-based instant preview</span>
-                      </li>
-                      <li className="flex items-start bg-green-50 dark:bg-green-900/30 -mx-2 px-2 py-1 rounded">
-                        <span className="inline-block w-2 h-2 rounded-full bg-red-500 mt-2 mr-3"></span>
-                        <span className="text-red-600 dark:text-red-400">API integration for advanced features</span>
-                      </li>
-                    </ul>
-                  )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">比較バージョン</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {compareSlides && compareSlides.find(s => s.slideNumber === selectedSlideIndex)?.thumbnail ? (
+                <img 
+                  src={compareSlides.find(s => s.slideNumber === selectedSlideIndex)?.thumbnail || ''} 
+                  alt={`比較スライド ${selectedSlideIndex}`}
+                  className="w-full border rounded-md"
+                />
+              ) : (
+                <div className="w-full h-32 bg-slate-100 dark:bg-slate-800 flex items-center justify-center border rounded-md">
+                  <FileText className="h-8 w-8 text-slate-400" />
                 </div>
               )}
-            </div>
-          </div>
-        ) : (
-          <div className="p-4">
-            <XMLDiffViewer />
-          </div>
-        )}
-      </div>
-      
-      <div className="flex justify-end space-x-3">
-        <Button variant="outline">
-          Cancel
-        </Button>
-        <Button className="bg-blue-500 hover:bg-blue-600 text-white">
-          Restore This Version
-        </Button>
+            </CardContent>
+          </Card>
+        </div> */}
+        
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-3">概要</h2>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="border p-4 rounded-md bg-green-50 dark:bg-green-900/20">
+                  <div className="font-medium text-green-700 dark:text-green-300 mb-1">追加</div>
+                  <div className="text-2xl font-bold text-green-800 dark:text-green-200">
+                    {diffContent?.added.length || 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">要素</div>
+                </div>
+                <div className="border p-4 rounded-md bg-amber-50 dark:bg-amber-900/20">
+                  <div className="font-medium text-amber-700 dark:text-amber-300 mb-1">変更</div>
+                  <div className="text-2xl font-bold text-amber-800 dark:text-amber-200">
+                    {diffContent?.modified.length || 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">要素</div>
+                </div>
+                <div className="border p-4 rounded-md bg-red-50 dark:bg-red-900/20">
+                  <div className="font-medium text-red-700 dark:text-red-300 mb-1">削除</div>
+                  <div className="text-2xl font-bold text-red-800 dark:text-red-200">
+                    {diffContent?.deleted.length || 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">要素</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default DiffView;
