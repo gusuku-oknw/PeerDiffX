@@ -1,7 +1,18 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp, varchar, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp, varchar, primaryKey, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Session storage for authentication
+export const sessions = pgTable("sessions", {
+  sid: varchar("sid").primaryKey(),
+  sess: jsonb("sess").notNull(),
+  expire: timestamp("expire").notNull(),
+}, (table) => {
+  return {
+    expireIdx: index("IDX_session_expire").on(table.expire),
+  };
+});
 
 // ロールの定義（学生、企業担当者、管理者など）
 export const roles = pgTable("roles", {
@@ -25,8 +36,6 @@ export const permissions = pgTable("permissions", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 50 }).notNull().unique(),
   description: text("description"),
-  resource: varchar("resource", { length: 50 }).notNull(),  // presentations, branches, commits, etc.
-  action: varchar("action", { length: 50 }).notNull(),      // read, write, comment, etc.
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -34,8 +43,6 @@ export const permissions = pgTable("permissions", {
 export const insertPermissionSchema = createInsertSchema(permissions).pick({
   name: true,
   description: true,
-  resource: true,
-  action: true,
 });
 
 export type InsertPermission = z.infer<typeof insertPermissionSchema>;
@@ -79,6 +86,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   lastName: true,
   organization: true,
   roleId: true,
+  isActive: true,
+  lastLogin: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
