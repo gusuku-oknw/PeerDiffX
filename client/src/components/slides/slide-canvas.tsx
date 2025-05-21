@@ -363,22 +363,22 @@ export default function SlideCanvas({
                     </Button>
                   </div>
                   
-                  <div className="px-2 pb-1">
-                    <TabsList className="w-full h-12 grid grid-cols-4 bg-gray-100 dark:bg-gray-800">
-                      <TabsTrigger value="comments" className="text-sm flex items-center">
-                        <FaComments className="mr-1.5 text-sm" />
+                  <div className="px-4 py-2">
+                    <TabsList className="w-full h-14 grid grid-cols-4 bg-gray-100 dark:bg-gray-800 rounded-md">
+                      <TabsTrigger value="comments" className="text-sm md:text-base flex items-center justify-center">
+                        <FaComments className="mr-1.5 text-base" />
                         <span>コメント</span>
                       </TabsTrigger>
-                      <TabsTrigger value="history" className="text-sm flex items-center">
-                        <FaHistory className="mr-1.5 text-sm" />
+                      <TabsTrigger value="history" className="text-sm md:text-base flex items-center justify-center">
+                        <FaHistory className="mr-1.5 text-base" />
                         <span>履歴</span>
                       </TabsTrigger>
-                      <TabsTrigger value="locks" className="text-sm flex items-center">
-                        <FaLock className="mr-1.5 text-sm" />
+                      <TabsTrigger value="locks" className="text-sm md:text-base flex items-center justify-center">
+                        <FaLock className="mr-1.5 text-base" />
                         <span>ロック</span>
                       </TabsTrigger>
-                      <TabsTrigger value="ai" className="text-sm flex items-center">
-                        <FaRobot className="mr-1.5 text-sm" />
+                      <TabsTrigger value="ai" className="text-sm md:text-base flex items-center justify-center">
+                        <FaRobot className="mr-1.5 text-base" />
                         <span>AI分析</span>
                       </TabsTrigger>
                     </TabsList>
