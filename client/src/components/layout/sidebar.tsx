@@ -34,13 +34,15 @@ export default function Sidebar() {
             </div>
           ) : (
             presentations?.map((presentation) => (
-              <Link key={presentation.id} href={`/preview/${presentation.id}`}>
-                <a className={`flex items-center px-3 py-2 rounded-md ${presentation.id === activePresentationId ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'}`}>
-                  <FaFilePowerpoint className="mr-3" />
-                  <span className={`truncate ${presentation.id === activePresentationId ? 'font-medium' : ''}`}>
-                    {presentation.name}
-                  </span>
-                </a>
+              <Link 
+                key={presentation.id} 
+                href={`/preview/${presentation.id}`}
+                className={`flex items-center px-3 py-2 rounded-md ${presentation.id === activePresentationId ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'}`}
+              >
+                <FaFilePowerpoint className="mr-3" />
+                <span className={`truncate ${presentation.id === activePresentationId ? 'font-medium' : ''}`}>
+                  {presentation.name}
+                </span>
               </Link>
             ))
           )}
@@ -56,13 +58,15 @@ export default function Sidebar() {
               </div>
             ) : (
               branches?.map((branch) => (
-                <Link key={branch.id} href={`/history/${branch.id}`}>
-                  <a className={`flex items-center px-3 py-2 rounded-md ${branch.isDefault ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'}`}>
-                    <div className={`w-4 h-4 rounded-full mr-3 flex-shrink-0 ${branch.name === 'main' ? 'bg-blue-500' : branch.name.startsWith('feature/') ? 'bg-green-500' : 'bg-purple-500'}`}></div>
-                    <span className={branch.isDefault ? 'font-medium' : ''}>
-                      {branch.name}
-                    </span>
-                  </a>
+                <Link 
+                  key={branch.id} 
+                  href={`/history/${branch.id}`}
+                  className={`flex items-center px-3 py-2 rounded-md ${branch.isDefault ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'}`}
+                >
+                  <div className={`w-4 h-4 rounded-full mr-3 flex-shrink-0 ${branch.name === 'main' ? 'bg-blue-500' : branch.name.startsWith('feature') ? 'bg-green-500' : 'bg-purple-500'}`}></div>
+                  <span className={branch.isDefault ? 'font-medium' : ''}>
+                    {branch.name}
+                  </span>
                 </Link>
               ))
             )}
