@@ -1,30 +1,15 @@
 import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/pg-pool';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Check environment variables
 if (!process.env.DATABASE_URL) {
   throw new Error(
-    "DATABASE_URL is not set. Make sure the database is correctly connected.",
+    "DATABASE_URL must be set. Did you forget to provision a database?"
   );
 }
 
-console.log("Connecting to PostgreSQL database...");
-
-// Create database connection pool
-export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
 });
 
-// Log successful connection
-pool.on('connect', () => {
-  console.log("Successfully connected to PostgreSQL database");
-});
-
-// Log connection errors
-pool.on('error', (err) => {
-  console.error("Database connection error:", err);
-});
-
-// Create Drizzle instance with schema
 export const db = drizzle(pool, { schema });

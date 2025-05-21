@@ -5,13 +5,19 @@ import {
   branches, 
   commits, 
   slides, 
-  diffs, 
+  diffs,
+  roles,
+  permissions,
+  rolePermissions,
   type InsertUser,
   type InsertPresentation,
   type InsertBranch,
   type InsertCommit,
   type InsertSlide,
-  type InsertDiff
+  type InsertDiff,
+  type InsertRole,
+  type InsertPermission,
+  type InsertRolePermission
 } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
@@ -28,7 +34,129 @@ export async function initializeDatabase() {
 
   console.log("Initializing database with sample data...");
 
-  // Create a demo user
+  // Create roles first
+  const adminRole: InsertRole = {
+    name: "admin",
+    description: "Administrator role with full access"
+  };
+  const [adminRoleResult] = await db.insert(roles).values(adminRole).returning();
+
+  const userRole: InsertRole = {
+    name: "user",
+    description: "Standard user role"
+  };
+  const [userRoleResult] = await db.insert(roles).values(userRole).returning();
+
+  const reviewerRole: InsertRole = {
+    name: "reviewer",
+    description: "Reviewer with special permissions"
+  };
+  const [reviewerRoleResult] = await db.insert(roles).values(reviewerRole).returning();
+
+  // Create permissions
+  const createPermissions = [
+    { name: "create:presentation", description: "Create presentations" },
+    { name: "create:branch", description: "Create branches" },
+    { name: "create:commit", description: "Create commits" },
+    { name: "create:comment", description: "Create comments" }
+  ];
+  
+  const readPermissions = [
+    { name: "read:presentation", description: "View presentations" },
+    { name: "read:branch", description: "View branches" },
+    { name: "read:commit", description: "View commits" },
+    { name: "read:diff", description: "View diffs" }
+  ];
+  
+  const updatePermissions = [
+    { name: "update:presentation", description: "Update presentations" },
+    { name: "update:branch", description: "Update branches" },
+    { name: "update:slide", description: "Update slides" }
+  ];
+  
+  const deletePermissions = [
+    { name: "delete:presentation", description: "Delete presentations" },
+    { name: "delete:branch", description: "Delete branches" },
+    { name: "delete:comment", description: "Delete comments" }
+  ];
+  
+  const adminPermissions = [
+    { name: "admin:users", description: "Manage users" },
+    { name: "admin:roles", description: "Manage roles" },
+    { name: "admin:system", description: "Manage system settings" }
+  ];
+
+  // Combine all permissions
+  const allPermissions = [
+    ...createPermissions,
+    ...readPermissions,
+    ...updatePermissions,
+    ...deletePermissions,
+    ...adminPermissions
+  ];
+  
+  // Insert all permissions
+  const permissionResults = [];
+  for (const perm of allPermissions) {
+    const [result] = await db.insert(permissions).values(perm).returning();
+    permissionResults.push(result);
+  }
+  
+  // Assign permissions to roles
+  // Admin gets all permissions
+  for (const perm of permissionResults) {
+    await db.insert(rolePermissions).values({
+      roleId: adminRoleResult.id,
+      permissionId: perm.id
+    });
+  }
+  
+  // Regular users get basic permissions
+  const userPermissionNames = [
+    "create:presentation", "create:branch", "create:commit", "create:comment",
+    "read:presentation", "read:branch", "read:commit", "read:diff",
+    "update:presentation", "update:branch", "update:slide",
+    "delete:presentation", "delete:branch", "delete:comment"
+  ];
+  
+  for (const perm of permissionResults) {
+    if (userPermissionNames.includes(perm.name)) {
+      await db.insert(rolePermissions).values({
+        roleId: userRoleResult.id,
+        permissionId: perm.id
+      });
+    }
+  }
+  
+  // Reviewers get read permissions and comments
+  const reviewerPermissionNames = [
+    "read:presentation", "read:branch", "read:commit", "read:diff",
+    "create:comment", "update:comment", "delete:comment"
+  ];
+  
+  for (const perm of permissionResults) {
+    if (reviewerPermissionNames.includes(perm.name)) {
+      await db.insert(rolePermissions).values({
+        roleId: reviewerRoleResult.id,
+        permissionId: perm.id
+      });
+    }
+  }
+
+  // Create demo users
+  const demoAdminUser: InsertUser = {
+    username: "admin",
+    password: "admin123", // In a real app, this would be hashed
+    email: "admin@example.com",
+    firstName: "Admin",
+    lastName: "User",
+    organization: "PeerDiffX Inc",
+    roleId: adminRoleResult.id,
+    isActive: true,
+    lastLogin: new Date()
+  };
+  const [adminUser] = await db.insert(users).values(demoAdminUser).returning();
+
   const demoUser: InsertUser = {
     username: "demo",
     password: "demo123", // In a real app, this would be hashed
@@ -36,7 +164,9 @@ export async function initializeDatabase() {
     firstName: "Demo",
     lastName: "User",
     organization: "PeerDiffX Inc",
-    roleId: null
+    roleId: userRoleResult.id,
+    isActive: true,
+    lastLogin: new Date()
   };
   const [user] = await db.insert(users).values(demoUser).returning();
 
