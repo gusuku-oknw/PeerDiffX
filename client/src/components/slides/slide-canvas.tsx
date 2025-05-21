@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSlide } from "@/hooks/use-pptx";
 import { Button } from "@/components/ui/button";
-import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaDesktop, FaTv } from "react-icons/fa";
 
 interface SlideCanvasProps {
   slideId: number;
@@ -26,6 +26,7 @@ export default function SlideCanvas({
 }: SlideCanvasProps) {
   const { data: slide, isLoading } = useSlide(slideId);
   const [zoomLevel, setZoomLevel] = useState(100);
+  const [aspectRatio, setAspectRatio] = useState<'16:9' | '4:3'>('16:9'); // Default to 16:9 widescreen
   const canvasRef = useRef<HTMLDivElement>(null);
   
   const handleZoomIn = () => {
@@ -44,6 +45,10 @@ export default function SlideCanvas({
         canvasRef.current.requestFullscreen();
       }
     }
+  };
+  
+  const toggleAspectRatio = () => {
+    setAspectRatio(prev => prev === '16:9' ? '4:3' : '16:9');
   };
   
   if (isLoading) {
@@ -191,6 +196,17 @@ export default function SlideCanvas({
           >
             <FaSearchPlus />
           </Button>
+          <div className="border-l border-gray-300 dark:border-gray-600 h-6 mx-1"></div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+            onClick={toggleAspectRatio}
+            title={`Change to ${aspectRatio === '16:9' ? '4:3' : '16:9'} aspect ratio`}
+          >
+            {aspectRatio === '16:9' ? <FaDesktop /> : <FaTv />}
+          </Button>
+          <div className="text-xs text-gray-500 dark:text-gray-400">{aspectRatio}</div>
           <Button 
             variant="ghost" 
             size="icon" 
@@ -230,7 +246,7 @@ export default function SlideCanvas({
       <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-center p-8">
         <div 
           ref={canvasRef}
-          className="bg-white dark:bg-gray-800 shadow-lg rounded-sm aspect-w-16 aspect-h-9 w-full max-w-4xl"
+          className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} w-full max-w-4xl`}
           style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'center' }}
         >
           {renderSlideContent()}
