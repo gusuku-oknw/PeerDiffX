@@ -19,7 +19,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import HistoryIcon from '@mui/icons-material/History';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useNavigate, useLocation } from 'wouter';
+import { useLocation } from 'wouter';
 import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
 import Avatar from '@mui/material/Avatar';

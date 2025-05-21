@@ -32,6 +32,11 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/profile" component={Profile} />
       <Route path="/public-preview/:presentationId/:commitId?" component={PublicPreview} />
+      <Route path="/preview/:id" component={() => {
+        // 古いプレビューパスから新しいパブリックプレビューにリダイレクト
+        window.location.href = window.location.href.replace('/preview/', '/public-preview/pdx-');
+        return <div>リダイレクト中...</div>;
+      }} />
       <Route path="/diff/:baseCommitId/:compareCommitId" component={DiffView} />
       <Route path="/history/:branchId" component={History} />
       <Route path="/branches/:presentationId" component={Branches} />
