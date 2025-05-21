@@ -620,7 +620,7 @@ export default function SlideCanvas({
             </div>
             
             {/* パネルコンテンツ - 可変高さのスクロール可能なエリア */}
-            <div className="overflow-auto" style={{ height: `${panelHeight}px` }}>
+            <div className="overflow-auto" style={{ minHeight: '100px', maxHeight: 'calc(100vh - 300px)' }}>
               {renderActiveTabContent()}
             </div>
           </div>
