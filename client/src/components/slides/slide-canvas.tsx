@@ -3,6 +3,7 @@ import { useSlide } from "@/hooks/use-pptx";
 import { Button } from "@/components/ui/button";
 import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaDesktop, FaTv, FaComments, FaCodeBranch } from "react-icons/fa";
 import { CommentsPanel } from "@/components/comments/comments-panel";
+import { AiAnalysisButton } from "@/components/ai/ai-analysis-button";
 
 interface SlideCanvasProps {
   slideId: number;
@@ -316,12 +317,17 @@ export default function SlideCanvas({
             <span>コメント</span>
           </Button>
           
+          {/* AI分析ボタン - 企業ダッシュボード用 */}
+          <div className="ml-2">
+            <AiAnalysisButton presentationId={1} commitId={slideData?.commitId || 1} />
+          </div>
+          
           {shareDialogComponent && (
             <div className="ml-2">
               {shareDialogComponent}
             </div>
           )}
-          <Button className="px-3 py-1.5 rounded-md bg-green-600 hover:bg-green-700 text-white transition text-sm flex items-center">
+          <Button className="ml-2 px-3 py-1.5 rounded-md bg-green-600 hover:bg-green-700 text-white transition text-sm flex items-center">
             <FaCodeBranch className="mr-2 text-white" />
             <span>Commit</span>
           </Button>

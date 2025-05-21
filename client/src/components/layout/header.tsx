@@ -127,6 +127,14 @@ export default function Header() {
             <FaBars />
           </Button>
           
+          {/* 学生レビュークレジット表示 */}
+          <div className="hidden md:block relative mr-3">
+            <CreditIndicator 
+              totalCredits={100} 
+              usedCredits={67}
+            />
+          </div>
+          
           <div className="hidden md:block relative">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
