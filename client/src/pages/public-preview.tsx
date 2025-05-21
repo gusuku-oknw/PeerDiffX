@@ -7,7 +7,8 @@ import {
   Maximize,
   Home,
   FileCode,
-  AlertTriangle
+  AlertTriangle,
+  Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +18,7 @@ import { decodeId } from "@/lib/hash-utils";
 import { Share } from "@/components/ui/share";
 import SlideThumbnails from "@/components/slides/slide-thumbnails";
 import SlideCanvas from "@/components/slides/slide-canvas";
-import { FaHistory, FaCode, FaLayerGroup, FaComment } from "react-icons/fa";
+import { FaHistory, FaCode, FaLayerGroup, FaComment, FaTools } from "react-icons/fa";
 
 /**
  * 公開プレビューページ - 本来のPeerDiffXデザインに合わせた高度なUIに修正
@@ -210,7 +211,16 @@ export default function PublicPreview() {
       }
     },
     enabled: !!currentCommit?.id,
+    refetchOnWindowFocus: false
   });
+  
+  // スライドデータが変更されたときに最初のスライドを選択
+  useEffect(() => {
+    if (slides.length > 0 && currentSlideIndex === 0) {
+      console.log('Slides loaded successfully, setting first slide');
+      setCurrentSlideIndex(0);
+    }
+  }, [slides, currentSlideIndex]);
   
   // ナビゲーション関数
   const goToPreviousSlide = useCallback(() => {
@@ -425,6 +435,16 @@ export default function PublicPreview() {
             className="text-xs"
           >
             共有
+          </Button>
+          <Button 
+            asChild 
+            size="sm" 
+            variant="outline"
+          >
+            <Link href="/settings">
+              <Settings className="mr-1.5 h-3.5 w-3.5" />
+              設定
+            </Link>
           </Button>
           <Button asChild size="sm" variant="ghost">
             <Link href="/">
