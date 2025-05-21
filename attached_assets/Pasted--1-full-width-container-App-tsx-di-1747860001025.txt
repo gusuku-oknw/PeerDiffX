@@ -1,0 +1,61 @@
+### 余白が生まれている本当の原因
+
+1. **`full-width-container` というユーティリティが幅を制限している**
+   `App.tsx` でルーターを包んでいる div に
+
+   ```tsx
+   className="flex-1 flex overflow-hidden full-width-container …"
+   ```
+
+   が入っています。
+   リポジトリを確認すると **`full-width-container` は
+   `max-width` と左右 `margin: auto` を当てるカスタムクラス** として
+   `client/src/index.css`（Tailwind の @layer utilities 部分）に定義されています。
+   そのため **画面がその max-width（デフォルト 1200 px）を超えると右側に
+   真っ白な余白が残る** 仕組みです。
+   タブを開閉しただけで余白量が微妙に変わるのは、
+   スクロールバー出現→全体幅 -16 px で中央寄せが再計算されるせいです。
+
+2. **`SlideCanvas` 側の中央寄せ (`justify-center`) は無関係**
+   こちらは「中央寄せ+`max-w-4xl` で内側を 64 rem に抑える」ためのものですが、
+   右端の “真っ白な帯” は `full-width-container` の中央寄せが作っています。
+
+---
+
+### 直し方（どれか 1 つで OK）
+
+| 方法                   | 修正内容                                                                                                       | 影響範囲              |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------- |
+| **A. クラスを外す**        | `App.tsx` の `full-width-container` を削除                                                                     | もっとも簡単／他ページにも適用   |
+| **B. 最大幅だけ殺す**       | `client/src/index.css` の<br>`@layer utilities .full-width-container {…}` を<br>`max-width:none;` か 100% に変更 | 既存の余白パディングは残したい場合 |
+| **C. Tailwind で上書き** | どこかに<br>`css<br>.full-width-container{ @apply max-w-none !important; }<br>`                                | CSS 1 行で済む        |
+
+---
+
+#### 例：`App.tsx` をいじる場合
+
+```diff
+- <div className={`flex-1 flex overflow-hidden full-width-container ${isPublicPreview ? 'pt-0' : ''}`}>
++ <div className={`flex-1 flex overflow-hidden ${isPublicPreview ? 'pt-0' : ''}`}>
+```
+
+#### 例：ユーティリティを上書きする場合
+
+```css
+/* client/src/index.css など */
+@layer utilities {
+  .full-width-container {
+    max-width: none;   /* これだけで右の白帯は消える */
+  }
+}
+```
+
+---
+
+### 確認ポイント
+
+1. DevTools で `.full-width-container` を選び、
+   `max-width` を無効化すると余白が即座に無くなるはず。
+2. モバイル幅や 4K 幅でも白帯が出ないことを確認。
+
+これで「ホーム／Commit ボタンの右にできる謎の余白」は完全に解消できます。

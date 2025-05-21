@@ -3,15 +3,17 @@
 @tailwind utilities;
 
 /* レイアウト構造の全体的な修正 */
-.full-width-container {
-  width: 100%;
-  max-width: none;
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-  overflow: hidden;
-  position: relative;
-  display: flex;
+@layer utilities {
+  .full-width-container {
+    width: 100%;
+    max-width: none !important; /* 最大幅の制限を解除して右側の余白を防止 */
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+  }
 }
 
 /* 右側の余白を削除する */
