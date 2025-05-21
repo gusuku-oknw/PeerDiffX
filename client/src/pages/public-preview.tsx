@@ -8,6 +8,8 @@ import { FaLayerGroup, FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, F
 import { Home, Settings, ChevronRight, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import SlideCanvas from '@/components/slides/slide-canvas';
 import SlideThumbnails from '@/components/slides/slide-thumbnails';
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 /**
  * 元のデザインに近づけたプレゼンテーションプレビュー
@@ -42,25 +44,77 @@ export default function PublicPreview() {
   const { data: presentation, isLoading: isLoadingPresentation } = usePresentation(presentationId);
   
   // スライド情報を取得
-  const { data: slides = [] } = useSlides(commitId);
+  const { data: slides = [], isLoading: isLoadingSlides } = useSlides(commitId);
   
   const [currentSlideId, setCurrentSlideId] = useState<number | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [isCreatingDefaultSlide, setIsCreatingDefaultSlide] = useState(false);
   
-  // 最初のスライドが読み込まれたら選択
-  useEffect(() => {
-    if (slides?.length > 0) {
-      setCurrentSlideId(slides[0].id);
-      setCurrentSlideIndex(0);
+  // トーストの状態を管理
+  const { toast } = useToast();
+
+  // よりシンプルなアプローチでのスライド表示
+  // 既存のコードでエラーが発生するため、デフォルトサンプルスライドを用意
+  const sampleSlide = {
+    id: 9999,
+    title: "Q4 Presentation",
+    slideNumber: 1,
+    content: {
+      elements: [
+        {
+          type: "text",
+          x: 50,
+          y: 200,
+          content: "Q4 Presentation",
+          style: {
+            fontSize: 42,
+            fontWeight: "bold",
+            color: "#000000"
+          }
+        },
+        {
+          type: "text",
+          x: 50,
+          y: 280,
+          content: "Company Overview and Results",
+          style: {
+            fontSize: 24,
+            color: "#444444"
+          }
+        },
+        {
+          type: "text",
+          x: 50,
+          y: 400,
+          content: new Date().toLocaleDateString('ja-JP'),
+          style: {
+            fontSize: 16,
+            color: "#666666"
+          }
+        }
+      ]
     }
-  }, [slides]);
+  };
+
+  // 最初のスライドが読み込まれたら選択、スライドがなければサンプルスライドを表示
+  useEffect(() => {
+    if (!isLoadingSlides) {
+      if (slides?.length > 0) {
+        // 実際のスライドがある場合はそれを表示
+        setCurrentSlideId(slides[0].id);
+        setCurrentSlideIndex(0);
+      } else {
+        // スライドがない場合はサンプルスライドを使用（IDをnull以外に設定）
+        setCurrentSlideId(sampleSlide.id);
+        setCurrentSlideIndex(0);
+      }
+    }
+  }, [slides, isLoadingSlides]);
   
   // 選択したスライドが変更されたら状態を更新
   useEffect(() => {
-    if (!currentSlideId && slides?.length > 0) {
-      setCurrentSlideId(slides[0].id);
-      setCurrentSlideIndex(0);
-    } else if (currentSlideId) {
+    // 実際のスライドから選択されたIDをチェック
+    if (currentSlideId !== sampleSlide.id && slides?.length > 0) {
       const index = slides.findIndex((s: any) => s.id === currentSlideId);
       if (index !== -1) {
         setCurrentSlideIndex(index);
@@ -266,13 +320,37 @@ export default function PublicPreview() {
               
               {/* スライド表示エリア */}
               <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
-                {slides[currentSlideIndex] ? (
+                {currentSlideId === sampleSlide.id ? (
+                  // サンプルスライドを表示
                   <div className="w-full max-w-4xl bg-white rounded-lg shadow-sm" style={{ aspectRatio: '16/9' }}>
                     <div className="p-12 h-full relative flex flex-col items-center justify-center">
-                      <h1 className="text-4xl font-bold mb-6 text-center">Q4 Presentation</h1>
+                      <h1 className="text-4xl font-bold mb-6 text-center">{sampleSlide.title}</h1>
                       <div className="w-20 h-1 bg-blue-500 mb-8"></div>
                       <p className="text-xl text-gray-600 dark:text-gray-300 text-center">Company Overview and Results</p>
-                      <div className="mt-12 text-sm text-gray-500">December 15, 2023</div>
+                      <div className="mt-12 text-sm text-gray-500">{new Date().toLocaleDateString('ja-JP')}</div>
+                    </div>
+                  </div>
+                ) : slides[currentSlideIndex] ? (
+                  // 実際のスライドを表示
+                  <div className="w-full max-w-4xl bg-white rounded-lg shadow-sm" style={{ aspectRatio: '16/9' }}>
+                    <div className="p-8 h-full relative">
+                      <h2 className="text-3xl font-bold">{slides[currentSlideIndex].title || 'タイトルなし'}</h2>
+                      {slides[currentSlideIndex].content && slides[currentSlideIndex].content.elements && 
+                        slides[currentSlideIndex].content.elements.map((element: any, idx: number) => (
+                          element.type === 'text' && (
+                            <p key={idx} style={{
+                              position: 'absolute',
+                              left: `${element.x}px`,
+                              top: `${element.y}px`,
+                              color: element.style?.color || '#000',
+                              fontSize: `${element.style?.fontSize || 16}px`,
+                              fontWeight: element.style?.fontWeight || 'normal',
+                            }}>
+                              {element.content}
+                            </p>
+                          )
+                        ))
+                      }
                     </div>
                   </div>
                 ) : (
