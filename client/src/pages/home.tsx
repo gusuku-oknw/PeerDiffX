@@ -87,7 +87,9 @@ export default function Home() {
           : `${newPresentationName}.pptx`
       });
       
-      queryClient.invalidateQueries({ queryKey: ["/api/presentations"] });
+      // 強力にキャッシュを無効化して確実に再取得する
+      await queryClient.invalidateQueries({ queryKey: ["/api/presentations"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/presentations"] });
       setNewPresentationDialog(false);
       setNewPresentationName("");
       toast({
