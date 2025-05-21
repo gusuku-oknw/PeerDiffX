@@ -16,7 +16,7 @@ import {
   type Comment,
   type InsertComment
 } from "@shared/schema";
-import { MemStorage } from "./mem-storage";
+import { DatabaseStorage } from "./storage-db";
 
 // Interface for storage operations
 export interface IStorage {
@@ -74,5 +74,5 @@ export interface IStorage {
   getReplies(commentId: number): Promise<Comment[]>;
 }
 
-// Create and export a MemStorage instance for in-memory storage
-export const storage = new MemStorage();
+// Create and export a DatabaseStorage instance to use PostgreSQL database
+export const storage = new DatabaseStorage();
