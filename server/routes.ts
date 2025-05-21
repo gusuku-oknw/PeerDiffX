@@ -590,19 +590,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.get("/api/snapshots/:id", async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
+      
+      // スナップショットの取得
       const snapshot = await storage.getSnapshot(id);
       
       if (!snapshot) {
         return res.status(404).json({ error: "Snapshot not found" });
       }
       
-      // 期限切れチェック
-      if (snapshot.expiresAt < new Date()) {
-        return res.status(410).json({ error: "Snapshot has expired" });
-      }
-      
       // アクセスカウントを更新
       await storage.updateSnapshotAccessCount(id);
+      
+      // 有効期限切れかチェック
+      const now = new Date();
+      if (new Date(snapshot.expiresAt) < now) {
+        return res.status(410).json({ error: "Snapshot has expired" });
+      }
       
       res.json(snapshot);
     } catch (error) {
