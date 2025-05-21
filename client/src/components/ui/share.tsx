@@ -1,104 +1,121 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Check, Share as ShareIcon } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Check, Copy, Share as ShareIcon, X } from "lucide-react";
+import { FaTwitter, FaFacebook, FaLinkedin, FaEnvelope } from "react-icons/fa";
 
 interface ShareProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
   url: string;
+  title: string;
 }
 
-export function Share({ isOpen, onClose, title, url }: ShareProps) {
-  const { toast } = useToast();
+export function Share({ isOpen, onClose, url, title }: ShareProps) {
   const [copied, setCopied] = useState(false);
-
-  // URLをクリップボードにコピー
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      toast({
-        title: "URLをコピーしました",
-        description: "共有リンクがクリップボードにコピーされました。",
-      });
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      toast({
-        title: "コピーに失敗しました",
-        description: "リンクのコピーに失敗しました。手動でコピーしてください。",
-        variant: "destructive",
-      });
-    }
+  
+  const handleCopy = () => {
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
-
+  
+  const encodedUrl = encodeURIComponent(url);
+  const encodedTitle = encodeURIComponent(title);
+  
+  const twitterUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+  const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+  const mailUrl = `mailto:?subject=${encodedTitle}&body=${encodedUrl}`;
+  
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>プレゼンテーションを共有</DialogTitle>
-          <DialogDescription>
-            以下のリンクを共有して、他の人とプレゼンテーションを見ることができます。
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex items-center space-x-2 mt-2">
-          <div className="grid flex-1 gap-2">
-            <label htmlFor="link" className="sr-only">共有リンク</label>
-            <Input
-              id="link"
-              value={url}
-              readOnly
-              onClick={(e) => e.currentTarget.select()}
-            />
-          </div>
-          <Button 
-            size="sm" 
-            className="px-3" 
-            onClick={copyToClipboard}
-            variant="secondary"
+          <DialogTitle className="flex items-center">
+            <ShareIcon className="w-5 h-5 mr-2" />
+            プレゼンテーションを共有
+          </DialogTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-4 top-4 p-0 w-7 h-7"
+            onClick={onClose}
           >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            <span className="sr-only">リンクをコピー</span>
+            <X className="h-4 w-4" />
           </Button>
-        </div>
-        <div className="mt-4">
-          <h3 className="text-sm font-medium mb-2">他の共有方法</h3>
-          <div className="flex space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex-1"
-              onClick={() => {
-                window.open(`mailto:?subject=${encodeURIComponent(`${title} - 共有プレゼンテーション`)}&body=${encodeURIComponent(`${title}をご覧ください: ${url}`)}`, "_blank");
-              }}
-            >
-              <ShareIcon className="mr-2 h-4 w-4" />
-              メールで送信
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex-1"
-              onClick={() => {
-                const tweetText = `${title} ${url}`;
-                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, "_blank");
-              }}
-            >
-              <ShareIcon className="mr-2 h-4 w-4" />
-              Xで共有
-            </Button>
+        </DialogHeader>
+        <div className="p-4">
+          <div className="mb-4">
+            <Label htmlFor="link" className="text-sm font-medium mb-1.5 block">
+              共有リンク
+            </Label>
+            <div className="flex items-center">
+              <Input
+                id="link"
+                readOnly
+                value={url}
+                className="flex-1 pr-10"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="ml-2"
+                onClick={handleCopy}
+              >
+                {copied ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          <div className="mt-6">
+            <Label className="text-sm font-medium mb-3 block">
+              SNSで共有
+            </Label>
+            <div className="flex space-x-2">
+              <Button asChild size="sm" variant="outline" className="flex-1">
+                <a href={twitterUrl} target="_blank" rel="noopener noreferrer">
+                  <FaTwitter className="mr-2 h-4 w-4" />
+                  Twitter
+                </a>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="flex-1">
+                <a href={facebookUrl} target="_blank" rel="noopener noreferrer">
+                  <FaFacebook className="mr-2 h-4 w-4" />
+                  Facebook
+                </a>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="flex-1">
+                <a href={linkedinUrl} target="_blank" rel="noopener noreferrer">
+                  <FaLinkedin className="mr-2 h-4 w-4" />
+                  LinkedIn
+                </a>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="flex-1">
+                <a href={mailUrl} target="_blank" rel="noopener noreferrer">
+                  <FaEnvelope className="mr-2 h-4 w-4" />
+                  メール
+                </a>
+              </Button>
+            </div>
+          </div>
+          
+          <div className="mt-6">
+            <Label className="text-sm font-medium mb-1.5 block">
+              権限設定
+            </Label>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              このプレゼンテーションの閲覧権限は「公開」に設定されています。リンクを持つ全ての人が閲覧可能です。
+            </div>
           </div>
         </div>
-        <DialogFooter className="sm:justify-start mt-6">
-          <DialogClose asChild>
-            <Button type="button" variant="secondary" onClick={onClose}>
-              閉じる
-            </Button>
-          </DialogClose>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
