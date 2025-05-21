@@ -554,8 +554,8 @@ export default function SlideCanvas({
         <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-start p-0">
           <div 
             ref={canvasRef}
-            className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} w-full`}
-            style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'left center' }}
+            className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} max-w-[90%]`}
+            style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'left center', marginLeft: '20px' }}
           >
             {renderSlideContent()}
           </div>
