@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSlide } from "@/hooks/use-pptx";
 import { Button } from "@/components/ui/button";
-import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch } from "react-icons/fa";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch, FaLock, FaFilter } from "react-icons/fa";
 import { CommentsPanel } from "@/components/comments/comments-panel";
 import { AiAnalysisButton } from "@/components/ai/ai-analysis-button";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import VersionPanel from "@/components/version/version-panel";
 
 interface SlideCanvasProps {
   slideId: number;
@@ -39,7 +41,8 @@ export default function SlideCanvas({
     presentationSettings.defaultAspectRatio as '16:9' | '4:3'
   );
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showComments, setShowComments] = useState(false);
+  const [showSidePanel, setShowSidePanel] = useState(false);
+  const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'locks'>('comments');
   const canvasRef = useRef<HTMLDivElement>(null);
   
   const handleZoomIn = () => {
@@ -304,12 +307,19 @@ export default function SlideCanvas({
           </Button>
           
           <Button 
-            variant={showComments ? "default" : "outline"}
+            variant={(showSidePanel && activeTab === 'comments') ? "default" : "outline"}
             size="sm" 
-            className={`ml-2 px-3 py-1.5 rounded-md border ${showComments ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'} text-sm flex items-center transition-colors`}
-            onClick={() => setShowComments(!showComments)}
+            className={`ml-2 px-3 py-1.5 rounded-md border ${(showSidePanel && activeTab === 'comments') ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'} text-sm flex items-center transition-colors`}
+            onClick={() => {
+              if (activeTab === 'comments' && showSidePanel) {
+                setShowSidePanel(false);
+              } else {
+                setActiveTab('comments');
+                setShowSidePanel(true);
+              }
+            }}
           >
-            <FaComments className={`mr-2 ${showComments ? 'text-white' : 'text-gray-500'}`} />
+            <FaComments className={`mr-2 ${(showSidePanel && activeTab === 'comments') ? 'text-white' : 'text-gray-500'}`} />
             <span>コメント</span>
           </Button>
           
@@ -330,10 +340,10 @@ export default function SlideCanvas({
         </div>
       </div>
       
-      {/* Slide Canvas and Comments Panel */}
+      {/* Slide Canvas and Side Panel */}
       <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-center p-8">
         <div className="flex w-full max-w-[1400px] h-full">
-          <div className={`flex-1 flex items-center justify-center transition-all ${showComments ? 'pr-4' : ''}`}>
+          <div className={`flex-1 flex items-center justify-center transition-all ${showSidePanel ? 'pr-4' : ''}`}>
             <div 
               ref={canvasRef}
               className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} w-full max-w-4xl`}
@@ -343,21 +353,78 @@ export default function SlideCanvas({
             </div>
           </div>
           
-          {showComments && (
+          {showSidePanel && (
             <div className="w-80 bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 flex flex-col transition-all overflow-hidden">
-              <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex justify-between items-center">
-                <h3 className="text-sm font-medium">スライドのコメント</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 w-7 p-0 rounded-full"
-                  onClick={() => setShowComments(false)}
-                >
-                  ✕
-                </Button>
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <CommentsPanel slideId={slideId} />
+              {/* タブ切り替え部分 */}
+              <div className="border-b border-gray-200 dark:border-gray-700">
+                <Tabs defaultValue={activeTab} onValueChange={(val) => setActiveTab(val as 'comments' | 'history' | 'locks')}>
+                  <div className="flex justify-between items-center px-2">
+                    <TabsList className="h-10">
+                      <TabsTrigger value="comments" className="text-xs">コメント</TabsTrigger>
+                      <TabsTrigger value="history" className="text-xs">履歴</TabsTrigger>
+                      <TabsTrigger value="locks" className="text-xs">ロック</TabsTrigger>
+                    </TabsList>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 w-7 p-0 rounded-full"
+                      onClick={() => setShowSidePanel(false)}
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                  
+                  <TabsContent value="comments" className="m-0">
+                    <div className="flex-1 overflow-hidden">
+                      <CommentsPanel slideId={slideId} />
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="history" className="m-0">
+                    <div className="flex-1 overflow-hidden">
+                      <div className="p-4">
+                        <h3 className="text-sm font-medium mb-2">バージョン履歴</h3>
+                        {/* VersionPanelのロジックを組み込む */}
+                        {slideId && (
+                          <VersionPanel 
+                            slideId={slideId} 
+                            onViewChanges={(commitId) => console.log('View changes for commit', commitId)} 
+                            onRestoreVersion={(commitId) => console.log('Restore version', commitId)}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="locks" className="m-0">
+                    <div className="p-4">
+                      <h3 className="text-sm font-medium mb-2">ファイルロック</h3>
+                      <div className="space-y-2">
+                        <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
+                          <div className="flex items-center">
+                            <FaLock className="text-yellow-500 mr-2" />
+                            <span className="text-sm">スライド 1</span>
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <span>田中さんがロック中</span>
+                            <Button size="sm" variant="ghost" className="ml-2 p-1">
+                              <FaLock className="text-red-500" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
+                          <div className="flex items-center">
+                            <FaLock className="text-yellow-500 mr-2" />
+                            <span className="text-sm">スライド 3</span>
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <span>鈴木さんがロック中</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
           )}
