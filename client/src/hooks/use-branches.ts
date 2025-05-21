@@ -7,6 +7,21 @@ import {
   mergeBranches as mergeBranchesApi
 } from "@/features/branches/branch-manager";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+
+/**
+ * 古いブランチ管理機能（後方互換性のため）
+ */
+export function useBranches(presentationId: number) {
+  return useQuery({
+    queryKey: [`/api/presentations/${presentationId}/branches`],
+    queryFn: async () => {
+      if (!presentationId) return [];
+      return await fetchBranches(presentationId);
+    },
+    enabled: !!presentationId
+  });
+}
 
 /**
  * プレゼンテーションのブランチ管理機能を提供するカスタムフック

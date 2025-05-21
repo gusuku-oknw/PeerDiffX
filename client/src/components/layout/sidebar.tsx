@@ -36,7 +36,7 @@ export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
     changeBranch,
     createBranch,
     mergeBranches
-  } = useBranch(presentationId);
+  } = useBranch(presentationId || null);
   
   const { user } = useAuth();
   
