@@ -94,8 +94,53 @@ export class DatabaseStorage implements IStorage {
     return updatedPresentation;
   }
 
-  async deletePresentation(id: number): Promise<void> {
-    await db.delete(presentations).where(eq(presentations.id, id));
+  async deletePresentation(id: number): Promise<boolean> {
+    try {
+      // トランザクションを使って、すべての関連データを順番に削除する
+      await db.transaction(async (tx) => {
+        // まず、この発表に関連するブランチを取得
+        const relatedBranches = await tx.select().from(branches).where(eq(branches.presentationId, id));
+        
+        for (const branch of relatedBranches) {
+          // ブランチに関連するコミットを取得
+          const relatedCommits = await tx.select().from(commits).where(eq(commits.branchId, branch.id));
+          
+          for (const commit of relatedCommits) {
+            // コメントの削除 (もし存在するなら)
+            const relatedSlides = await tx.select().from(slides).where(eq(slides.commitId, commit.id));
+            for (const slide of relatedSlides) {
+              await tx.delete(comments).where(eq(comments.slideId, slide.id));
+            }
+            
+            // スライドの削除
+            await tx.delete(slides).where(eq(slides.commitId, commit.id));
+            
+            // Diffの削除
+            await tx.delete(diffs).where(eq(diffs.commitId, commit.id));
+          }
+          
+          // コミットの削除
+          await tx.delete(commits).where(eq(commits.branchId, branch.id));
+        }
+        
+        // ブランチの削除
+        await tx.delete(branches).where(eq(branches.presentationId, id));
+        
+        // スナップショットの削除
+        await tx.delete(snapshots).where(eq(snapshots.presentationId, id));
+        
+        // アクセス権の削除
+        await tx.delete(presentationAccess).where(eq(presentationAccess.presentationId, id));
+        
+        // 最後にプレゼンテーション自体を削除
+        await tx.delete(presentations).where(eq(presentations.id, id));
+      });
+      
+      return true;
+    } catch (error) {
+      console.error(`Error during presentation deletion (ID: ${id}):`, error);
+      return false;
+    }
   }
 
   // Branch operations
