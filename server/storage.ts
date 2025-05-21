@@ -60,6 +60,7 @@ export class MemStorage implements IStorage {
   private slides: Map<number, Slide>;
   private diffs: Map<number, Diff>;
   private snapshots: Map<string, Snapshot>;
+  private comments: Map<number, Comment>;
   
   private userId: number;
   private presentationId: number;
@@ -67,6 +68,7 @@ export class MemStorage implements IStorage {
   private commitId: number;
   private slideId: number;
   private diffId: number;
+  private commentId: number;
 
   constructor() {
     this.users = new Map();
@@ -76,6 +78,7 @@ export class MemStorage implements IStorage {
     this.slides = new Map();
     this.diffs = new Map();
     this.snapshots = new Map();
+    this.comments = new Map();
     
     this.userId = 1;
     this.presentationId = 1;
@@ -83,6 +86,7 @@ export class MemStorage implements IStorage {
     this.commitId = 1;
     this.slideId = 1;
     this.diffId = 1;
+    this.commentId = 1;
     
     // Initialize with demo data
     this.initializeDemoData();
