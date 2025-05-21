@@ -12,7 +12,7 @@ import {
 import { usePresentations } from "@/hooks/use-pptx";
 import { useBranches } from "@/hooks/use-branches";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { FaCode, FaCodeBranch, FaHistory, FaBars, FaBell, FaSun, FaMoon, FaUpload } from "react-icons/fa";
+import { FaCode, FaCodeBranch, FaHistory, FaBars, FaBell, FaSun, FaMoon, FaUpload, FaSignOutAlt, FaUser, FaCog } from "react-icons/fa";
 
 export default function Header() {
   const { theme, setTheme } = useTheme();
@@ -142,6 +142,14 @@ export default function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <FaUser className="mr-2 text-gray-500" />
+                Account Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <FaCog className="mr-2 text-gray-500" />
+                Preferences
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
                 {theme === "light" ? <FaMoon className="mr-2" /> : <FaSun className="mr-2" />}
                 {theme === "light" ? t("darkMode") : t("lightMode")}
@@ -151,6 +159,10 @@ export default function Header() {
                   {language === "ja" ? "EN" : "JA"}
                 </span>
                 {language === "ja" ? "English" : "日本語"}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20">
+                <FaSignOutAlt className="mr-2" />
+                Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

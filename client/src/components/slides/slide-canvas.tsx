@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSlide } from "@/hooks/use-pptx";
 import { Button } from "@/components/ui/button";
-import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaDesktop, FaTv, FaComments } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaDesktop, FaTv, FaComments, FaCodeBranch } from "react-icons/fa";
 import { CommentsPanel } from "@/components/comments/comments-panel";
 
 interface SlideCanvasProps {
@@ -321,8 +321,9 @@ export default function SlideCanvas({
               {shareDialogComponent}
             </div>
           )}
-          <Button className="px-3 py-1.5 rounded-md bg-blue-500 hover:bg-blue-600 text-white transition text-sm">
-            <span>Save</span>
+          <Button className="px-3 py-1.5 rounded-md bg-green-600 hover:bg-green-700 text-white transition text-sm flex items-center">
+            <FaCodeBranch className="mr-2 text-white" />
+            <span>Commit</span>
           </Button>
         </div>
       </div>
