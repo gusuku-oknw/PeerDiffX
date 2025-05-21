@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { TopReviewerPanel } from "@/components/rewards/top-reviewer-panel";
 import { StorageUsagePanel } from "@/components/storage/storage-usage-panel";
+import { SubscriptionPanel } from "@/components/billing/subscription-panel";
 import {
   FaTachometerAlt,
   FaUsers,
@@ -136,7 +137,7 @@ export default function AdminDashboard() {
         </div>
         
         <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-4 mb-6">
+          <TabsList className="grid grid-cols-5 mb-6">
             <TabsTrigger value="overview">
               <FaTachometerAlt className="mr-2 h-4 w-4" />
               <span>概要</span>
@@ -152,6 +153,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="storage">
               <FaDatabase className="mr-2 h-4 w-4" />
               <span>ストレージ</span>
+            </TabsTrigger>
+            <TabsTrigger value="billing">
+              <FaFileInvoiceDollar className="mr-2 h-4 w-4" />
+              <span>請求情報</span>
             </TabsTrigger>
           </TabsList>
           
@@ -265,6 +270,10 @@ export default function AdminDashboard() {
           
           <TabsContent value="storage">
             <StorageUsagePanel />
+          </TabsContent>
+          
+          <TabsContent value="billing">
+            <SubscriptionPanel />
           </TabsContent>
         </Tabs>
       </div>
