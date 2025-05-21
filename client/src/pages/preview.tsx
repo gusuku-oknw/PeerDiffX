@@ -334,7 +334,6 @@ export default function Preview() {
             onNextSlide={handleNextSlide}
             onViewXmlDiff={handleViewXmlDiff}
             onViewHistory={handleViewHistory}
-            versionPanelVisible={showVersionPanel}
             shareDialogComponent={
               <ShareDialog 
                 presentationId={presentationId} 
@@ -344,14 +343,7 @@ export default function Preview() {
             }
           />
           
-          {showVersionPanel && (
-            <VersionPanel 
-              slideId={activeSlideId}
-              onViewChanges={handleViewChanges}
-              onRestoreVersion={handleRestoreVersion}
-              onClose={() => setShowVersionPanel(false)}
-            />
-          )}
+          {/* バージョン履歴パネルはサイドパネルに統合しました */}
         </>
       ) : (
         // アクティブスライドがない場合は読み込み中表示

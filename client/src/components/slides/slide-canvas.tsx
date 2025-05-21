@@ -15,8 +15,7 @@ interface SlideCanvasProps {
   onPrevSlide: () => void;
   onNextSlide: () => void;
   onViewXmlDiff: () => void;
-  onViewHistory: () => void;
-  versionPanelVisible?: boolean;
+  onViewHistory?: () => void; // オプショナルに変更
   shareDialogComponent?: React.ReactNode;
 }
 
@@ -28,7 +27,6 @@ export default function SlideCanvas({
   onNextSlide,
   onViewXmlDiff,
   onViewHistory,
-  versionPanelVisible,
   shareDialogComponent
 }: SlideCanvasProps) {
   const { data: slide, isLoading } = useSlide(slideId);
@@ -297,13 +295,20 @@ export default function SlideCanvas({
             <span>XML Diff</span>
           </Button>
           <Button 
-            variant={versionPanelVisible ? "default" : "outline"}
+            variant={(showSidePanel && activeTab === 'history') ? "default" : "outline"}
             size="sm" 
-            className={`px-3 py-1.5 rounded-md border ${versionPanelVisible ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'} text-sm flex items-center transition-colors`}
-            onClick={onViewHistory}
+            className={`px-3 py-1.5 rounded-md border ${(showSidePanel && activeTab === 'history') ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'} text-sm flex items-center transition-colors`}
+            onClick={() => {
+              if (activeTab === 'history' && showSidePanel) {
+                setShowSidePanel(false);
+              } else {
+                setActiveTab('history');
+                setShowSidePanel(true);
+              }
+            }}
           >
-            <FaHistory className={`mr-2 ${versionPanelVisible ? 'text-white' : 'text-gray-500'}`} />
-            <span>History</span>
+            <FaHistory className={`mr-2 ${(showSidePanel && activeTab === 'history') ? 'text-white' : 'text-gray-500'}`} />
+            <span>履歴</span>
           </Button>
           
           <Button 
@@ -384,12 +389,13 @@ export default function SlideCanvas({
                     <div className="flex-1 overflow-hidden">
                       <div className="p-4">
                         <h3 className="text-sm font-medium mb-2">バージョン履歴</h3>
-                        {/* VersionPanelのロジックを組み込む */}
+                        {/* VersionPanelのロジック統合 */}
                         {slideId && (
                           <VersionPanel 
                             slideId={slideId} 
                             onViewChanges={(commitId) => console.log('View changes for commit', commitId)} 
                             onRestoreVersion={(commitId) => console.log('Restore version', commitId)}
+                            onClose={() => setShowSidePanel(false)}
                           />
                         )}
                       </div>
