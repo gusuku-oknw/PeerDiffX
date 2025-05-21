@@ -16,9 +16,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { decodeId } from "@/lib/hash-utils";
 import { Share } from "@/components/ui/share";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import SlideThumbnails from "@/components/slides/slide-thumbnails";
 import SlideCanvas from "@/components/slides/slide-canvas";
-import { FaHistory, FaCode, FaLayerGroup, FaComment, FaTools, FaRobot, FaBrain } from "react-icons/fa";
+import { FaHistory, FaCode, FaLayerGroup, FaComment, FaTools, FaRobot, FaBrain, FaTimes } from "react-icons/fa";
 
 /**
  * 公開プレビューページ - 本来のPeerDiffXデザインに合わせた高度なUIに修正
@@ -31,6 +32,7 @@ export default function PublicPreview() {
   const [currentTab, setCurrentTab] = useState("slide");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [showBottomPanel, setShowBottomPanel] = useState(false);
   const [activeTabPanel, setActiveTabPanel] = useState<'history' | 'xml' | 'comments' | 'ai'>('history');
   
@@ -471,12 +473,9 @@ export default function PublicPreview() {
                 </div>
               </div>
               
-              {/* AI分析ボタン - サイドバーに追加 */}
+              {/* AI分析ボタン - サイドバーに追加（ダイアログ型に変更） */}
               <button 
-                onClick={() => {
-                  setActiveTabPanel('ai');
-                  setShowBottomPanel(true);
-                }}
+                onClick={() => setIsAiDialogOpen(true)}
                 className="flex items-center w-full px-3 py-2 mt-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
               >
                 <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
@@ -587,6 +586,64 @@ export default function PublicPreview() {
           title={presentation.name || 'プレゼンテーションプレビュー'}
           url={shareUrl}
         />
+
+        {/* AI分析ダイアログ */}
+        <Dialog open={isAiDialogOpen} onOpenChange={setIsAiDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto fixed inset-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <FaBrain className="mr-2 text-blue-600" />
+                AI分析ダッシュボード
+              </DialogTitle>
+            </DialogHeader>
+            <div className="mt-4">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
+                      <FaRobot className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">プレゼンテーション分析</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">AIによる詳細な分析結果</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="p-4 bg-white dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
+                    <h5 className="font-medium mb-2">サマリー</h5>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">このプレゼンテーションは企業概要と第2四半期の結果を説明する内容です。主要な財務指標とプロジェクトの進捗状況が含まれています。</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
+                        <h6 className="text-xs font-medium mb-2">全体的な印象</h6>
+                        <div className="flex">
+                          <div className="w-1/4 text-center p-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-l">
+                            肯定的
+                          </div>
+                          <div className="w-2/4 text-center p-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                            中立的
+                          </div>
+                          <div className="w-1/4 text-center p-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-r">
+                            否定的
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
+                        <h6 className="text-xs font-medium mb-2">キーワード分析</h6>
+                        <div className="flex flex-wrap gap-1">
+                          <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded">収益</span>
+                          <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded">戦略</span>
+                          <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded">プロジェクト</span>
+                          <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded">成長</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
