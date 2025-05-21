@@ -100,9 +100,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Creating presentation with userId:", userId);
       
+      // Ensure userId is always a string
       const presentationData = insertPresentationSchema.parse({
         ...req.body,
-        userId
+        userId: String(userId)
       });
       
       // Create the presentation
