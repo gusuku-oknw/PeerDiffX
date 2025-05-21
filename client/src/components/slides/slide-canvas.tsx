@@ -568,11 +568,7 @@ export default function SlideCanvas({
               }
             </Button>
             
-            {shareDialogComponent && (
-              <div className="ml-2">
-                {shareDialogComponent}
-              </div>
-            )}
+
             
             <Button className="ml-2 px-3 py-1.5 rounded-md bg-green-600 hover:bg-green-700 text-white transition text-sm flex items-center">
               <FaCodeBranch className="mr-2 text-white" />
