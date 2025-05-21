@@ -3,18 +3,23 @@ import { Link } from "wouter";
 import { usePresentations } from "@/hooks/use-pptx";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FaUpload, FaFilePowerpoint, FaPlus, FaClock } from "react-icons/fa";
+import { FaUpload, FaFilePowerpoint, FaPlus, FaClock, FaEllipsisV, FaCog, FaTrash } from "react-icons/fa";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function Home() {
   const { data: presentations, isLoading, isError } = usePresentations();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [newPresentationDialog, setNewPresentationDialog] = useState(false);
   const [newPresentationName, setNewPresentationName] = useState("");
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedPresentation, setSelectedPresentation] = useState<any>(null);
+  const [editPresentationName, setEditPresentationName] = useState("");
   const { toast } = useToast();
 
   const formatDate = (dateString: string) => {
@@ -97,6 +102,73 @@ export default function Home() {
       });
     }
   };
+  
+  const handleEditClick = (presentation: any) => {
+    setSelectedPresentation(presentation);
+    setEditPresentationName(presentation.name);
+    setEditDialogOpen(true);
+  };
+  
+  const handleDeleteClick = (presentation: any) => {
+    setSelectedPresentation(presentation);
+    setDeleteDialogOpen(true);
+  };
+  
+  const handleUpdatePresentation = async () => {
+    if (!editPresentationName.trim() || !selectedPresentation) {
+      toast({
+        title: "Name required",
+        description: "Please enter a name for the presentation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await apiRequest('PATCH', `/api/presentations/${selectedPresentation.id}`, {
+        name: editPresentationName.endsWith('.pptx') 
+          ? editPresentationName 
+          : `${editPresentationName}.pptx`,
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/presentations"] });
+      setEditDialogOpen(false);
+      setSelectedPresentation(null);
+      toast({
+        title: "Presentation updated",
+        description: "Your presentation has been updated",
+      });
+    } catch (error) {
+      console.error("Error updating presentation:", error);
+      toast({
+        title: "Update failed",
+        description: "There was an error updating your presentation",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleDeletePresentation = async () => {
+    if (!selectedPresentation) return;
+    
+    try {
+      await apiRequest('DELETE', `/api/presentations/${selectedPresentation.id}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/presentations"] });
+      setDeleteDialogOpen(false);
+      setSelectedPresentation(null);
+      toast({
+        title: "Presentation deleted",
+        description: "Your presentation has been deleted",
+      });
+    } catch (error) {
+      console.error("Error deleting presentation:", error);
+      toast({
+        title: "Deletion failed",
+        description: "There was an error deleting your presentation",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto p-8 max-w-7xl">
@@ -165,7 +237,26 @@ export default function Home() {
               <div className="bg-gray-100 dark:bg-gray-700 h-48 flex items-center justify-center">
                 <FaFilePowerpoint className="text-6xl text-blue-500 dark:text-blue-400" />
               </div>
-              <CardHeader>
+              <CardHeader className="relative">
+                <div className="absolute top-4 right-4">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <FaEllipsisV />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEditClick(presentation)}>
+                        <FaCog className="mr-2" />
+                        設定
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteClick(presentation)}>
+                        <FaTrash className="mr-2" />
+                        削除
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
                 <CardTitle className="truncate">{presentation.name}</CardTitle>
                 <CardDescription className="flex items-center">
                   <FaClock className="mr-1" />
@@ -228,6 +319,54 @@ export default function Home() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Presentation Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Presentation</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Presentation Name</Label>
+              <Input
+                id="edit-name"
+                value={editPresentationName}
+                onChange={(e) => setEditPresentationName(e.target.value)}
+                placeholder="My Presentation.pptx"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                キャンセル
+              </Button>
+              <Button onClick={handleUpdatePresentation}>
+                更新
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>プレゼンテーションを削除</DialogTitle>
+            <DialogDescription>
+              本当に「{selectedPresentation?.name}」を削除しますか？この操作は取り消せません。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              キャンセル
+            </Button>
+            <Button variant="destructive" onClick={handleDeletePresentation}>
+              削除
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
