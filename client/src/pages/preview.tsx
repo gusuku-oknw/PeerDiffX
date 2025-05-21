@@ -158,28 +158,18 @@ export default function Preview() {
     );
   }
   
-  // エラーケース: ブランチやコミットがまったくない
-  if (presentation && (!defaultBranch || !latestCommit)) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center p-8 max-w-lg">
-          <h2 className="text-2xl font-bold mb-4">プレゼンテーションを初期化しています</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            このプレゼンテーションは初期化中です。ブランチやコミットデータが作成されています。
-            更新するには画面をリフレッシュしてください。
-          </p>
-          <div className="flex justify-center gap-4">
-            <Button onClick={() => window.location.reload()}>
-              リフレッシュ
-            </Button>
-            <Button variant="outline" onClick={() => window.location.href = "/"}>
-              ホームに戻る
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // 自動リフレッシュロジック: ブランチやコミットのデータを確認
+  useEffect(() => {
+    if (presentation && (!defaultBranch || !latestCommit)) {
+      console.log("データが不完全です。自動リロードを準備します...");
+      // 5秒後に自動的にリロード
+      const timer = setTimeout(() => {
+        window.location.reload();
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [presentation, defaultBranch, latestCommit]);
   
   // Check if we're missing the presentation entirely
   if (!presentation) {
