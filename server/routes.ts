@@ -315,12 +315,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.post("/api/slides", async (req: Request, res: Response) => {
     try {
       const slideData = insertSlideSchema.parse(req.body);
+      
+      // コミットに対応するスライドが既に存在するか確認
+      const existingSlides = await storage.getSlidesByCommitId(slideData.commitId);
+      const existingSlide = existingSlides.find(s => s.slideNumber === slideData.slideNumber);
+      
+      if (existingSlide) {
+        // 既存のスライドが見つかった場合は、それを返す
+        console.log(`スライド (${slideData.slideNumber}) は既に存在します。ID: ${existingSlide.id}`);
+        return res.status(200).json(existingSlide);
+      }
+      
+      // 新しいスライドを作成
+      console.log(`新しいスライド (${slideData.slideNumber}) を作成します。コミットID: ${slideData.commitId}`);
       const slide = await storage.createSlide(slideData);
       res.status(201).json(slide);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid slide data", errors: error.errors });
       }
+      console.error("スライド作成エラー:", error);
       res.status(500).json({ message: "Failed to create slide" });
     }
   });
@@ -398,6 +412,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid diff data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create diff" });
+    }
+  });
+
+  // コミット用のスライド自動作成エンドポイント
+  apiRouter.post("/api/commits/:commitId/create-slides", async (req: Request, res: Response) => {
+    try {
+      const commitId = parseInt(req.params.commitId);
+      const { slideCount = 1, title = "Welcome" } = req.body;
+      
+      // コミットの存在確認
+      const commit = await storage.getCommit(commitId);
+      if (!commit) {
+        return res.status(404).json({ message: "Commit not found" });
+      }
+      
+      // 既存のスライドをチェック
+      const existingSlides = await storage.getSlidesByCommitId(commitId);
+      
+      // 既存のスライドがある場合は、そのまま返す（重複作成を防止）
+      if (existingSlides.length > 0) {
+        console.log(`コミット ${commitId} には既に ${existingSlides.length} 件のスライドが存在します。`);
+        return res.status(200).json(existingSlides);
+      }
+      
+      // 新しいスライドを作成
+      console.log(`コミット ${commitId} の新しいスライドを ${slideCount} 件作成します。`);
+      const createdSlides = [];
+      
+      for (let i = 1; i <= slideCount; i++) {
+        const slideData = {
+          commitId,
+          slideNumber: i,
+          title: i === 1 ? title : `Slide ${i}`,
+          content: {
+            elements: [
+              {
+                id: `title${i}`,
+                type: 'text',
+                x: 100,
+                y: 100,
+                width: 600,
+                height: 100,
+                content: i === 1 ? title : `Slide ${i}`,
+                style: { fontSize: 32, fontWeight: 'bold', color: '#333333' }
+              },
+              {
+                id: `subtitle${i}`,
+                type: 'text',
+                x: 100,
+                y: 220,
+                width: 600,
+                height: 50,
+                content: 'Created with PeerDiffX',
+                style: { fontSize: 24, color: '#666666' }
+              }
+            ],
+            background: '#ffffff'
+          },
+          xmlContent: `<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>${i === 1 ? title : `Slide ${i}`}</a:t></a:r></a:p></p:txBody></p:sp><p:sp><p:txBody><a:p><a:r><a:t>Created with PeerDiffX</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>`
+        };
+        
+        const slide = await storage.createSlide(slideData);
+        console.log(`スライド ${i} を作成しました。ID: ${slide.id}`);
+        createdSlides.push(slide);
+      }
+      
+      res.status(201).json(createdSlides);
+    } catch (error) {
+      console.error("スライド作成エラー:", error);
+      res.status(500).json({ message: "Failed to create slides" });
     }
   });
 
