@@ -12,6 +12,7 @@ import DiffView from "@/pages/diff-view";
 import History from "@/pages/history";
 import Branches from "@/pages/branches";
 import SnapshotPage from "@/pages/snapshot";
+import AdminDashboard from "@/pages/admin/dashboard";
 
 function Router() {
   return (
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/history/:branchId" component={History} />
       <Route path="/branches/:presentationId" component={Branches} />
       <Route path="/snapshot/:id" component={SnapshotPage} />
+      <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

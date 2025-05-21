@@ -319,7 +319,7 @@ export default function SlideCanvas({
           
           {/* AI分析ボタン - 企業ダッシュボード用 */}
           <div className="ml-2">
-            <AiAnalysisButton presentationId={1} commitId={slideData?.commitId || 1} />
+            <AiAnalysisButton presentationId={1} commitId={slide?.commitId || 1} />
           </div>
           
           {shareDialogComponent && (
