@@ -131,6 +131,54 @@ export const translations: TranslationType = {
   checkOutPresentation: {
     en: 'Check out this presentation',
     ja: 'このプレゼンテーションをご覧ください'
+  },
+  snapshot: {
+    en: 'Shared Presentation',
+    ja: '共有プレゼンテーション'
+  },
+  snapshotNotFound: {
+    en: 'Snapshot Not Found',
+    ja: 'スナップショットが見つかりません'
+  },
+  snapshotExpired: {
+    en: 'Snapshot Expired',
+    ja: 'スナップショットの期限が切れています'
+  },
+  snapshotError: {
+    en: 'Error Loading Snapshot',
+    ja: 'スナップショット読み込みエラー'
+  },
+  snapshotErrorDesc: {
+    en: 'The presentation snapshot you are trying to view is not available. It may have been deleted or the link may be incorrect.',
+    ja: '表示しようとしているプレゼンテーションのスナップショットは利用できません。削除されたか、リンクが正しくない可能性があります。'
+  },
+  goBack: {
+    en: 'Go Back',
+    ja: '戻る'
+  },
+  expiresIn: {
+    en: 'Expires in',
+    ja: '有効期限'
+  },
+  expired: {
+    en: 'Expired',
+    ja: '期限切れ'
+  },
+  hours: {
+    en: 'hours',
+    ja: '時間'
+  },
+  noSlides: {
+    en: 'No slides available',
+    ja: 'スライドがありません'
+  },
+  previous: {
+    en: 'Previous',
+    ja: '前へ'
+  },
+  next: {
+    en: 'Next',
+    ja: '次へ'
   }
 };
 

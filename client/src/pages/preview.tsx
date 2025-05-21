@@ -5,6 +5,7 @@ import SlideThumbnails from "@/components/slides/slide-thumbnails";
 import SlideCanvas from "@/components/slides/slide-canvas";
 import VersionPanel from "@/components/version/version-panel";
 import DiffViewer from "@/components/diff/diff-viewer";
+import { ShareDialog } from "@/components/share/share-dialog";
 import { usePresentation, useCommits, useSlides } from "@/hooks/use-pptx";
 import { useBranch } from "@/hooks/use-branches";
 import { Button } from "@/components/ui/button";
@@ -163,16 +164,26 @@ export default function Preview() {
             onSelectSlide={handleSelectSlide} 
           />
           
-          <SlideCanvas 
-            slideId={activeSlideId}
-            totalSlides={slides.length}
-            currentSlideNumber={activeSlide?.slideNumber || 1}
-            onPrevSlide={handlePrevSlide}
-            onNextSlide={handleNextSlide}
-            onViewXmlDiff={handleViewXmlDiff}
-            onViewHistory={handleViewHistory}
-            versionPanelVisible={showVersionPanel}
-          />
+          <div className="flex-1 flex flex-col overflow-hidden relative">
+            <SlideCanvas 
+              slideId={activeSlideId}
+              totalSlides={slides.length}
+              currentSlideNumber={activeSlide?.slideNumber || 1}
+              onPrevSlide={handlePrevSlide}
+              onNextSlide={handleNextSlide}
+              onViewXmlDiff={handleViewXmlDiff}
+              onViewHistory={handleViewHistory}
+              versionPanelVisible={showVersionPanel}
+            />
+            
+            <div className="absolute top-4 right-4">
+              <ShareDialog 
+                presentationId={presentationId} 
+                commitId={latestCommit.id} 
+                slideId={activeSlideId} 
+              />
+            </div>
+          </div>
           
           {showVersionPanel && (
             <VersionPanel 
