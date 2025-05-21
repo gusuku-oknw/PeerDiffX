@@ -58,13 +58,14 @@ async function upsertUser(
   claims: any,
 ) {
   const userData = {
+    id: claims["sub"], // Use the sub claim as the user ID
     username: claims["sub"],
     password: '', // No password for OAuth users
     email: claims["email"] || null,
     firstName: claims["first_name"] || null,
     lastName: claims["last_name"] || null,
     profileImageUrl: claims["profile_image_url"] || null,
-    roleId: 5, // Default to regular user role
+    roleId: 2, // Default to regular user role
     isActive: true
   };
 
@@ -139,8 +140,16 @@ export async function setupAuth(app: Express) {
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const user = await storage.getUserByUsername(userId);
-      res.json(user);
+      const user = await storage.getUser(userId);
+      
+      if (user) {
+        res.json(user);
+      } else {
+        // If user is authenticated but not in our database yet
+        // Create the user record from the claims
+        const newUser = await upsertUser(req.user.claims);
+        res.json(newUser);
+      }
     } catch (error) {
       console.error('Error fetching user:', error);
       res.status(500).json({ message: 'Failed to fetch user' });

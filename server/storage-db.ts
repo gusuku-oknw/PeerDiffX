@@ -64,7 +64,6 @@ export class DatabaseStorage implements IStorage {
     
     return user;
   }
-  }
 
   // Presentation operations
   async getPresentations(): Promise<Presentation[]> {

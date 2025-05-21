@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./init-db";
+import { setupAuth } from "./replitAuth";
 
 const app = express();
 app.use(express.json());
@@ -42,6 +43,9 @@ app.use((req, res, next) => {
     // データベースの初期化とサンプルデータの作成
     console.log("Initializing database with sample data...");
     await initializeDatabase();
+    
+    // Setup authentication with Replit Auth
+    await setupAuth(app);
     
     const server = await registerRoutes(app);
 

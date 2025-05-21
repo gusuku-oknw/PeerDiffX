@@ -1,67 +1,42 @@
 import { db } from './db';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import { migrate } from 'drizzle-orm/neon-serverless/migrator';
+import { pool } from './db';
 
-/**
- * This script updates the tables to match our schema definition
- */
-async function updateTables() {
-  console.log('Updating database tables...');
+async function main() {
+  console.log('Starting database migration...');
   
   try {
-    // Check existing tables
-    const tables = await db.execute(`
-      SELECT table_name FROM information_schema.tables 
-      WHERE table_schema = 'public';
-    `);
-    console.log('Existing tables:', tables.rows.map(row => row.table_name).join(', '));
-    
-    console.log('Updating presentations table...');
-    // Add missing columns to presentations table
+    // Add profileImageUrl column to users table
     await db.execute(`
-      ALTER TABLE IF EXISTS presentations 
-      ADD COLUMN IF NOT EXISTS description TEXT,
-      ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE NOT NULL,
-      ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'draft' NOT NULL,
-      ADD COLUMN IF NOT EXISTS thumbnail TEXT;
-    `);
-    
-    // Add missing columns to branches table
-    console.log('Updating branches table...');
-    await db.execute(`
-      ALTER TABLE IF EXISTS branches 
-      ADD COLUMN IF NOT EXISTS description TEXT,
-      ADD COLUMN IF NOT EXISTS is_default BOOLEAN DEFAULT FALSE;
-    `);
-    
-    // Add missing columns to slides table
-    console.log('Updating slides table...');
-    await db.execute(`
-      ALTER TABLE IF EXISTS slides 
-      ADD COLUMN IF NOT EXISTS title TEXT,
-      ADD COLUMN IF NOT EXISTS thumbnail TEXT;
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS profile_image_url TEXT;
     `);
 
-    // Add missing columns to diffs table
-    console.log('Updating diffs table...');
+    // Update user id to be varchar instead of serial
     await db.execute(`
-      ALTER TABLE IF EXISTS diffs 
-      ADD COLUMN IF NOT EXISTS xml_diff TEXT;
+      ALTER TABLE users 
+      ALTER COLUMN id TYPE VARCHAR(255);
     `);
-    
-    console.log('Tables updated successfully!');
-    return true;
+
+    // Make password nullable (for OAuth users)
+    await db.execute(`
+      ALTER TABLE users
+      ALTER COLUMN password DROP NOT NULL;
+    `);
+
+    console.log('Migration completed successfully!');
   } catch (error) {
-    console.error('Error updating tables:', error);
+    console.error('Migration failed:', error);
     throw error;
   }
 }
 
-// Run the update
-updateTables()
-  .then(() => {
-    console.log('Database schema update completed.');
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Database schema update failed:', error);
+main()
+  .catch(e => {
+    console.error(e);
     process.exit(1);
+  })
+  .finally(async () => {
+    await pool.end();
   });
