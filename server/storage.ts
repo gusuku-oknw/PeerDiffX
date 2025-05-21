@@ -7,33 +7,36 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   
   // Presentation operations
-  getPresentations(userId: number): Promise<Presentation[]>;
+  getPresentations(): Promise<Presentation[]>;
+  getPresentationsByUserId(userId: number): Promise<Presentation[]>;
   getPresentation(id: number): Promise<Presentation | undefined>;
   createPresentation(presentation: InsertPresentation): Promise<Presentation>;
-  updatePresentation(id: number, presentation: Partial<Presentation>): Promise<Presentation | undefined>;
-  deletePresentation(id: number): Promise<boolean>;
+  updatePresentation(id: number, presentation: Partial<InsertPresentation>): Promise<Presentation | undefined>;
+  deletePresentation(id: number): Promise<void>;
   
   // Branch operations
-  getBranches(presentationId: number): Promise<Branch[]>;
+  getBranchesByPresentationId(presentationId: number): Promise<Branch[]>;
   getBranch(id: number): Promise<Branch | undefined>;
   getDefaultBranch(presentationId: number): Promise<Branch | undefined>;
   createBranch(branch: InsertBranch): Promise<Branch>;
-  updateBranch(id: number, branch: Partial<Branch>): Promise<Branch | undefined>;
-  deleteBranch(id: number): Promise<boolean>;
+  updateBranch(id: number, branch: Partial<InsertBranch>): Promise<Branch | undefined>;
+  deleteBranch(id: number): Promise<void>;
   
   // Commit operations
-  getCommits(branchId: number): Promise<Commit[]>;
+  getCommitsByBranchId(branchId: number): Promise<Commit[]>;
   getCommit(id: number): Promise<Commit | undefined>;
+  getLatestCommit?(branchId: number): Promise<Commit | undefined>;
   createCommit(commit: InsertCommit): Promise<Commit>;
   
   // Slide operations
-  getSlides(commitId: number): Promise<Slide[]>;
+  getSlidesByCommitId(commitId: number): Promise<Slide[]>;
   getSlide(id: number): Promise<Slide | undefined>;
   createSlide(slide: InsertSlide): Promise<Slide>;
-  updateSlide(id: number, slide: Partial<Slide>): Promise<Slide | undefined>;
+  updateSlide(id: number, slide: Partial<InsertSlide>): Promise<Slide | undefined>;
+  deleteSlide(id: number): Promise<void>;
   
   // Diff operations
-  getDiffs(commitId: number): Promise<Diff[]>;
+  getDiffsByCommitId(commitId: number): Promise<Diff[]>;
   getDiff(id: number): Promise<Diff | undefined>;
   createDiff(diff: InsertDiff): Promise<Diff>;
   
@@ -47,8 +50,8 @@ export interface IStorage {
   getComments(slideId: number): Promise<Comment[]>;
   getComment(id: number): Promise<Comment | undefined>;
   createComment(comment: InsertComment): Promise<Comment>;
-  updateComment(id: number, comment: Partial<Comment>): Promise<Comment | undefined>;
-  deleteComment(id: number): Promise<boolean>;
+  updateComment(id: number, comment: Partial<InsertComment>): Promise<Comment | undefined>;
+  deleteComment(id: number): Promise<void>;
   getReplies(commentId: number): Promise<Comment[]>;
 }
 

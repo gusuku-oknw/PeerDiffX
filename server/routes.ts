@@ -26,7 +26,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.get("/api/presentations", async (req: Request, res: Response) => {
     // In a real app, get from authenticated user
     const userId = 1;
-    const presentations = await storage.getPresentations(userId);
+    const presentations = await storage.getPresentationsByUserId(userId);
     res.json(presentations);
   });
 
@@ -120,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Branches endpoints
   apiRouter.get("/api/presentations/:presentationId/branches", async (req: Request, res: Response) => {
     const presentationId = parseInt(req.params.presentationId);
-    const branches = await storage.getBranches(presentationId);
+    const branches = await storage.getBranchesByPresentationId(presentationId);
     res.json(branches);
   });
 
@@ -151,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Commits endpoints
   apiRouter.get("/api/branches/:branchId/commits", async (req: Request, res: Response) => {
     const branchId = parseInt(req.params.branchId);
-    const commits = await storage.getCommits(branchId);
+    const commits = await storage.getCommitsByBranchId(branchId);
     res.json(commits);
   });
 
@@ -188,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Slides endpoints
   apiRouter.get("/api/commits/:commitId/slides", async (req: Request, res: Response) => {
     const commitId = parseInt(req.params.commitId);
-    const slides = await storage.getSlides(commitId);
+    const slides = await storage.getSlidesByCommitId(commitId);
     res.json(slides);
   });
 
@@ -235,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Diffs endpoints
   apiRouter.get("/api/commits/:commitId/diffs", async (req: Request, res: Response) => {
     const commitId = parseInt(req.params.commitId);
-    const diffs = await storage.getDiffs(commitId);
+    const diffs = await storage.getDiffsByCommitId(commitId);
     res.json(diffs);
   });
 
