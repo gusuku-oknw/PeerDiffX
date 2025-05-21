@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSlide } from "@/hooks/use-pptx";
 import { Button } from "@/components/ui/button";
-import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch, FaLock, FaRobot, FaChevronRight, FaChevronLeft } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch, FaLock, FaRobot, FaChevronRight, FaChevronLeft, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { CommentsPanel } from "@/components/comments/comments-panel";
 import { AiAnalysisButton } from "@/components/ai/ai-analysis-button";
 import { AiAnalysisPanel } from "@/components/ai/ai-analysis-panel";
@@ -39,7 +39,7 @@ export default function SlideCanvas({
     presentationSettings.defaultAspectRatio as '16:9' | '4:3'
   );
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showSidePanel, setShowSidePanel] = useState(false);
+  const [showBottomPanel, setShowBottomPanel] = useState(false);
   const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'locks' | 'ai'>('comments');
   const canvasRef = useRef<HTMLDivElement>(null);
   
@@ -125,6 +125,71 @@ export default function SlideCanvas({
     }
   };
   
+  // アクティブパネルのコンテンツをレンダリング
+  const renderActiveTabContent = () => {
+    switch (activeTab) {
+      case 'comments':
+        return <CommentsPanel slideId={slideId} />;
+      case 'history':
+        return (
+          <div className="p-4">
+            <h3 className="text-sm font-medium mb-2">バージョン履歴</h3>
+            {slideId && (
+              <VersionPanel 
+                slideId={slideId} 
+                onViewChanges={(commitId) => console.log('View changes for commit', commitId)} 
+                onRestoreVersion={(commitId) => console.log('Restore version', commitId)}
+                onClose={() => setShowBottomPanel(false)}
+              />
+            )}
+          </div>
+        );
+      case 'locks':
+        return (
+          <div className="p-4">
+            <h3 className="text-sm font-medium mb-2">ファイルロック</h3>
+            <div className="space-y-2">
+              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
+                <div className="flex items-center">
+                  <FaLock className="text-yellow-500 mr-2" />
+                  <span className="text-sm">スライド 1</span>
+                </div>
+                <div className="flex items-center text-xs text-gray-500">
+                  <span>田中さんがロック中</span>
+                  <Button size="sm" variant="ghost" className="ml-2 p-1">
+                    <FaLock className="text-red-500" />
+                  </Button>
+                </div>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
+                <div className="flex items-center">
+                  <FaLock className="text-yellow-500 mr-2" />
+                  <span className="text-sm">スライド 3</span>
+                </div>
+                <div className="flex items-center text-xs text-gray-500">
+                  <span>鈴木さんがロック中</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'ai':
+        return (
+          <div className="p-4">
+            {slide && (
+              <AiAnalysisPanel 
+                presentationId={1} 
+                commitId={slide.commitId || 1} 
+              />
+            )}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+  
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -226,78 +291,6 @@ export default function SlideCanvas({
     }
   };
   
-  // サイドパネルのコンテンツをレンダリングする関数
-  const renderActivePanelContent = () => {
-    switch (activeTab) {
-      case 'comments':
-        return (
-          <div className="h-full">
-            <CommentsPanel slideId={slideId} />
-          </div>
-        );
-      case 'history':
-        return (
-          <div className="h-full">
-            <div className="p-4">
-              <h3 className="text-sm font-medium mb-2">バージョン履歴</h3>
-              {slideId && (
-                <VersionPanel 
-                  slideId={slideId} 
-                  onViewChanges={(commitId) => console.log('View changes for commit', commitId)} 
-                  onRestoreVersion={(commitId) => console.log('Restore version', commitId)}
-                  onClose={() => setShowSidePanel(false)}
-                />
-              )}
-            </div>
-          </div>
-        );
-      case 'locks':
-        return (
-          <div className="p-4">
-            <h3 className="text-sm font-medium mb-2">ファイルロック</h3>
-            <div className="space-y-2">
-              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
-                <div className="flex items-center">
-                  <FaLock className="text-yellow-500 mr-2" />
-                  <span className="text-sm">スライド 1</span>
-                </div>
-                <div className="flex items-center text-xs text-gray-500">
-                  <span>田中さんがロック中</span>
-                  <Button size="sm" variant="ghost" className="ml-2 p-1">
-                    <FaLock className="text-red-500" />
-                  </Button>
-                </div>
-              </div>
-              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
-                <div className="flex items-center">
-                  <FaLock className="text-yellow-500 mr-2" />
-                  <span className="text-sm">スライド 3</span>
-                </div>
-                <div className="flex items-center text-xs text-gray-500">
-                  <span>鈴木さんがロック中</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      case 'ai':
-        return (
-          <div className="h-full">
-            <div className="h-[calc(100vh-12rem)] overflow-auto px-3 py-3">
-              {slide && (
-                <AiAnalysisPanel 
-                  presentationId={1} 
-                  commitId={slide.commitId || 1} 
-                />
-              )}
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-  
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Action Toolbar */}
@@ -321,7 +314,7 @@ export default function SlideCanvas({
           >
             <FaArrowRight />
           </Button>
-          <span className="text-sm font-medium">Slide {currentSlideNumber}/{totalSlides}</span>
+          <span className="text-sm font-medium">スライド {currentSlideNumber}/{totalSlides}</span>
         </div>
         
         <div className="flex items-center space-x-2">
@@ -373,17 +366,17 @@ export default function SlideCanvas({
           
           {/* 右側：パネル操作とコミット */}
           <div className="ml-auto flex items-center">
-            {/* サイドパネルボタン */}
+            {/* 下部パネルボタン - VSCode風 */}
             <Button 
               variant="ghost"
               size="icon" 
-              className={`p-1.5 rounded ${showSidePanel ? 'text-blue-600 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-900/40' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'} transition-colors`}
-              onClick={() => setShowSidePanel(!showSidePanel)}
-              title={showSidePanel ? "パネルを閉じる" : "パネルを開く"}
+              className={`p-1.5 rounded ${showBottomPanel ? 'text-blue-600 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-900/40' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'} transition-colors`}
+              onClick={() => setShowBottomPanel(!showBottomPanel)}
+              title={showBottomPanel ? "パネルを閉じる" : "パネルを開く"}
             >
-              {showSidePanel ? 
-                <FaChevronRight className="h-4 w-4" /> : 
-                <FaComments className="h-4 w-4" />
+              {showBottomPanel ? 
+                <FaChevronDown className="h-4 w-4" /> : 
+                <FaChevronUp className="h-4 w-4" />
               }
             </Button>
             
@@ -401,84 +394,83 @@ export default function SlideCanvas({
         </div>
       </div>
       
-      {/* Slide Canvas and Side Panel */}
-      <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-center p-8">
-        <div className="flex w-full h-full">
-          <div className={`flex-1 flex items-center justify-center transition-all ${showSidePanel ? 'pr-0 lg:w-[60%] 2xl:w-2/3' : ''}`}>
-            <div 
-              ref={canvasRef}
-              className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} w-full max-w-4xl`}
-              style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'center' }}
-            >
-              {renderSlideContent()}
+      {/* Main Content Area - Flexbox with Slide and Bottom Panel */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Slide Canvas */}
+        <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-center p-8">
+          <div 
+            ref={canvasRef}
+            className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} w-full max-w-4xl`}
+            style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'center' }}
+          >
+            {renderSlideContent()}
+          </div>
+        </div>
+        
+        {/* VSCode風の下部パネル - 表示/非表示を切り替え */}
+        {showBottomPanel && (
+          <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+            {/* タブナビゲーション */}
+            <div className="flex border-b border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => setActiveTab('comments')}
+                className={`px-4 py-2 text-sm ${activeTab === 'comments' ? 'bg-white dark:bg-gray-800 border-b-2 border-blue-500 dark:border-blue-400 text-blue-500 dark:text-blue-400' : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
+              >
+                <div className="flex items-center">
+                  <FaComments className="mr-1.5 h-3.5 w-3.5" />
+                  <span>コメント</span>
+                  <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">スライド {currentSlideNumber}</span>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`px-4 py-2 text-sm ${activeTab === 'history' ? 'bg-white dark:bg-gray-800 border-b-2 border-blue-500 dark:border-blue-400 text-blue-500 dark:text-blue-400' : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
+              >
+                <div className="flex items-center">
+                  <FaHistory className="mr-1.5 h-3.5 w-3.5" />
+                  <span>履歴</span>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('locks')}
+                className={`px-4 py-2 text-sm ${activeTab === 'locks' ? 'bg-white dark:bg-gray-800 border-b-2 border-blue-500 dark:border-blue-400 text-blue-500 dark:text-blue-400' : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
+              >
+                <div className="flex items-center">
+                  <FaLock className="mr-1.5 h-3.5 w-3.5" />
+                  <span>ロック</span>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('ai')}
+                className={`px-4 py-2 text-sm ${activeTab === 'ai' ? 'bg-white dark:bg-gray-800 border-b-2 border-blue-500 dark:border-blue-400 text-blue-500 dark:text-blue-400' : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
+              >
+                <div className="flex items-center">
+                  <FaRobot className="mr-1.5 h-3.5 w-3.5" />
+                  <span>AI分析</span>
+                </div>
+              </button>
+              
+              <div className="ml-auto flex items-center pr-2">
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowBottomPanel(false)}
+                  className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <FaChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+            
+            {/* パネルコンテンツ - 固定高さのスクロール可能なエリア */}
+            <div className="h-64 overflow-auto">
+              {renderActiveTabContent()}
             </div>
           </div>
-          
-          {showSidePanel && (
-            <div className="w-64 min-h-screen bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col transition-all overflow-hidden z-10">
-              {/* ヘッダー部分 */}
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-lg font-semibold flex items-center">
-                    <FaChevronLeft onClick={() => setShowSidePanel(false)} className="h-4 w-4 mr-3 cursor-pointer text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" />
-                    情報パネル
-                  </h2>
-                </div>
-              </div>
-              
-              {/* 機能リスト */}
-              <div className="p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 px-3">機能</h3>
-                <div className="space-y-1">
-                  <button 
-                    onClick={() => setActiveTab('comments')}
-                    className={`flex items-center w-full px-3 py-2 rounded-md ${activeTab === 'comments' ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`}
-                  >
-                    <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900 flex-shrink-0 flex items-center justify-center text-purple-600 dark:text-purple-400 mr-3">
-                      <FaComments className="text-xs" />
-                    </div>
-                    <span>コメント</span>
-                  </button>
-                  
-                  <button 
-                    onClick={() => setActiveTab('history')}
-                    className={`flex items-center w-full px-3 py-2 rounded-md ${activeTab === 'history' ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`}
-                  >
-                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
-                      <FaHistory className="text-xs" />
-                    </div>
-                    <span>履歴</span>
-                  </button>
-                  
-                  <button 
-                    onClick={() => setActiveTab('locks')}
-                    className={`flex items-center w-full px-3 py-2 rounded-md ${activeTab === 'locks' ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`}
-                  >
-                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900 flex-shrink-0 flex items-center justify-center text-green-600 dark:text-green-400 mr-3">
-                      <FaLock className="text-xs" />
-                    </div>
-                    <span>ロック</span>
-                  </button>
-                  
-                  <button 
-                    onClick={() => setActiveTab('ai')}
-                    className={`flex items-center w-full px-3 py-2 rounded-md ${activeTab === 'ai' ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`}
-                  >
-                    <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900 flex-shrink-0 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-3">
-                      <FaRobot className="text-xs" />
-                    </div>
-                    <span>AI分析</span>
-                  </button>
-                </div>
-              </div>
-              
-              {/* コンテンツ部分 */}
-              <div className="flex-1 overflow-auto">
-                {renderActivePanelContent()}
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
