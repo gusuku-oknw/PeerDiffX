@@ -341,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Presentation deletion with manual cascade handling
+  // Presentation deletion using storage interface
   apiRouter.delete("/api/presentations/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -354,55 +354,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Processing delete request for presentation ID: ${id}`);
 
-      // 手動でカスケード削除を実行
-      // 1. 関連するブランチを取得
-      const relatedBranches = await db.select()
-        .from(branches)
-        .where(eq(branches.presentationId, id));
-
-      // 2. 各ブランチに関連するコミットを削除
-      for (const branch of relatedBranches) {
-        // 2.1 コミットを取得
-        const relatedCommits = await db.select()
-          .from(commits)
-          .where(eq(commits.branchId, branch.id));
-
-        // 2.2 各コミットに関連するスライドとdiffを削除
-        for (const commit of relatedCommits) {
-          // スライドを削除
-          await db.delete(slides)
-            .where(eq(slides.commitId, commit.id));
-          
-          // Diffを削除
-          await db.delete(diffs)
-            .where(eq(diffs.commitId, commit.id));
-        }
-
-        // 2.3 コミットを削除
-        await db.delete(commits)
-          .where(eq(commits.branchId, branch.id));
-      }
-
-      // 3. ブランチを削除
-      await db.delete(branches)
-        .where(eq(branches.presentationId, id));
-
-      // 4. スナップショットを削除
-      await db.delete(snapshots)
-        .where(eq(snapshots.presentationId, id));
-
-      // 5. アクセス権を削除
-      await db.delete(presentationAccess)
-        .where(eq(presentationAccess.presentationId, id));
-
-      // 6. 最後にプレゼンテーション自体を削除
-      await db.delete(presentations)
-        .where(eq(presentations.id, id));
-
-      console.log(`Successfully deleted presentation with ID: ${id} and all related data`);
+      // ストレージインターフェースを使用して削除
+      const success = await storage.deletePresentation(id);
       
-      // Return success response
-      res.status(200).json({ message: "Presentation deleted successfully" });
+      if (success) {
+        console.log(`Successfully deleted presentation with ID: ${id}`);
+        res.status(200).json({ message: "Presentation deleted successfully" });
+      } else {
+        console.error(`Failed to delete presentation with ID: ${id}`);
+        res.status(500).json({ message: "Failed to delete presentation" });
+      }
     } catch (error) {
       console.error("Error deleting presentation:", error);
       res.status(500).json({ message: "Failed to delete presentation" });
