@@ -238,36 +238,37 @@ export default function Home() {
               <div className="bg-gray-100 dark:bg-gray-700 h-48 flex items-center justify-center">
                 <FaFilePowerpoint className="text-6xl text-blue-500 dark:text-blue-400" />
               </div>
-              <CardHeader className="relative">
-                <div className="absolute top-4 right-4">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <FaEllipsisV />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEditClick(presentation)}>
-                        <FaCog className="mr-2" />
-                        設定
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeleteClick(presentation)}>
-                        <FaTrash className="mr-2" />
-                        削除
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <CardTitle className="truncate">{presentation.name}</CardTitle>
+              <CardHeader>
+                <CardTitle className="truncate">
+                  {/* Remove .pptx extension if present */}
+                  {presentation.name.replace(/\.pptx$/i, '')}
+                </CardTitle>
                 <CardDescription className="flex items-center">
                   <FaClock className="mr-1" />
                   Updated {formatDate(presentation.updatedAt)}
                 </CardDescription>
               </CardHeader>
-              <CardFooter className="border-t bg-gray-50 dark:bg-gray-800 p-4">
+              <CardFooter className="border-t bg-gray-50 dark:bg-gray-800 p-4 flex justify-between items-center">
                 <Link href={`/preview/${encodeId(presentation.id)}`}>
-                  <Button className="w-full">Open Presentation</Button>
+                  <Button>Open</Button>
                 </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <FaEllipsisV />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleEditClick(presentation)}>
+                      <FaCog className="mr-2" />
+                      設定
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDeleteClick(presentation)}>
+                      <FaTrash className="mr-2" />
+                      削除
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </CardFooter>
             </Card>
           ))}

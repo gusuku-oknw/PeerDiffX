@@ -328,6 +328,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update slide" });
     }
   });
+  
+  // Add delete route for presentations
+  apiRouter.delete("/api/presentations/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const presentation = await storage.getPresentation(id);
+      
+      if (!presentation) {
+        return res.status(404).json({ message: "Presentation not found" });
+      }
+      
+      // Delete the presentation
+      await storage.deletePresentation(id);
+      res.status(200).json({ message: "Presentation deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting presentation:", error);
+      res.status(500).json({ message: "Failed to delete presentation" });
+    }
+  });
 
   // Diffs endpoints
   apiRouter.get("/api/commits/:commitId/diffs", async (req: Request, res: Response) => {
