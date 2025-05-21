@@ -35,23 +35,53 @@ export default function PublicPreview() {
     data: presentation = {},
     isLoading: isLoadingPresentation,
     error: presentationError
-  } = useQuery<{name?: string, description?: string}>({
+  } = useQuery<{name?: string, description?: string, id?: number}>({
     queryKey: ['/api/presentations', presentationId],
     queryFn: async () => {
-      if (!presentationId) return {};
-      
-      console.log(`Fetching presentation: ${presentationId}`);
-      const response = await fetch(`/api/presentations/${presentationId}`);
-      
-      if (!response.ok) {
-        console.error('Failed to fetch presentation:', response.status, response.statusText);
-        throw new Error("プレゼンテーションの取得に失敗しました");
+      if (!presentationId) {
+        console.warn('No presentation ID provided, skipping fetch');
+        return {};
       }
       
-      return response.json();
+      console.log(`Fetching presentation: ${presentationId}`);
+      try {
+        const response = await fetch(`/api/presentations/${presentationId}`);
+        
+        if (!response.ok) {
+          console.error('Failed to fetch presentation:', response.status, response.statusText);
+          
+          if (response.status === 404) {
+            toast({
+              title: "プレゼンテーションが見つかりません",
+              description: `ID ${presentationId} のプレゼンテーションは存在しません。別のプレゼンテーションを選択してください。`,
+              variant: "destructive"
+            });
+            
+            // 代わりに利用可能なプレゼンテーション一覧を取得
+            const allResponse = await fetch(`/api/presentations`);
+            const presentations = await allResponse.json();
+            
+            if (presentations.length > 0) {
+              console.log('Available presentations:', presentations);
+              // 最初のプレゼンテーションを代わりに表示する選択肢があることを示す
+              return { id: presentations[0].id, name: presentations[0].name, alternateFound: true };
+            }
+          }
+          
+          throw new Error("プレゼンテーションの取得に失敗しました");
+        }
+        
+        const data = await response.json();
+        console.log('Presentation data received:', data);
+        return data;
+      } catch (error) {
+        console.error('Error in presentation fetch:', error);
+        throw error;
+      }
     },
     enabled: !!presentationId,
-    staleTime: 60000 // キャッシュを1分間保持
+    staleTime: 30000,
+    retry: 1
   });
   
   // Fetch commit data (either specified commit or latest)
@@ -214,24 +244,52 @@ export default function PublicPreview() {
   // Get the current slide
   const currentSlide = slides[currentSlideIndex];
   
+  // 代替のプレゼンテーションが見つかった場合
+  useEffect(() => {
+    if (presentation?.alternateFound && presentation?.id) {
+      // 存在しないプレゼンテーションから存在するものへ自動リダイレクト
+      toast({
+        title: "別のプレゼンテーションへリダイレクト",
+        description: `ID ${presentationId} のプレゼンテーションは見つかりませんでした。利用可能なプレゼンテーションを表示します。`,
+      });
+      
+      // 新しいURLへリダイレクト
+      window.location.href = `/public-preview/${presentation.id}`;
+    }
+  }, [presentation, presentationId, toast]);
+
   // If there's an error, show error UI
   if (presentationError || commitError || slidesError) {
     const error = presentationError || commitError || slidesError;
+    // エラー情報をコンソールに出力
+    console.error('Preview error:', { 
+      presentationError, 
+      commitError, 
+      slidesError,
+      message: error?.message 
+    });
+    
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
         <Alert variant="destructive" className="max-w-2xl">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>プレビューの読み込みエラー</AlertTitle>
           <AlertDescription>
-            {error?.message || "プレゼンテーションの読み込み中にエラーが発生しました。もう一度お試しください。"}
+            {error?.message || "プレゼンテーションの読み込み中にエラーが発生しました。"}
+            <div className="mt-2 text-sm">
+              ID: {presentationId} {commitId ? `/ コミットID: ${commitId}` : ''}
+            </div>
           </AlertDescription>
         </Alert>
-        <div className="mt-6">
+        <div className="mt-6 flex space-x-4">
           <Button asChild>
             <Link href="/">
               <Home className="mr-2 h-4 w-4" />
               ホームに戻る
             </Link>
+          </Button>
+          <Button variant="outline" onClick={() => window.location.href = `/public-preview/12`}>
+            サンプルプレゼンテーションを表示
           </Button>
         </div>
       </div>
