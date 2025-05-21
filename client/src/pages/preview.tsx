@@ -22,6 +22,7 @@ export default function Preview() {
   
   const [activeSlideId, setActiveSlideId] = useState<number | null>(null);
   const [showDiffViewer, setShowDiffViewer] = useState(false);
+  const [showVersionPanel, setShowVersionPanel] = useState(true);
   const [diffViewerData, setDiffViewerData] = useState({
     slideNumber: 0,
     beforeCommitId: 0,
@@ -168,11 +169,14 @@ export default function Preview() {
             onViewHistory={handleViewHistory}
           />
           
-          <VersionPanel 
-            slideId={activeSlideId}
-            onViewChanges={handleViewChanges}
-            onRestoreVersion={handleRestoreVersion}
-          />
+          {showVersionPanel && (
+            <VersionPanel 
+              slideId={activeSlideId}
+              onViewChanges={handleViewChanges}
+              onRestoreVersion={handleRestoreVersion}
+              onClose={() => setShowVersionPanel(false)}
+            />
+          )}
         </>
       )}
       

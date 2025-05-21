@@ -8,12 +8,14 @@ interface VersionPanelProps {
   slideId: number;
   onViewChanges: (commitId: number) => void;
   onRestoreVersion: (commitId: number) => void;
+  onClose?: () => void;
 }
 
 export default function VersionPanel({ 
   slideId, 
   onViewChanges, 
-  onRestoreVersion 
+  onRestoreVersion,
+  onClose 
 }: VersionPanelProps) {
   const { data: versionHistory, isLoading } = useVersionHistory(slideId);
   
@@ -90,9 +92,20 @@ export default function VersionPanel({
   
   return (
     <div className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 overflow-y-auto flex flex-col">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-sm font-semibold">Version History</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Showing changes for current slide</p>
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <div>
+          <h3 className="text-sm font-semibold">Version History</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Showing changes for current slide</p>
+        </div>
+        <button 
+          onClick={() => onClose && onClose()}
+          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          aria-label="Close version panel"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 dark:text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </button>
       </div>
       
       <div className="overflow-y-auto flex-1 p-4">
