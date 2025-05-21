@@ -18,6 +18,9 @@ const upload = multer({ dest: os.tmpdir() });
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes (prefix with /api)
   const apiRouter = app;
+  
+  // Register the access control routes
+  app.use(accessControlRouter);
 
   // Presentations endpoints
   apiRouter.get("/api/presentations", async (req: Request, res: Response) => {
