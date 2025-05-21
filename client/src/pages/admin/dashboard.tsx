@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TopReviewerPanel } from "@/components/rewards/top-reviewer-panel";
+import { StorageUsagePanel } from "@/components/storage/storage-usage-panel";
 import {
   FaTachometerAlt,
   FaUsers,
