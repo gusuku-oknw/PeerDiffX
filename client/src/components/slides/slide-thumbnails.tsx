@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSlides } from "@/hooks/use-pptx";
+import { FaGripLinesVertical } from "react-icons/fa";
 
 interface SlideThumbnailsProps {
   commitId: number;
@@ -9,10 +10,49 @@ interface SlideThumbnailsProps {
 
 export default function SlideThumbnails({ commitId, activeSlideId, onSelectSlide }: SlideThumbnailsProps) {
   const { data: slides, isLoading } = useSlides(commitId);
+  const [width, setWidth] = useState(256); // Default width in pixels (w-64 = 16rem = 256px)
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeRef = useRef<HTMLDivElement>(null);
+  const minWidth = 200; // Minimum width in pixels
+  const maxWidth = 500; // Maximum width in pixels
+  
+  // Setup mouse event handlers for resizing
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      
+      const newWidth = e.clientX;
+      if (newWidth >= minWidth && newWidth <= maxWidth) {
+        setWidth(newWidth);
+      }
+    };
+    
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+    };
+    
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+  
+  const startResize = () => {
+    setIsResizing(true);
+  };
   
   if (isLoading) {
     return (
-      <div className="w-64 bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4">
+      <div style={{ width: `${width}px` }} className="relative flex-shrink-0 bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4">
         <h3 className="text-sm font-semibold mb-4">Slides</h3>
         <div className="space-y-3">
           {[1, 2, 3].map((index) => (
@@ -28,7 +68,15 @@ export default function SlideThumbnails({ commitId, activeSlideId, onSelectSlide
   }
   
   return (
-    <div className="w-64 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4">
+    <div style={{ width: `${width}px` }} ref={resizeRef} className="relative flex-shrink-0 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4">
+      <div className="absolute top-0 right-0 bottom-0 w-1 bg-transparent cursor-ew-resize z-10" 
+           onMouseDown={startResize}
+           title="Resize panel"
+           style={{ touchAction: 'none' }}>
+        <div className="absolute top-1/2 right-0 -mt-6 bg-gray-200 dark:bg-gray-600 rounded-l-md px-0.5 py-3 flex items-center justify-center shadow-sm hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">
+          <FaGripLinesVertical className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+        </div>
+      </div>
       <h3 className="text-sm font-semibold mb-4 text-gray-800 dark:text-gray-200">Slides</h3>
       <div className="space-y-4">
         {slides?.map((slide) => (
