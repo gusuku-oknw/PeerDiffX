@@ -16,7 +16,6 @@ import {
   commits,
   slides,
   diffs,
-  snapshots,
   presentationAccess
 } from "@shared/schema";
 import { extractDiffFromPPTX, comparePPTXFiles, lockFile, unlockFile, checkLockStatus } from "./services/diff-service";

@@ -11,8 +11,6 @@ import {
   type InsertSlide,
   type Diff,
   type InsertDiff,
-  type Snapshot,
-  type InsertSnapshot,
   type Comment,
   type InsertComment
 } from "@shared/schema";
@@ -60,11 +58,7 @@ export interface IStorage {
   getDiff(id: number): Promise<Diff | undefined>;
   createDiff(diff: InsertDiff): Promise<Diff>;
   
-  // Snapshot operations
-  getSnapshot(id: string): Promise<Snapshot | undefined>;
-  createSnapshot(snapshot: InsertSnapshot): Promise<Snapshot>;
-  updateSnapshotAccessCount(id: string): Promise<Snapshot | undefined>;
-  deleteExpiredSnapshots(): Promise<number>;
+  // Snapshot operations removed
   
   // Comment operations
   getComments(slideId: number): Promise<Comment[]>;

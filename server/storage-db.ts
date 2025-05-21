@@ -5,7 +5,6 @@ import {
   commits, type Commit, type InsertCommit,
   slides, type Slide, type InsertSlide,
   diffs, type Diff, type InsertDiff,
-  snapshots, type Snapshot, type InsertSnapshot,
   comments, type Comment, type InsertComment,
   presentationAccess
 } from "../shared/schema";
