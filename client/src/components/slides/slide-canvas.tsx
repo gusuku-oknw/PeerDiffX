@@ -346,45 +346,74 @@ export default function SlideCanvas({
           </div>
           
           {showSidePanel && (
-            <div className="w-full lg:w-[40%] 2xl:w-1/3 min-h-screen bg-white dark:bg-gray-900 border-l border-gray-300 dark:border-gray-700 flex flex-col transition-all overflow-hidden z-10">
-              {/* タブ切り替え部分 */}
-              <div className="border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
-                <Tabs defaultValue={activeTab} onValueChange={(val) => setActiveTab(val as 'comments' | 'history' | 'locks' | 'ai')}>
-                  <div className="flex justify-between items-center p-4 border-b border-gray-300 dark:border-gray-700 bg-blue-50 dark:bg-blue-950/30">
-                    <h3 className="font-bold text-xl text-blue-800 dark:text-blue-300 flex items-center">
-                      <FaChevronLeft onClick={() => setShowSidePanel(false)} className="h-4 w-4 mr-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400" />
-                      情報パネル
-                    </h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0 rounded-full text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40"
-                      onClick={() => setShowSidePanel(false)}
-                    >
-                      ✕
-                    </Button>
-                  </div>
+            <div className="w-64 min-h-screen bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col transition-all overflow-hidden z-10">
+              {/* 左サイドバーと同じようなヘッダー */}
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-lg font-semibold flex items-center">
+                    <FaChevronLeft onClick={() => setShowSidePanel(false)} className="h-4 w-4 mr-3 cursor-pointer text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" />
+                    情報パネル
+                  </h2>
+                </div>
+              </div>
+              
+              {/* 左サイドバーと同じようなツールセクション */}
+              <div className="p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 px-3">機能</h3>
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => setActiveTab('comments')}
+                    className={`flex items-center w-full px-3 py-2 rounded-md ${activeTab === 'comments' ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`}
+                  >
+                    <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900 flex-shrink-0 flex items-center justify-center text-purple-600 dark:text-purple-400 mr-3">
+                      <FaComments className="text-xs" />
+                    </div>
+                    <span>コメント</span>
+                  </button>
                   
-                  <div className="px-4 py-3">
-                    <TabsList className="w-full h-16 grid grid-cols-4 bg-gray-100 dark:bg-gray-800 rounded-md">
-                      <TabsTrigger value="comments" className="text-sm md:text-base flex flex-col items-center justify-center gap-1 py-2">
-                        <FaComments className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        <span>コメント</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="history" className="text-sm md:text-base flex flex-col items-center justify-center gap-1 py-2">
-                        <FaHistory className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        <span>履歴</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="locks" className="text-sm md:text-base flex flex-col items-center justify-center gap-1 py-2">
-                        <FaLock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        <span>ロック</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="ai" className="text-sm md:text-base flex flex-col items-center justify-center gap-1 py-2">
-                        <FaRobot className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        <span>AI分析</span>
-                      </TabsTrigger>
-                    </TabsList>
-                  </div>
+                  <button 
+                    onClick={() => setActiveTab('history')}
+                    className={`flex items-center w-full px-3 py-2 rounded-md ${activeTab === 'history' ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`}
+                  >
+                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
+                      <FaHistory className="text-xs" />
+                    </div>
+                    <span>履歴</span>
+                  </button>
+                  
+                  <button 
+                    onClick={() => setActiveTab('locks')}
+                    className={`flex items-center w-full px-3 py-2 rounded-md ${activeTab === 'locks' ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`}
+                  >
+                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900 flex-shrink-0 flex items-center justify-center text-green-600 dark:text-green-400 mr-3">
+                      <FaLock className="text-xs" />
+                    </div>
+                    <span>ロック</span>
+                  </button>
+                  
+                  <button 
+                    onClick={() => setActiveTab('ai')}
+                    className={`flex items-center w-full px-3 py-2 rounded-md ${activeTab === 'ai' ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`}
+                  >
+                    <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900 flex-shrink-0 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-3">
+                      <FaRobot className="text-xs" />
+                    </div>
+                    <span>AI分析</span>
+                  </button>
+                </div>
+              </div>
+              
+              {/* 隠しタブコンテンツ - カスタム表示のためのコントロール */}
+              <div className="hidden">
+                <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'comments' | 'history' | 'locks' | 'ai')}>
+                  <TabsList>
+                    <TabsTrigger value="comments">コメント</TabsTrigger>
+                    <TabsTrigger value="history">履歴</TabsTrigger>
+                    <TabsTrigger value="locks">ロック</TabsTrigger>
+                    <TabsTrigger value="ai">AI分析</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
                   
                   <TabsContent value="comments" className="m-0">
                     <div className="flex-1 overflow-hidden">
