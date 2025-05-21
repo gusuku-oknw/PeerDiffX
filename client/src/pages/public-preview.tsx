@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRoute, Link } from 'wouter';
 import { useSlide, usePresentation, useSlides } from '@/hooks/use-pptx';
 import { decodeId, encodeId } from '@/lib/hash-utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { FaLayerGroup, FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch } from 'react-icons/fa';
+import { FaLayerGroup, FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch, FaTimes, FaLock } from 'react-icons/fa';
 import { Home, Settings, ChevronRight, ChevronLeft, ChevronDown, ChevronUp, GitCompare, History } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import SlideCanvas from '@/components/slides/slide-canvas';
 import SlideThumbnails from '@/components/slides/slide-thumbnails';
 import { SlideControls } from '@/components/slides/slide-controls';
@@ -50,6 +51,14 @@ export default function PublicPreview() {
   const [currentSlideId, setCurrentSlideId] = useState<number | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isCreatingDefaultSlide, setIsCreatingDefaultSlide] = useState(false);
+  const [showBottomPanel, setShowBottomPanel] = useState(false);
+  const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'locks' | 'ai'>('comments');
+  const [panelHeight, setPanelHeight] = useState(240); // 初期パネル高さ(px)
+  
+  // リサイズ関連の状態
+  const resizeRef = useRef<HTMLDivElement>(null);
+  const startYRef = useRef(0);
+  const startHeightRef = useRef(0);
   
   // トーストの状態を管理
   const { toast } = useToast();
@@ -145,12 +154,35 @@ export default function PublicPreview() {
 
   // XMLディフを表示
   const handleViewXmlDiff = () => {
-    console.log("XML表示機能は準備中です");
+    setActiveTab('history');
+    setShowBottomPanel(true);
+    console.log("差分表示を開きました");
   };
   
   // 履歴を表示
   const handleViewHistory = () => {
-    console.log("履歴表示機能は準備中です");
+    setActiveTab('history');
+    setShowBottomPanel(true);
+  };
+  
+  // ボトムパネルのリサイズ処理
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    startYRef.current = e.clientY;
+    startHeightRef.current = panelHeight;
+    document.addEventListener('mousemove', handleResizeMove);
+    document.addEventListener('mouseup', handleResizeEnd);
+  };
+
+  const handleResizeMove = (e: MouseEvent) => {
+    const deltaY = startYRef.current - e.clientY;
+    const newHeight = Math.max(100, Math.min(window.innerHeight * 0.7, startHeightRef.current + deltaY));
+    setPanelHeight(newHeight);
+  };
+
+  const handleResizeEnd = () => {
+    document.removeEventListener('mousemove', handleResizeMove);
+    document.removeEventListener('mouseup', handleResizeEnd);
   };
 
   // キーボードショートカット
@@ -386,6 +418,107 @@ export default function PublicPreview() {
                   <p className="text-gray-500">スライドデータを読み込み中...</p>
                 )}
               </div>
+              
+              {/* ボトムパネル - VSCode風のパネル */}
+              {showBottomPanel && (
+                <div className="flex flex-col bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700" style={{ height: `${panelHeight}px` }}>
+                  {/* リサイズ用のグラブバー */}
+                  <div 
+                    ref={resizeRef}
+                    className="h-1 bg-gray-200 dark:bg-gray-700 hover:bg-blue-300 dark:hover:bg-blue-700 cursor-ns-resize group flex justify-center items-center"
+                    onMouseDown={handleResizeStart}
+                  >
+                    <div className="w-8 h-1 bg-gray-400 dark:bg-gray-600 group-hover:bg-blue-500 dark:group-hover:bg-blue-400 rounded-full transform scale-75 group-hover:scale-100 transition-all"></div>
+                  </div>
+                  
+                  {/* タブメニューとコンテンツ */}
+                  <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
+                    <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-3 py-2">
+                      <TabsList className="bg-transparent p-0">
+                        <TabsTrigger 
+                          value="comments" 
+                          className="px-3 py-1 data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-500 rounded-none"
+                        >
+                          <FaComments className="mr-2 h-4 w-4" />
+                          コメント
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="history" 
+                          className="px-3 py-1 data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-500 rounded-none"
+                        >
+                          <FaHistory className="mr-2 h-4 w-4" />
+                          履歴
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="locks" 
+                          className="px-3 py-1 data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-500 rounded-none"
+                        >
+                          <FaLock className="mr-2 h-4 w-4" />
+                          ロック状況
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      <Button 
+                        onClick={() => setShowBottomPanel(false)}
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      >
+                        <FaTimes className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                    
+                    {/* タブコンテンツ */}
+                    <div className="p-4 overflow-y-auto" style={{ height: `${panelHeight - 50}px` }}>
+                      <TabsContent value="comments" className="m-0 p-0">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-sm font-medium">スライド {currentSlideIndex + 1} のコメント</h3>
+                          <Button variant="outline" size="sm" className="text-xs">
+                            <FaComments className="mr-1.5 h-3 w-3" />
+                            新規コメント
+                          </Button>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">このスライドにはまだコメントがありません。</p>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="history" className="m-0 p-0">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-sm font-medium">バージョン履歴</h3>
+                          <div className="text-xs text-gray-500">
+                            <span>最終更新: {new Date().toLocaleDateString('ja-JP')}</span>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md border-l-2 border-blue-500">
+                            <div className="flex justify-between">
+                              <span className="font-medium">初期バージョン</span>
+                              <span className="text-xs text-gray-500">{new Date().toLocaleDateString('ja-JP')}</span>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              プレゼンテーションを作成しました。
+                            </p>
+                          </div>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="locks" className="m-0 p-0">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-sm font-medium">ファイルロック状況</h3>
+                          <Button variant="outline" size="sm" className="text-xs">
+                            <FaLock className="mr-1.5 h-3 w-3" />
+                            現在のスライドをロック
+                          </Button>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">現在ロックされているスライドはありません。</p>
+                        </div>
+                      </TabsContent>
+                    </div>
+                  </Tabs>
+                </div>
+              )}
             </div>
           ) : (
             <div className="h-full flex items-center justify-center">
