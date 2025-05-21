@@ -58,6 +58,39 @@ export class MemStorage implements IStorage {
     this.users.push(user);
     return user;
   }
+  
+  async upsertUser(userData: Partial<InsertUser>): Promise<User> {
+    // Check if user already exists
+    if (userData.username) {
+      const existingUser = await this.getUserByUsername(userData.username);
+      
+      if (existingUser) {
+        // Update existing user
+        const updatedUser = {
+          ...existingUser,
+          ...userData,
+          updatedAt: new Date()
+        };
+        
+        // Replace the old user with the updated one
+        const index = this.users.findIndex(u => u.id === existingUser.id);
+        if (index !== -1) {
+          this.users[index] = updatedUser;
+        }
+        
+        return updatedUser;
+      }
+    }
+    
+    // Create new user if not exists
+    // Ensure password is set (can be empty for OAuth users)
+    const newUserData = {
+      ...userData,
+      password: userData.password || '',  // Default empty password for OAuth users
+    } as InsertUser;
+    
+    return this.createUser(newUserData);
+  }
 
   // Presentation operations
   async getPresentations(): Promise<Presentation[]> {
