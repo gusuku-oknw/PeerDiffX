@@ -144,7 +144,7 @@ export const presentations = pgTable("presentations", {
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  userId: integer("user_id").references(() => users.id),
+  userId: varchar("user_id", { length: 255 }).references(() => users.id),
   isPublic: boolean("is_public").default(false).notNull(),
   status: varchar("status", { length: 20 }).default("draft").notNull(), // draft, active, archived
   thumbnail: text("thumbnail"),  // URLまたはBase64エンコードされたサムネイル
@@ -166,11 +166,11 @@ export type Presentation = typeof presentations.$inferSelect;
 export const presentationAccess = pgTable("presentation_access", {
   id: serial("id").primaryKey(),
   presentationId: integer("presentation_id").notNull().references(() => presentations.id, { onDelete: 'cascade' }),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   accessLevel: varchar("access_level", { length: 20 }).notNull(), // view, comment, edit, admin
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  createdBy: integer("created_by").references(() => users.id),
+  createdBy: varchar("created_by", { length: 255 }).references(() => users.id),
   expiresAt: timestamp("expires_at"), // アクセス権の有効期限（オプション）
 });
 
@@ -211,7 +211,7 @@ export const commits = pgTable("commits", {
   id: serial("id").primaryKey(),
   message: text("message").notNull(),
   branchId: integer("branch_id").references(() => branches.id).notNull(),
-  userId: integer("user_id").references(() => users.id),
+  userId: varchar("user_id", { length: 255 }).references(() => users.id),
   parentId: integer("parent_id").references(() => commits.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }) as any;
@@ -381,7 +381,7 @@ export const snapshotsRelations = relations(snapshots, ({ one }) => ({
 export const comments = pgTable("comments", {
   id: serial("id").primaryKey(),
   slideId: integer("slide_id").notNull().references(() => slides.id),
-  userId: integer("user_id").references(() => users.id),
+  userId: varchar("user_id", { length: 255 }).references(() => users.id),
   message: text("message").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

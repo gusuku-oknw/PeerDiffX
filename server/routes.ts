@@ -108,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Initial commit",
         branchId: branch.id,
         parentId: null, 
-        userId: typeof userId === 'string' ? parseInt(userId) : userId
+        userId: userId.toString() // Always use string for user ID
       });
       console.log("Created commit:", commit.id);
       
