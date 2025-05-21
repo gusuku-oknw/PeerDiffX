@@ -164,26 +164,23 @@ export default function Preview() {
             onSelectSlide={handleSelectSlide} 
           />
           
-          <div className="flex-1 flex flex-col overflow-hidden relative">
-            <SlideCanvas 
-              slideId={activeSlideId}
-              totalSlides={slides.length}
-              currentSlideNumber={activeSlide?.slideNumber || 1}
-              onPrevSlide={handlePrevSlide}
-              onNextSlide={handleNextSlide}
-              onViewXmlDiff={handleViewXmlDiff}
-              onViewHistory={handleViewHistory}
-              versionPanelVisible={showVersionPanel}
-            />
-            
-            <div className="absolute top-4 right-4">
+          <SlideCanvas 
+            slideId={activeSlideId}
+            totalSlides={slides.length}
+            currentSlideNumber={activeSlide?.slideNumber || 1}
+            onPrevSlide={handlePrevSlide}
+            onNextSlide={handleNextSlide}
+            onViewXmlDiff={handleViewXmlDiff}
+            onViewHistory={handleViewHistory}
+            versionPanelVisible={showVersionPanel}
+            shareDialogComponent={
               <ShareDialog 
                 presentationId={presentationId} 
                 commitId={latestCommit.id} 
                 slideId={activeSlideId} 
               />
-            </div>
-          </div>
+            }
+          />
           
           {showVersionPanel && (
             <VersionPanel 

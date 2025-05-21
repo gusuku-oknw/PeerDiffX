@@ -12,6 +12,7 @@ interface SlideCanvasProps {
   onViewXmlDiff: () => void;
   onViewHistory: () => void;
   versionPanelVisible?: boolean;
+  shareDialogComponent?: React.ReactNode;
 }
 
 export default function SlideCanvas({
@@ -22,7 +23,8 @@ export default function SlideCanvas({
   onNextSlide,
   onViewXmlDiff,
   onViewHistory,
-  versionPanelVisible
+  versionPanelVisible,
+  shareDialogComponent
 }: SlideCanvasProps) {
   const { data: slide, isLoading } = useSlide(slideId);
   const [zoomLevel, setZoomLevel] = useState(100);
