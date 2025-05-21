@@ -1,10 +1,6 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/pg-pool';
 import * as schema from "@shared/schema";
-
-// Set WebSocket implementation
-neonConfig.webSocketConstructor = ws;
 
 // Check environment variables
 if (!process.env.DATABASE_URL) {
@@ -13,6 +9,28 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Create database connection pool
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+console.log("Connecting to Supabase PostgreSQL database...");
+
+// Create database connection pool using Supabase Transaction Pooler
+export const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  connectionTimeoutMillis: 5000,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+// Log successful connection
+pool.on('connect', () => {
+  console.log("Successfully connected to Supabase PostgreSQL database");
+});
+
+// Log connection errors
+pool.on('error', (err) => {
+  console.error("Database connection error:", err);
+});
+
+// Create Drizzle ORM instance with the pool
 export const db = drizzle(pool, { schema });
