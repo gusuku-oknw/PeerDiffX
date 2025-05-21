@@ -38,8 +38,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize database with sample data
-  await initializeDatabase();
+  // Skip initialization for now until database structure is fully aligned
+  // await initializeDatabase();
   
   const server = await registerRoutes(app);
 
