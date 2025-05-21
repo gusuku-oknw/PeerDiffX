@@ -12,7 +12,7 @@ async function createSampleData() {
     // Check if the user already has presentations
     const userPresentations = await db.select()
       .from(presentations)
-      .where(eq(presentations.userId, parseInt(userId)));
+      .where(eq(presentations.userId, userId));
     
     if (userPresentations.length > 0) {
       console.log('User already has presentations. Skipping sample data creation.');
@@ -24,7 +24,7 @@ async function createSampleData() {
       .values({
         name: 'Company Overview Q2 2025',
         description: 'Quarterly business review presentation',
-        userId: parseInt(userId),
+        userId: userId,
         isPublic: true,
         status: 'active',
         thumbnail: null
@@ -61,7 +61,7 @@ async function createSampleData() {
         message: 'Initial presentation structure',
         branchId: mainBranch.id,
         parentId: null,
-        userId: parseInt(userId)
+        userId: userId
       })
       .returning();
     
