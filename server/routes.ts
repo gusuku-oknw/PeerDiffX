@@ -246,13 +246,189 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.post("/api/branches", async (req: Request, res: Response) => {
     try {
       const branchData = insertBranchSchema.parse(req.body);
+      
+      // ベース（派生元）ブランチから作成する場合の処理
+      if (req.body.baseBranchId) {
+        const baseBranchId = parseInt(req.body.baseBranchId);
+        const baseBranch = await storage.getBranch(baseBranchId);
+        
+        if (!baseBranch) {
+          return res.status(404).json({ message: "Base branch not found" });
+        }
+        
+        // 新しいブランチを作成
+        const branch = await storage.createBranch(branchData);
+        
+        // 派生元ブランチの最新コミットを取得
+        const latestCommit = await storage.getLatestCommit(baseBranchId);
+        
+        if (latestCommit) {
+          // 新しいブランチに初期コミットを作成
+          const commit = await storage.createCommit({
+            message: `Branch created from ${baseBranch.name}`,
+            branchId: branch.id,
+            parentId: latestCommit.id,
+            userId: req.user?.id || "41964833" // 認証済みユーザーまたはモックユーザー
+          });
+          
+          // 派生元のスライドをコピー
+          const slides = await storage.getSlidesByCommitId(latestCommit.id);
+          
+          for (const slide of slides) {
+            await storage.createSlide({
+              commitId: commit.id,
+              slideNumber: slide.slideNumber,
+              title: slide.title,
+              content: slide.content,
+              thumbnail: slide.thumbnail,
+              xmlContent: slide.xmlContent
+            });
+          }
+          
+          return res.status(201).json({ branch, commit, baseCommit: latestCommit });
+        }
+        
+        return res.status(201).json(branch);
+      }
+      
+      // 通常のブランチ作成
       const branch = await storage.createBranch(branchData);
       res.status(201).json(branch);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid branch data", errors: error.errors });
       }
+      console.error("ブランチ作成エラー:", error);
       res.status(500).json({ message: "Failed to create branch" });
+    }
+  });
+  
+  // ブランチマージエンドポイント
+  apiRouter.post("/api/branches/merge", async (req: Request, res: Response) => {
+    try {
+      const { sourceBranchId, targetBranchId, commitMessage = "Merge branch" } = req.body;
+      
+      if (!sourceBranchId || !targetBranchId) {
+        return res.status(400).json({ message: "Source and target branch IDs are required" });
+      }
+      
+      // ソースブランチとターゲットブランチを取得
+      const sourceBranch = await storage.getBranch(sourceBranchId);
+      const targetBranch = await storage.getBranch(targetBranchId);
+      
+      if (!sourceBranch || !targetBranch) {
+        return res.status(404).json({ message: "One or both branches not found" });
+      }
+      
+      // 最新コミットを取得
+      const sourceCommit = await storage.getLatestCommit(sourceBranchId);
+      const targetCommit = await storage.getLatestCommit(targetBranchId);
+      
+      if (!sourceCommit || !targetCommit) {
+        return res.status(404).json({ message: "Latest commits not found" });
+      }
+      
+      // マージコミットを作成
+      const mergeCommit = await storage.createCommit({
+        message: commitMessage,
+        branchId: targetBranchId,
+        parentId: targetCommit.id,
+        userId: req.user?.id || "41964833" // 認証済みユーザーまたはモックユーザー
+      });
+      
+      // ソースブランチのスライドを取得
+      const sourceSlides = await storage.getSlidesByCommitId(sourceCommit.id);
+      const targetSlides = await storage.getSlidesByCommitId(targetCommit.id);
+      
+      // マージしたスライドを作成
+      const mergedSlides = [];
+      const processedSlideNumbers = new Set();
+      
+      // ターゲットスライドを処理（保持または更新）
+      for (const targetSlide of targetSlides) {
+        const sourceSlide = sourceSlides.find(s => s.slideNumber === targetSlide.slideNumber);
+        processedSlideNumbers.add(targetSlide.slideNumber);
+        
+        if (sourceSlide) {
+          // 同じスライド番号が両方にある場合、ソースを優先（マージ）
+          const mergedSlide = await storage.createSlide({
+            commitId: mergeCommit.id,
+            slideNumber: targetSlide.slideNumber,
+            title: sourceSlide.title,
+            content: sourceSlide.content,
+            thumbnail: sourceSlide.thumbnail,
+            xmlContent: sourceSlide.xmlContent
+          });
+          
+          // 差分を記録
+          await storage.createDiff({
+            commitId: mergeCommit.id,
+            slideId: mergedSlide.id,
+            diffContent: {
+              added: [],
+              deleted: [],
+              modified: [{
+                before: targetSlide.content,
+                after: sourceSlide.content
+              }]
+            },
+            xmlDiff: `Merged from ${sourceBranch.name}`,
+            changeType: "modified"
+          });
+          
+          mergedSlides.push(mergedSlide);
+        } else {
+          // ターゲットブランチにのみ存在するスライドはそのまま保持
+          const copiedSlide = await storage.createSlide({
+            commitId: mergeCommit.id,
+            slideNumber: targetSlide.slideNumber,
+            title: targetSlide.title,
+            content: targetSlide.content,
+            thumbnail: targetSlide.thumbnail,
+            xmlContent: targetSlide.xmlContent
+          });
+          
+          mergedSlides.push(copiedSlide);
+        }
+      }
+      
+      // ソースブランチにのみ存在するスライドを追加
+      for (const sourceSlide of sourceSlides) {
+        if (!processedSlideNumbers.has(sourceSlide.slideNumber)) {
+          const newSlide = await storage.createSlide({
+            commitId: mergeCommit.id,
+            slideNumber: sourceSlide.slideNumber,
+            title: sourceSlide.title,
+            content: sourceSlide.content,
+            thumbnail: sourceSlide.thumbnail,
+            xmlContent: sourceSlide.xmlContent
+          });
+          
+          // 差分を記録（新規追加）
+          await storage.createDiff({
+            commitId: mergeCommit.id,
+            slideId: newSlide.id,
+            diffContent: {
+              added: [sourceSlide.content],
+              deleted: [],
+              modified: []
+            },
+            xmlDiff: `Added from ${sourceBranch.name}`,
+            changeType: "added"
+          });
+          
+          mergedSlides.push(newSlide);
+        }
+      }
+      
+      res.status(200).json({
+        mergeCommit,
+        mergedSlides,
+        message: `Branch ${sourceBranch.name} successfully merged into ${targetBranch.name}`
+      });
+    } catch (error) {
+      console.error("ブランチマージエラー:", error);
+      res.status(500).json({ message: "Failed to merge branches" });
     }
   });
 
