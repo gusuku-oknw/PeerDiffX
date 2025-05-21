@@ -9,10 +9,29 @@ import { ShareDialog } from "@/components/share/share-dialog";
 import { usePresentation, useCommits, useSlides } from "@/hooks/use-pptx";
 import { useBranch } from "@/hooks/use-branches";
 import { Button } from "@/components/ui/button";
+import { decodeId } from "@/lib/hash-utils";
 
 export default function Preview() {
   const [, params] = useRoute("/preview/:id");
-  const presentationId = parseInt(params?.id || "0");
+  
+  // URL hash parameter から presentation ID を復元
+  let presentationId = 0;
+  
+  try {
+    // 通常の数値IDの場合（ハッシュ化前のURL）
+    if (params?.id && !isNaN(parseInt(params.id))) {
+      presentationId = parseInt(params.id);
+    } 
+    // ハッシュ化されたIDの場合
+    else if (params?.id) {
+      const decodedId = decodeId(params.id);
+      if (decodedId !== null) {
+        presentationId = decodedId;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to decode presentation ID:", error);
+  }
   
   const { data: presentation, isLoading: isLoadingPresentation } = usePresentation(presentationId);
   const { data: defaultBranch, isLoading: isLoadingBranch } = useBranch(presentationId, true);

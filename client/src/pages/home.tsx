@@ -10,6 +10,7 @@ import { FaUpload, FaFilePowerpoint, FaPlus, FaClock, FaEllipsisV, FaCog, FaTras
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { encodeId } from "@/lib/hash-utils";
 
 export default function Home() {
   const { data: presentations, isLoading, isError } = usePresentations();
@@ -264,7 +265,7 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardFooter className="border-t bg-gray-50 dark:bg-gray-800 p-4">
-                <Link href={`/preview/${presentation.id}`}>
+                <Link href={`/preview/${encodeId(presentation.id)}`}>
                   <Button className="w-full">Open Presentation</Button>
                 </Link>
               </CardFooter>
