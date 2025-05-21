@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, jsonb, timestamp, varchar } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -16,6 +17,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Define relations after all tables are defined
 
 // Presentation schemas
 export const presentations = pgTable("presentations", {
@@ -146,3 +149,36 @@ export type DiffContent = {
     after: SlideElement;
   }[];
 };
+
+// Define all relations after all tables are defined
+export const usersRelations = relations(users, ({ many }) => ({
+  presentations: many(presentations),
+}));
+
+export const presentationsRelations = relations(presentations, ({ one, many }) => ({
+  user: one(users, { fields: [presentations.userId], references: [users.id] }),
+  branches: many(branches),
+}));
+
+export const branchesRelations = relations(branches, ({ one, many }) => ({
+  presentation: one(presentations, { fields: [branches.presentationId], references: [presentations.id] }),
+  commits: many(commits),
+}));
+
+export const commitsRelations = relations(commits, ({ one, many }) => ({
+  branch: one(branches, { fields: [commits.branchId], references: [branches.id] }),
+  user: one(users, { fields: [commits.userId], references: [users.id] }),
+  parentCommit: one(commits, { fields: [commits.parentId], references: [commits.id] }),
+  slides: many(slides),
+  diffs: many(diffs),
+}));
+
+export const slidesRelations = relations(slides, ({ one, many }) => ({
+  commit: one(commits, { fields: [slides.commitId], references: [commits.id] }),
+  diffs: many(diffs, { relationName: "slideDiffs" }),
+}));
+
+export const diffsRelations = relations(diffs, ({ one }) => ({
+  commit: one(commits, { fields: [diffs.commitId], references: [commits.id] }),
+  slide: one(slides, { fields: [diffs.slideId], references: [slides.id], relationName: "slideDiffs" }),
+}));
