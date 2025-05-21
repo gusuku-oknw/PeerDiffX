@@ -35,7 +35,7 @@ export default function PublicPreview() {
     data: presentation = {},
     isLoading: isLoadingPresentation,
     error: presentationError
-  } = useQuery<{name?: string, description?: string, id?: number}>({
+  } = useQuery<{name?: string, description?: string, id?: number, alternateFound?: boolean}>({
     queryKey: ['/api/presentations', presentationId],
     queryFn: async () => {
       if (!presentationId) {
@@ -244,7 +244,8 @@ export default function PublicPreview() {
   // Get the current slide
   const currentSlide = slides[currentSlideIndex];
   
-  // 代替のプレゼンテーションが見つかった場合
+  // Ensure all useEffect hooks are called unconditionally at the top level
+  // リダイレクト処理のuseEffect - このフックはすべてのレンダリングパスで実行される必要があります
   useEffect(() => {
     if (presentation?.alternateFound && presentation?.id) {
       // 存在しないプレゼンテーションから存在するものへ自動リダイレクト
@@ -320,13 +321,13 @@ export default function PublicPreview() {
     );
   }
   
-  // ログ出力を追加
+  // This debugging effect hook must be placed here for consistent order
   useEffect(() => {
     if (commit?.id) {
       console.log('Current commit:', commit);
       console.log('Loaded slides:', slides);
       console.log('Current slide index:', currentSlideIndex);
-      if (slides.length > 0 && currentSlideIndex < slides.length) {
+      if (slides && slides.length > 0 && currentSlideIndex < slides.length) {
         console.log('Current slide:', slides[currentSlideIndex]);
       }
     }

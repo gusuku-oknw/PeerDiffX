@@ -1,0 +1,104 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+public-preview.tsx:28 Route params: 
+{0: '12', 1: undefined, presentationId: '12', commitId: undefined}
+public-preview.tsx:29 Parsed presentationId: 12
+public-preview.tsx:30 Parsed commitId: undefined
+public-preview.tsx:46 Fetching presentation: 12
+public-preview.tsx:96 Fetching commit data - presentationId: 12, commitId: latest
+public-preview.tsx:110 Fetching branches for presentation: 12
+public-preview.tsx:118 Retrieved 2 branches
+public-preview.tsx:128 Using branch: 34 (main)
+public-preview.tsx:75 Presentation data received: 
+{id: 12, name: 'Company Overview Q2 2025', description: 'Quarterly business review presentation', createdAt: '2025-05-21T13:56:25.049Z', updatedAt: '2025-05-21T13:56:25.049Z', …}
+public-preview.tsx:28 Route params: 
+{0: '12', 1: undefined, presentationId: '12', commitId: undefined}
+public-preview.tsx:29 Parsed presentationId: 12
+public-preview.tsx:30 Parsed commitId: undefined
+public-preview.tsx:136 Retrieved 2 commits
+public-preview.tsx:143 Using latest commit: 35
+public-preview.tsx:28 Route params: 
+{0: '12', 1: undefined, presentationId: '12', commitId: undefined}
+public-preview.tsx:29 Parsed presentationId: 12
+public-preview.tsx:30 Parsed commitId: undefined
+public-preview.tsx:169 Fetching slides for commit: 35
+public-preview.tsx:178 Retrieved 3 slides for commit 35: 
+(3) [{…}, {…}, {…}]
+public-preview.tsx:324 Warning: React has detected a change in the order of Hooks called by PublicPreview. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks
+
+   Previous render            Next render
+   ------------------------------------------------------
+1. useContext                 useContext
+2. useContext                 useContext
+3. useSyncExternalStore       useSyncExternalStore
+4. useRef                     useRef
+5. useInsertionEffect         useInsertionEffect
+6. useState                   useState
+7. useEffect                  useEffect
+8. useState                   useState
+9. useState                   useState
+10. useEffect                 useEffect
+11. useContext                useContext
+12. useContext                useContext
+13. useContext                useContext
+14. useEffect                 useEffect
+15. useState                  useState
+16. useCallback               useCallback
+17. useSyncExternalStore      useSyncExternalStore
+18. useEffect                 useEffect
+19. useContext                useContext
+20. useContext                useContext
+21. useContext                useContext
+22. useEffect                 useEffect
+23. useState                  useState
+24. useCallback               useCallback
+25. useSyncExternalStore      useSyncExternalStore
+26. useEffect                 useEffect
+27. useContext                useContext
+28. useContext                useContext
+29. useContext                useContext
+30. useEffect                 useEffect
+31. useState                  useState
+32. useCallback               useCallback
+33. useSyncExternalStore      useSyncExternalStore
+34. useEffect                 useEffect
+35. useEffect                 useEffect
+36. useEffect                 useEffect
+37. undefined                 useEffect
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    at PublicPreview (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/pages/public-preview.tsx?t=1747850072399:29:22)
+    at Route (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=8e0f28fd:323:16)
+    at Switch (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=8e0f28fd:379:17)
+    at Router (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/App.tsx?t=1747850072399&v=wIGe_n7n65YWvFu5YJ3Hx:39:22)
+    at div
+    at div
+    at Provider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…unner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=8e0f28fd:38:15)
+    at TooltipProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…rkspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=8e0f28fd:62:5)
+    at LanguageProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/i18n/language-context.tsx:190:36)
+    at QueryClientProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=8e0f28fd:2805:3)
+    at App (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/App.tsx?t=1747850072399&v=wIGe_n7n65YWvFu5YJ3Hx:114:22)
+    at ThemeProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/theme-provider.tsx:25:3)
+chunk-RPCDYKBN.js?v=8e0f28fd:11678 Uncaught Error: Rendered more hooks than during the previous render.
+    at PublicPreview (public-preview.tsx:324:3)
+chunk-RPCDYKBN.js?v=8e0f28fd:11678 Uncaught Error: Rendered more hooks than during the previous render.
+    at PublicPreview (public-preview.tsx:324:3)
+chunk-RPCDYKBN.js?v=8e0f28fd:14032 The above error occurred in the <PublicPreview> component:
+
+    at PublicPreview (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/pages/public-preview.tsx?t=1747850072399:29:22)
+    at Route (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=8e0f28fd:323:16)
+    at Switch (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=8e0f28fd:379:17)
+    at Router (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/App.tsx?t=1747850072399&v=wIGe_n7n65YWvFu5YJ3Hx:39:22)
+    at div
+    at div
+    at Provider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…unner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=8e0f28fd:38:15)
+    at TooltipProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…rkspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=8e0f28fd:62:5)
+    at LanguageProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/i18n/language-context.tsx:190:36)
+    at QueryClientProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=8e0f28fd:2805:3)
+    at App (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/App.tsx?t=1747850072399&v=wIGe_n7n65YWvFu5YJ3Hx:114:22)
+    at ThemeProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/theme-provider.tsx:25:3)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+chunk-RPCDYKBN.js?v=8e0f28fd:11678 Uncaught Error: Rendered more hooks than during the previous render.
+    at PublicPreview (public-preview.tsx:324:3)
+
