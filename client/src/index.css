@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* スライドキャンバスのレイアウト修正 */
+.slide-canvas-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  flex: 1;
+}
+
+/* ダイアログのサイズと位置を調整 */
+[data-state="open"][role="dialog"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog-content-fix {
+  width: calc(100% - 64px);
+  max-width: 1200px;
+  margin: auto;
+}
+
 :root {
       --background: 0 0% 100%;
 --foreground: 20 14.3% 4.1%;

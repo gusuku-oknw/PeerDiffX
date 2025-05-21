@@ -33,6 +33,15 @@ export default function SlideCanvas({
   presentationId,
   presentationName
 }: SlideCanvasProps) {
+  // CSSで右側の余白を防ぐため、スタイルをセット
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--slide-canvas-width', '100%');
+    
+    return () => {
+      root.style.removeProperty('--slide-canvas-width');
+    };
+  }, []);
   const { data: slide, isLoading } = useSlide(slideId);
   const [presentationSettings] = useLocalStorage('presentation_settings', {
     defaultAspectRatio: '16:9',
@@ -540,7 +549,7 @@ export default function SlideCanvas({
       </div>
       
       {/* Main Content Area - Flexbox with Slide and Bottom Panel */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden slide-canvas-container">
         {/* Slide Canvas */}
         <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-center p-8">
           <div 
