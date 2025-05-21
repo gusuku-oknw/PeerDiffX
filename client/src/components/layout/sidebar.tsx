@@ -27,32 +27,7 @@ export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
     <div className="hidden md:block w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Project Files</h2>
-          <Button variant="ghost" size="sm" className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
-            <FaPlus />
-          </Button>
-        </div>
-        
-        <div className="space-y-1 mb-6">
-          {isLoadingPresentations ? (
-            <div className="animate-pulse space-y-2">
-              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            </div>
-          ) : (
-            presentations?.map((presentation) => (
-              <Link 
-                key={presentation.id} 
-                href={`/preview/${presentation.id}`}
-                className={`flex items-center px-3 py-2 rounded-md ${presentation.id === activePresentationId ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'}`}
-              >
-                <FaFilePowerpoint className="mr-3" />
-                <span className={`truncate ${presentation.id === activePresentationId ? 'font-medium' : ''}`}>
-                  {presentation.name}
-                </span>
-              </Link>
-            ))
-          )}
+          <h2 className="text-lg font-semibold">PeerDiffX</h2>
         </div>
         
         <div className="mb-6">
