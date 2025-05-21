@@ -1,27 +1,28 @@
-import { useState } from 'react';
+import { useState } from "react";
+import { FaBrain } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AiAnalysisPanel } from "./ai-analysis-panel";
-import { FaRobot, FaBrain } from "react-icons/fa";
 
 interface SidebarAiAnalysisButtonProps {
   presentationId: number;
-  commitId?: number; // オプショナルに変更
+  commitId?: number;
 }
 
-export function SidebarAiAnalysisButton({ presentationId, commitId = 0 }: SidebarAiAnalysisButtonProps) {
+export function SidebarAiAnalysisButton({ presentationId, commitId }: SidebarAiAnalysisButtonProps) {
   const [open, setOpen] = useState(false);
   
-  // シンプルな実装に変更（コミットID取得は複雑すぎるのでAI分析パネル側に任せる）
+  // 実効コミットIDを決定（commitIdが指定されていない場合は自動的に最新のコミットを使用）
   const effectiveCommitId = commitId || 0;
-
+  
   return (
     <>
-      <button 
+      <button
         onClick={() => setOpen(true)}
-        className="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+        className="flex flex-col items-center justify-center p-3 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
       >
-        <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
-          <FaRobot className="text-xs" />
+        <div className="mb-1 flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg">
+          <FaBrain className="text-blue-600 dark:text-blue-400" />
         </div>
         <span>AI分析</span>
       </button>
