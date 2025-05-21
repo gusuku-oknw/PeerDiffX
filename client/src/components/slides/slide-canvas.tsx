@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSlide } from "@/hooks/use-pptx";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch, FaLock, FaFilter, FaRobot } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaSearchMinus, FaSearchPlus, FaExpand, FaCode, FaHistory, FaComments, FaCodeBranch, FaLock, FaFilter, FaRobot, FaChevronRight, FaChevronLeft } from "react-icons/fa";
 import { CommentsPanel } from "@/components/comments/comments-panel";
 import { AiAnalysisButton } from "@/components/ai/ai-analysis-button";
 import { AiAnalysisPanel } from "@/components/ai/ai-analysis-panel";
@@ -306,14 +306,15 @@ export default function SlideCanvas({
           <div className="ml-auto flex items-center">
             {/* サイドパネルボタン */}
             <Button 
-              variant={showSidePanel ? "default" : "outline"}
-              size="sm" 
-              className={`px-3 py-1.5 rounded-md border ${showSidePanel ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'} text-sm flex items-center transition-colors`}
+              variant="ghost"
+              size="icon" 
+              className={`p-1.5 rounded ${showSidePanel ? 'text-blue-600 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-900/40' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'} transition-colors`}
               onClick={() => setShowSidePanel(!showSidePanel)}
+              title={showSidePanel ? "パネルを閉じる" : "パネルを開く"}
             >
               {showSidePanel ? 
-                <><FaComments className="mr-2 text-white" />パネルを閉じる</> : 
-                <><FaComments className="mr-2 text-gray-500" />パネルを開く</>
+                <FaChevronRight className="h-4 w-4" /> : 
+                <FaComments className="h-4 w-4" />
               }
             </Button>
             
@@ -349,34 +350,37 @@ export default function SlideCanvas({
               {/* タブ切り替え部分 */}
               <div className="border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
                 <Tabs defaultValue={activeTab} onValueChange={(val) => setActiveTab(val as 'comments' | 'history' | 'locks' | 'ai')}>
-                  <div className="flex justify-between items-center p-4 border-b border-gray-300 dark:border-gray-700">
-                    <h3 className="font-bold text-xl text-gray-800 dark:text-gray-200">情報パネル</h3>
+                  <div className="flex justify-between items-center p-4 border-b border-gray-300 dark:border-gray-700 bg-blue-50 dark:bg-blue-950/30">
+                    <h3 className="font-bold text-xl text-blue-800 dark:text-blue-300 flex items-center">
+                      <FaChevronLeft onClick={() => setShowSidePanel(false)} className="h-4 w-4 mr-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400" />
+                      情報パネル
+                    </h3>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="h-9 w-9 p-0 rounded-full"
+                      className="h-8 w-8 p-0 rounded-full text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40"
                       onClick={() => setShowSidePanel(false)}
                     >
                       ✕
                     </Button>
                   </div>
                   
-                  <div className="px-4 py-2">
-                    <TabsList className="w-full h-14 grid grid-cols-4 bg-gray-100 dark:bg-gray-800 rounded-md">
-                      <TabsTrigger value="comments" className="text-sm md:text-base flex items-center justify-center">
-                        <FaComments className="mr-1.5 text-base" />
+                  <div className="px-4 py-3">
+                    <TabsList className="w-full h-16 grid grid-cols-4 bg-gray-100 dark:bg-gray-800 rounded-md">
+                      <TabsTrigger value="comments" className="text-sm md:text-base flex flex-col items-center justify-center gap-1 py-2">
+                        <FaComments className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                         <span>コメント</span>
                       </TabsTrigger>
-                      <TabsTrigger value="history" className="text-sm md:text-base flex items-center justify-center">
-                        <FaHistory className="mr-1.5 text-base" />
+                      <TabsTrigger value="history" className="text-sm md:text-base flex flex-col items-center justify-center gap-1 py-2">
+                        <FaHistory className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                         <span>履歴</span>
                       </TabsTrigger>
-                      <TabsTrigger value="locks" className="text-sm md:text-base flex items-center justify-center">
-                        <FaLock className="mr-1.5 text-base" />
+                      <TabsTrigger value="locks" className="text-sm md:text-base flex flex-col items-center justify-center gap-1 py-2">
+                        <FaLock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                         <span>ロック</span>
                       </TabsTrigger>
-                      <TabsTrigger value="ai" className="text-sm md:text-base flex items-center justify-center">
-                        <FaRobot className="mr-1.5 text-base" />
+                      <TabsTrigger value="ai" className="text-sm md:text-base flex flex-col items-center justify-center gap-1 py-2">
+                        <FaRobot className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                         <span>AI分析</span>
                       </TabsTrigger>
                     </TabsList>
