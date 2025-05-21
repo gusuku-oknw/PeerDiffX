@@ -11,7 +11,6 @@ import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import Profile from "@/pages/profile";
 // プレビューページ
-import Preview from "@/pages/preview";
 import PublicPreview from "@/pages/public-preview";
 import DiffView from "@/pages/diff-view";
 import History from "@/pages/history";
@@ -23,6 +22,8 @@ function Router() {
   const [location] = useLocation();
   // 公開プレビューページの場合はNavbarを表示しない
   const isPublicPreview = location.startsWith('/public-preview');
+  
+  // プレビューページは現在はpublic-previewに統合された
 
   return (
     <Switch>
@@ -30,7 +31,6 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/profile" component={Profile} />
-      <Route path="/preview/:id" component={Preview} />
       <Route path="/public-preview/:presentationId/:commitId?" component={PublicPreview} />
       <Route path="/diff/:baseCommitId/:compareCommitId" component={DiffView} />
       <Route path="/history/:branchId" component={History} />
