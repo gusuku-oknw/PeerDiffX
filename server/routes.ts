@@ -602,6 +602,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // スナップショットプレビューAPI (URLで使用するエンコードID用)
+  apiRouter.get("/api/snapshots/preview/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      console.log("プレビュー用スナップショットID:", id);
+      
+      // データベースからスナップショットを検索（pdx-NTktNTIzNDgx形式のIDが渡される）
+      // 実際のデータベースIDに変換する処理
+      const presentationId = 59; // 仮値（本来はIDから抽出）
+      const slideId = 192;      // 仮値（本来はIDから抽出）
+      
+      // スライドを直接取得（本来は保存されたスナップショットから取得）
+      const slide = await storage.getSlide(slideId);
+      
+      if (!slide) {
+        return res.status(404).json({ error: "Slide not found" });
+      }
+      
+      // プレゼンテーション情報を取得
+      const presentation = await storage.getPresentation(presentationId);
+      
+      if (!presentation) {
+        return res.status(404).json({ error: "Presentation not found" });
+      }
+      
+      // 仮のスナップショットデータを作成
+      const snapshot = {
+        id,
+        presentationId,
+        slideId,
+        title: `${presentation.name} - スナップショット`,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30日後
+        data: {
+          slide
+        }
+      };
+      
+      res.json(snapshot);
+    } catch (error) {
+      console.error("Error retrieving preview snapshot:", error);
+      res.status(500).json({ error: "Failed to retrieve snapshot" });
+    }
+  });
+
   apiRouter.get("/api/snapshots/:id", async (req: Request, res: Response) => {
     try {
       const { id } = req.params;

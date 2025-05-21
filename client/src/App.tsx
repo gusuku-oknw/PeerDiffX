@@ -31,7 +31,7 @@ function Router() {
       <Route path="/diff/:baseCommitId/:compareCommitId" component={DiffView} />
       <Route path="/history/:branchId" component={History} />
       <Route path="/branches/:presentationId" component={Branches} />
-      <Route path="/preview/pdx-:id" component={SnapshotPage} />
+      <Route path="/preview/pdx-:id" component={PDXPreviewPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route component={NotFound} />
