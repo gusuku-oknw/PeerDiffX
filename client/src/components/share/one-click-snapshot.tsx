@@ -62,7 +62,7 @@ export function OneClickSnapshot({
       }
 
       const result = await response.json();
-      const snapshotUrl = `${window.location.origin}/snapshot/${result.id}`;
+      const snapshotUrl = `${window.location.origin}/preview/pdx-${result.id}`;
 
       // URLをクリップボードにコピー
       await navigator.clipboard.writeText(snapshotUrl);

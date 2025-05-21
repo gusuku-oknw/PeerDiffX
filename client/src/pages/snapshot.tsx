@@ -30,6 +30,7 @@ export default function SnapshotPage() {
       }
       
       try {
+        console.log("スナップショットID:", snapshotId);
         const response = await fetch(`/api/snapshots/${snapshotId}`);
         
         if (!response.ok) {
@@ -38,13 +39,14 @@ export default function SnapshotPage() {
           } else if (response.status === 410) {
             setError("このスナップショットは有効期限が切れています");
           } else {
-            setError("スナップショットの読み込みに失敗しました");
+            setError(`スナップショットの読み込みに失敗しました (${response.status})`);
           }
           setLoading(false);
           return;
         }
         
         const data = await response.json();
+        console.log("スナップショットデータ:", data);
         setSnapshot(data);
       } catch (err) {
         console.error("スナップショット取得エラー:", err);

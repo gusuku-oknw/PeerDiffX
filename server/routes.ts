@@ -536,8 +536,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // ベースとなるデータの取得
       const presentation = await storage.getPresentation(presentationId);
-      const commit = await storage.getCommit(commitId);
-      const slides = await storage.getSlidesByCommitId(commitId);
+      // commitId が 0 の場合は最新のコミットを取得
+      let targetCommitId = commitId;
+      if (commitId === 0 || !commitId) {
+        const branch = await storage.getDefaultBranch(presentationId);
+        if (!branch) {
+          return res.status(404).json({ error: "Default branch not found" });
+        }
+        const latestCommit = await storage.getLatestCommit(branch.id);
+        if (!latestCommit) {
+          return res.status(404).json({ error: "Latest commit not found" });
+        }
+        targetCommitId = latestCommit.id;
+      }
+      
+      const commit = await storage.getCommit(targetCommitId);
+      const slides = await storage.getSlidesByCommitId(targetCommitId);
       
       if (!presentation || !commit || !slides.length) {
         return res.status(404).json({ error: "Presentation, commit, or slides not found" });
@@ -574,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const snapshot = await storage.createSnapshot({
         id,
         presentationId,
-        commitId,
+        commitId: targetCommitId,
         slideId: slideId || null,
         expiresAt,
         data: snapshotData,

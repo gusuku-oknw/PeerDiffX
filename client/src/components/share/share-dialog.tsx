@@ -122,7 +122,7 @@ export function ShareDialog({
   const handleCopyLink = async () => {
     if (!snapshotId) return;
     
-    const url = `${window.location.origin}/snapshot/${snapshotId}`;
+    const url = `${window.location.origin}/preview/pdx-${snapshotId}`;
     try {
       await navigator.clipboard.writeText(url);
       setIsCopied(true);
@@ -218,7 +218,7 @@ export function ShareDialog({
                   <div className="flex">
                     <Input
                       readOnly
-                      value={`${window.location.origin}/snapshot/${snapshotId}`}
+                      value={`${window.location.origin}/preview/pdx-${snapshotId}`}
                       className="bg-white dark:bg-gray-700"
                     />
                     <Button 
