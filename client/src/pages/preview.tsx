@@ -136,16 +136,40 @@ export default function Preview() {
     );
   }
   
-  if (!presentation || !defaultBranch || !latestCommit || !slides || slides.length === 0) {
+  // Check if we have a presentation but missing other data
+  if (presentation && (!defaultBranch || !latestCommit || !slides || slides.length === 0)) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center p-8 max-w-lg">
+          <h2 className="text-2xl font-bold mb-4">プレゼンテーションを初期化しています</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            このプレゼンテーションは初期化中です。ブランチやスライドデータが作成されています。
+            更新するには画面をリフレッシュしてください。
+          </p>
+          <div className="flex justify-center gap-4">
+            <Button onClick={() => window.location.reload()}>
+              リフレッシュ
+            </Button>
+            <Button variant="outline" onClick={() => window.location.href = "/"}>
+              ホームに戻る
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Check if we're missing the presentation entirely
+  if (!presentation) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center p-8">
-          <h2 className="text-2xl font-bold mb-4">No Presentation Data</h2>
+          <h2 className="text-2xl font-bold mb-4">プレゼンテーションが見つかりません</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            This presentation has no slides or data available.
+            指定されたプレゼンテーションが見つかりませんでした。
           </p>
           <Button onClick={() => window.location.href = "/"}>
-            Return to Home
+            ホームに戻る
           </Button>
         </div>
       </div>

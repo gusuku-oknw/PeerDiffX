@@ -70,19 +70,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   apiRouter.post("/api/presentations", async (req: Request, res: Response) => {
     try {
-      // In a real app, get from authenticated user
-      const userId = 1;
+      // Get user ID from authenticated user
+      const userId = req.user?.id || req.body.userId || 1;
       const presentationData = insertPresentationSchema.parse({
         ...req.body,
         userId
       });
       
+      // Create the presentation
       const presentation = await storage.createPresentation(presentationData);
+      
+      // Create a default branch
+      const branch = await storage.createBranch({
+        name: "main",
+        presentationId: presentation.id,
+        isDefault: true
+      });
+      
+      // Create an initial commit
+      const commit = await storage.createCommit({
+        message: "Initial commit",
+        branchId: branch.id,
+        parentId: null,
+        userId
+      });
+      
+      // Create a welcome slide
+      await storage.createSlide({
+        commitId: commit.id,
+        slideNumber: 1,
+        title: "Welcome",
+        content: {
+          elements: [
+            {
+              id: 'title1',
+              type: 'text',
+              x: 100,
+              y: 100,
+              width: 600,
+              height: 100,
+              content: presentation.name.replace('.pptx', ''),
+              style: { fontSize: 32, fontWeight: 'bold', color: '#333333' }
+            },
+            {
+              id: 'subtitle1',
+              type: 'text',
+              x: 100,
+              y: 220,
+              width: 600,
+              height: 50,
+              content: 'Created with PeerDiffX',
+              style: { fontSize: 24, color: '#666666' }
+            }
+          ],
+          background: '#ffffff'
+        },
+        xmlContent: `<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>${presentation.name.replace('.pptx', '')}</a:t></a:r></a:p></p:txBody></p:sp><p:sp><p:txBody><a:p><a:r><a:t>Created with PeerDiffX</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>`
+      });
+      
       res.status(201).json(presentation);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid presentation data", errors: error.errors });
       }
+      console.error("Failed to create presentation:", error);
       res.status(500).json({ message: "Failed to create presentation" });
     }
   });
