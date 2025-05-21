@@ -1,8 +1,24 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { insertPresentationSchema, insertBranchSchema, insertCommitSchema, insertSlideSchema, insertDiffSchema, insertCommentSchema } from "@shared/schema";
+import { 
+  insertPresentationSchema, 
+  insertBranchSchema, 
+  insertCommitSchema, 
+  insertSlideSchema, 
+  insertDiffSchema, 
+  insertCommentSchema,
+  presentations,
+  branches,
+  commits,
+  slides,
+  diffs,
+  snapshots,
+  presentationAccess
+} from "@shared/schema";
 import { extractDiffFromPPTX, comparePPTXFiles, lockFile, unlockFile, checkLockStatus } from "./services/diff-service";
 import accessControlRouter from "./routes/access-control-routes";
 import { isAuthenticated, canAccessPresentation } from "./middleware/auth-middleware";
@@ -329,25 +345,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Add delete route for presentations
+  // Simplified delete route for presentations with direct SQL approach
   apiRouter.delete("/api/presentations/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const presentation = await storage.getPresentation(id);
       
+      // First check if the presentation exists
+      const presentation = await storage.getPresentation(id);
       if (!presentation) {
         return res.status(404).json({ message: "Presentation not found" });
       }
       
-      // Log the deletion attempt for debugging
-      console.log(`Attempting to delete presentation: ${id}`);
+      console.log(`Processing delete request for presentation ID: ${id}`);
       
-      // Delete the presentation
-      await storage.deletePresentation(id);
+      // Use direct SQL approach to delete the presentation
+      const deleted = await db.query(`
+        DELETE FROM presentations WHERE id = $1 RETURNING id;
+      `, [id]);
       
-      // Double-check deletion
-      const checkDeleted = await storage.getPresentation(id);
-      console.log("After deletion check:", checkDeleted ? "Still exists" : "Successfully deleted");
+      console.log(`Deletion result:`, deleted);
       
       // Return success response
       res.status(200).json({ message: "Presentation deleted successfully" });
