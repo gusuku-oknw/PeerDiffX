@@ -1,568 +1,140 @@
-import { useState, useEffect, useCallback } from "react";
-import { useRoute, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Maximize,
-  Home,
-  FileCode,
-  AlertTriangle,
-  Settings
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { decodeId } from "@/lib/hash-utils";
-import { Share } from "@/components/ui/share";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import SlideThumbnails from "@/components/slides/slide-thumbnails";
-import SlideCanvas from "@/components/slides/slide-canvas";
-import { FaHistory, FaCode, FaLayerGroup, FaComment, FaTools, FaRobot, FaBrain, FaTimes } from "react-icons/fa";
+import React, { useState, useEffect } from 'react';
+import { useRoute } from 'wouter';
+import { useSlide, usePresentation, useSlides } from '@/hooks/use-pptx';
+import { Skeleton } from '@/components/ui/skeleton';
 
 /**
- * 公開プレビューページ - 本来のPeerDiffXデザインに合わせた高度なUIに修正
+ * 最小限の機能に絞ったプレゼンテーションビューア
  */
 export default function PublicPreview() {
-  // 基本的な状態の設定 - フックをコンポーネントのトップレベルで定義
-  const [, params] = useRoute("/public-preview/:presentationId/:commitId?");
-  const { toast } = useToast();
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [currentTab, setCurrentTab] = useState("slide");
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
-  const [showBottomPanel, setShowBottomPanel] = useState(false);
-  const [activeTabPanel, setActiveTabPanel] = useState<'history' | 'xml' | 'comments' | 'ai'>('history');
+  const [, params] = useRoute<{ presentationId: string; commitId?: string }>('/public-preview/:presentationId/:commitId?');
   
-  // URLパラメータからID情報を取得（エンコードIDにも対応）
-  const rawPresentationId = params?.presentationId;
-  const rawCommitId = params?.commitId;
+  // IDは直接パースする（シンプル化のため）
+  const presentationId = params?.presentationId ? 
+    (params.presentationId.startsWith('pdx-') ? 
+      parseInt(params.presentationId.substring(4), 10) : 
+      parseInt(params.presentationId, 10)) 
+    : 12; // デフォルト値
   
-  // IDの変換処理
-  const presentationId = rawPresentationId ? 
-    (rawPresentationId.startsWith('pdx-') ? 
-      decodeId(rawPresentationId) : 
-      parseInt(rawPresentationId)) : 0;
-      
-  const commitId = rawCommitId ? 
-    (rawCommitId.startsWith('pdx-') ? 
-      decodeId(rawCommitId) : 
-      parseInt(rawCommitId)) : undefined;
-  
-  // デバッグ情報の記録
-  useEffect(() => {
-    console.log('Route params:', params);
-    console.log('Parsed presentationId:', presentationId);
-    console.log('Parsed commitId:', commitId);
-  }, [params, presentationId, commitId]);
+  const commitId = params?.commitId ? parseInt(params.commitId, 10) : 35; // デフォルト値
   
   // プレゼンテーション情報の取得
-  const { 
-    data: presentation = {},
-    isLoading: isLoadingPresentation,
-    error: presentationError
-  } = useQuery({
-    queryKey: ['/api/presentations', presentationId],
-    queryFn: async () => {
-      if (!presentationId) return {};
-      
-      console.log(`Fetching presentation: ${presentationId}`);
-      try {
-        const response = await fetch(`/api/presentations/${presentationId}`);
-        
-        if (!response.ok) {
-          console.error('Failed to fetch presentation:', response.status, response.statusText);
-          
-          if (response.status === 404) {
-            toast({
-              title: "プレゼンテーションが見つかりません",
-              description: `ID ${presentationId} のプレゼンテーションは存在しません。別のプレゼンテーションを選択してください。`,
-              variant: "destructive"
-            });
-            
-            // 代わりに利用可能なプレゼンテーション一覧を取得
-            const allResponse = await fetch(`/api/presentations`);
-            const presentations = await allResponse.json();
-            
-            if (presentations.length > 0) {
-              console.log('Available presentations:', presentations);
-              // 最初のプレゼンテーションを代わりに表示する選択肢があることを示す
-              return { ...presentations[0], alternateFound: true };
-            }
-          }
-          
-          throw new Error("プレゼンテーションの取得に失敗しました");
-        }
-        
-        const data = await response.json();
-        console.log('Presentation data received:', data);
-        return data;
-      } catch (error) {
-        console.error('Error in presentation fetch:', error);
-        throw error;
-      }
-    },
-    enabled: !!presentationId,
-    staleTime: 30000,
-    retry: 1
-  });
-  
-  // 代替プレゼンテーションへのリダイレクト処理
-  useEffect(() => {
-    if (presentation?.alternateFound && presentation?.id) {
-      toast({
-        title: "別のプレゼンテーションへリダイレクト",
-        description: `ID ${presentationId} のプレゼンテーションは見つかりませんでした。利用可能なプレゼンテーションを表示します。`,
-      });
-      window.location.href = `/public-preview/${presentation.id}`;
-    }
-  }, [presentation, presentationId, toast]);
-  
-  // ブランチ情報の取得
-  const {
-    data: branches = [],
-    isLoading: isLoadingBranches,
-    error: branchesError
-  } = useQuery({
-    queryKey: ['/api/branches', presentationId],
-    queryFn: async () => {
-      if (!presentationId) return [];
-      
-      try {
-        const response = await fetch(`/api/presentations/${presentationId}/branches`);
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch branches");
-        }
-        
-        const data = await response.json();
-        console.log(`Retrieved ${data.length} branches`);
-        return data;
-      } catch (error) {
-        console.error('Error fetching branches:', error);
-        throw error;
-      }
-    },
-    enabled: !!presentationId
-  });
-  
-  // デフォルトブランチを見つける
-  const defaultBranch = branches.find(b => b.isDefault) || branches[0];
-  
-  // コミット情報の取得
-  const {
-    data: commits = [],
-    isLoading: isLoadingCommits,
-    error: commitsError
-  } = useQuery({
-    queryKey: ['/api/commits', defaultBranch?.id],
-    queryFn: async () => {
-      if (!defaultBranch?.id) return [];
-      
-      try {
-        const response = await fetch(`/api/branches/${defaultBranch.id}/commits`);
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch commits");
-        }
-        
-        const data = await response.json();
-        console.log(`Retrieved ${data.length} commits`);
-        return data;
-      } catch (error) {
-        console.error('Error fetching commits:', error);
-        throw error;
-      }
-    },
-    enabled: !!defaultBranch?.id
-  });
-  
-  // 現在のコミットを決定
-  const currentCommit = commitId 
-    ? commits.find(c => c.id === commitId) 
-    : commits[0];
+  const { data: presentation, isLoading: isLoadingPresentation } = usePresentation(presentationId);
   
   // スライド情報の取得
-  const {
-    data: slides = [],
-    isLoading: isLoadingSlides,
-    error: slidesError 
-  } = useQuery({
-    queryKey: ['/api/slides', currentCommit?.id],
-    queryFn: async () => {
-      if (!currentCommit?.id) return [];
-      
-      console.log(`Fetching slides for commit: ${currentCommit.id}`);
-      
-      try {
-        const response = await fetch(`/api/commits/${currentCommit.id}/slides`);
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch slides");
-        }
-        
-        const slidesData = await response.json();
-        console.log(`Retrieved ${slidesData.length} slides for commit ${currentCommit.id}:`, slidesData);
-        
-        return slidesData;
-      } catch (error) {
-        console.error('Error fetching slides:', error);
-        throw error;
-      }
-    },
-    enabled: !!currentCommit?.id,
-    refetchOnWindowFocus: false
-  });
+  const { data: slides = [] } = useSlides(commitId);
   
-  // スライドデータが変更されたときに最初のスライドを選択
+  const [currentSlideId, setCurrentSlideId] = useState<number | null>(null);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState<any>(null);
+  
+  // 最初のスライドが読み込まれたら選択
   useEffect(() => {
-    if (slides.length > 0 && currentSlideIndex === 0) {
-      console.log('Slides loaded successfully, setting first slide');
+    if (slides?.length > 0) {
+      setCurrentSlideId(slides[0].id);
+      setCurrentSlide(slides[0]);
       setCurrentSlideIndex(0);
     }
-  }, [slides, currentSlideIndex]);
+  }, [slides]);
   
-  // ナビゲーション関数
-  const goToPreviousSlide = useCallback(() => {
-    if (currentSlideIndex > 0) {
-      setCurrentSlideIndex(prev => prev - 1);
-    }
-  }, [currentSlideIndex]);
-  
-  const goToNextSlide = useCallback(() => {
-    if (currentSlideIndex < slides.length - 1) {
-      setCurrentSlideIndex(prev => prev + 1);
-    }
-  }, [currentSlideIndex, slides.length]);
-  
-  const toggleFullscreen = useCallback(() => {
-    setIsFullscreen(prev => !prev);
-  }, []);
-  
-  // 共有モーダルの切り替え
-  const toggleShareModal = useCallback(() => {
-    setIsShareModalOpen(prev => !prev);
-  }, []);
-  
-  // スライドIDとスライド選択
-  const currentSlide = slides[currentSlideIndex];
-  const currentSlideId = currentSlide?.id;
-  
+  // スライド選択ハンドラ
   const handleSelectSlide = (slideId: number) => {
-    const index = slides.findIndex(slide => slide.id === slideId);
-    if (index !== -1) {
-      setCurrentSlideIndex(index);
+    setCurrentSlideId(slideId);
+    const slide = slides.find((s: any) => s.id === slideId);
+    if (slide) {
+      setCurrentSlide(slide);
+      const index = slides.findIndex((s: any) => s.id === slideId);
+      setCurrentSlideIndex(index !== -1 ? index : 0);
     }
   };
-  
-  // ボトムパネルを開く
-  const handleOpenBottomPanel = (tab: 'history' | 'xml' | 'comments' | 'ai') => {
-    setActiveTabPanel(tab);
-    setShowBottomPanel(true);
-  };
-  
-  // キーボードショートカット
+
+  // キーボードによるスライド移動
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'ArrowLeft':
-          goToPreviousSlide();
-          break;
-        case 'ArrowRight':
-          goToNextSlide();
-          break;
-        case 'Escape':
-          if (isFullscreen) setIsFullscreen(false);
-          break;
-        case 'f':
-          toggleFullscreen();
-          break;
+      if (e.key === 'ArrowLeft') {
+        if (currentSlideIndex > 0) {
+          const prevSlide = slides[currentSlideIndex - 1];
+          handleSelectSlide(prevSlide.id);
+        }
+      } else if (e.key === 'ArrowRight') {
+        if (currentSlideIndex < slides.length - 1) {
+          const nextSlide = slides[currentSlideIndex + 1];
+          handleSelectSlide(nextSlide.id);
+        }
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goToPreviousSlide, goToNextSlide, toggleFullscreen, isFullscreen]);
-  
-  // デバッグ情報のログ
-  useEffect(() => {
-    if (currentCommit?.id) {
-      console.log('Current commit:', currentCommit);
-      console.log('Loaded slides:', slides);
-      console.log('Current slide index:', currentSlideIndex);
-      if (slides.length > 0 && currentSlideIndex < slides.length) {
-        console.log('Current slide:', slides[currentSlideIndex]);
-      }
-    }
-  }, [currentCommit, slides, currentSlideIndex]);
-  
-  // ローディング状態の結合
-  const isLoading = isLoadingPresentation || isLoadingBranches || isLoadingCommits || isLoadingSlides;
-  
-  // エラー表示
-  if (presentationError || branchesError || commitsError || slidesError) {
-    const error = presentationError || branchesError || commitsError || slidesError;
-    console.error('Preview error:', { 
-      presentationError, 
-      branchesError,
-      commitsError, 
-      slidesError,
-      message: error?.message 
-    });
-    
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-        <Alert variant="destructive" className="max-w-2xl">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>プレビューの読み込みエラー</AlertTitle>
-          <AlertDescription>
-            {error?.message || "プレゼンテーションの読み込み中にエラーが発生しました。"}
-            <div className="mt-2 text-sm">
-              ID: {presentationId} {commitId ? `/ コミットID: ${commitId}` : ''}
-            </div>
-          </AlertDescription>
-        </Alert>
-        <div className="mt-6 flex space-x-4">
-          <Button asChild>
-            <Link href="/">
-              <Home className="mr-2 h-4 w-4" />
-              ホームに戻る
-            </Link>
-          </Button>
-          <Button variant="outline" onClick={() => window.location.href = `/public-preview/12`}>
-            サンプルプレゼンテーションを表示
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentSlideIndex, slides]);
+
   // ローディング表示
-  if (isLoading) {
+  if (isLoadingPresentation || !presentation) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-        <div className="p-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <Skeleton className="h-8 w-40" />
-          <div className="flex space-x-2">
-            <Skeleton className="h-9 w-20" />
-            <Skeleton className="h-9 w-20" />
-          </div>
-        </div>
-        
-        <div className="flex-1 flex">
-          {/* サイドバースケルトン */}
-          <div className="w-64 bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4">
-            <Skeleton className="h-6 w-32 mb-4" />
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex flex-col">
-                  <Skeleton className="h-20 w-full mb-1" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* メインコンテンツスケルトン */}
-          <div className="flex-1 flex flex-col overflow-hidden bg-gray-200 dark:bg-gray-900">
-            <div className="h-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center px-4">
-              <Skeleton className="h-6 w-32" />
-              <div className="ml-auto">
-                <Skeleton className="h-8 w-24" />
-              </div>
-            </div>
-            
-            <div className="flex-1 flex justify-center items-center p-8">
-              <div className="aspect-[16/9] w-full max-w-4xl">
-                <Skeleton className="w-full h-full rounded-lg" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  // スライドがない場合
-  if (currentCommit?.id && slides.length === 0) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-        <Alert className="max-w-2xl">
-          <FileCode className="h-4 w-4" />
-          <AlertTitle>スライドがありません</AlertTitle>
-          <AlertDescription>
-            このプレゼンテーションのコミット (ID: {currentCommit.id}) にはスライドが含まれていません。
-          </AlertDescription>
-        </Alert>
-        <div className="mt-6">
-          <Button asChild>
-            <Link href="/">
-              <Home className="mr-2 h-4 w-4" />
-              ホームに戻る
-            </Link>
-          </Button>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-full max-w-md p-8">
+          <Skeleton className="h-8 w-1/2 rounded-md" />
+          <Skeleton className="h-32 w-full rounded-md mt-4" />
         </div>
       </div>
     );
   }
 
-  // 共有URLの生成
-  const shareUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/public-preview/${presentationId}${commitId ? `/${commitId}` : ''}`
-    : '';
-  
-  // メインコンテンツのレンダリング - PeerDiffXの元のUIスタイル
+  // 最もシンプルなレイアウト
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 pt-0">
-      {/* ヘッダー部分 - シンプル化 */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
-        <div className="flex items-center">
-          <Link href="/" className="mr-4 flex items-center">
-            <div className="w-8 h-8 rounded-md bg-blue-500 flex items-center justify-center text-white mr-2">
-              <FaLayerGroup className="w-4 h-4" />
-            </div>
-            <span className="font-semibold text-gray-800 dark:text-gray-200">PeerDiffX</span>
-          </Link>
-          <div className="text-sm text-gray-600 dark:text-gray-400 ml-2">
-            {presentation?.name || 'Loading...'}
-          </div>
-        </div>
-        <div className="flex space-x-2">
-          <Button asChild size="sm" variant="ghost">
-            <Link href="/">
-              <Home className="mr-1.5 h-3.5 w-3.5" />
-              ホーム
-            </Link>
-          </Button>
-        </div>
+    <div className="flex flex-col h-screen">
+      {/* 最小限のヘッダー */}
+      <div className="h-12 bg-white border-b px-4 flex items-center">
+        <h1 className="text-base font-medium">{presentation?.name || 'プレゼンテーション'}</h1>
       </div>
 
-      {/* メインコンテンツ - シンプルな2カラムレイアウト */}
-      <div className="flex h-[calc(100vh-60px)]">
-        {/* サムネイル表示部分のみ */}
-        <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
-          <div className="p-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4">スライド一覧</h3>
+      {/* 2カラムレイアウト */}
+      <div className="flex flex-1">
+        {/* 左側スライド一覧 */}
+        <div className="w-48 border-r bg-white overflow-y-auto">
+          <div className="p-2">
+            <p className="text-xs font-medium mb-2 px-2">スライド一覧</p>
             
             {slides.length > 0 ? (
-              <div className="space-y-2">
-                {slides.map(slide => (
+              <div>
+                {slides.map((slide: any) => (
                   <div 
                     key={slide.id}
-                    className={`p-2 rounded-md cursor-pointer ${currentSlideId === slide.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-500' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                    className={`p-2 rounded cursor-pointer text-xs ${
+                      currentSlideId === slide.id 
+                        ? 'bg-blue-50 text-blue-600' 
+                        : 'hover:bg-gray-100'
+                    }`}
                     onClick={() => handleSelectSlide(slide.id)}
                   >
-                    <div className="w-full rounded-md overflow-hidden border border-gray-200 dark:border-gray-700 mb-1 aspect-video bg-white">
-                      {slide.thumbnail ? (
-                        <img src={slide.thumbnail} alt={`スライド ${slide.slideNumber}`} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800 text-gray-400">
-                          <div className="text-xs">{slide.slideNumber}</div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-xs truncate">{slide.title || `スライド ${slide.slideNumber}`}</div>
+                    スライド {slide.slideNumber}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="py-4 px-2 text-center text-gray-500 text-sm">
+              <div className="p-2 text-xs text-gray-500">
                 スライドがありません
               </div>
             )}
           </div>
         </div>
         
-        {/* スライドキャンバス部分のみ */}
-        {currentSlideId ? (
-          <div className="flex-1 flex">
-            <SlideCanvas 
-              slideId={currentSlideId}
-              totalSlides={slides.length}
-              currentSlideNumber={currentSlide?.slideNumber || 1}
-              onPrevSlide={goToPreviousSlide}
-              onNextSlide={goToNextSlide}
-              onViewXmlDiff={() => {}}
-              presentationId={presentationId}
-              presentationName={presentation?.name}
-            />
-          </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center p-8">
-              <h2 className="text-2xl font-bold mb-4">スライドを選択してください</h2>
-              <p className="text-gray-500">左側のサムネイルからスライドを選択すると、ここに表示されます</p>
-            </div>
-          </div>
-        )}
-        
-        {/* 共有モーダル */}
-        <Share
-          isOpen={isShareModalOpen}
-          onClose={toggleShareModal}
-          title={presentation.name || 'プレゼンテーションプレビュー'}
-          url={shareUrl}
-        />
-
-        {/* AI分析ダイアログ */}
-        <Dialog open={isAiDialogOpen} onOpenChange={setIsAiDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto fixed inset-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center">
-                <FaBrain className="mr-2 text-blue-600" />
-                AI分析ダッシュボード
-              </DialogTitle>
-            </DialogHeader>
-            <div className="mt-4">
-              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
-                      <FaRobot className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium">プレゼンテーション分析</h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">AIによる詳細な分析結果</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="p-4 bg-white dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
-                    <h5 className="font-medium mb-2">サマリー</h5>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">このプレゼンテーションは企業概要と第2四半期の結果を説明する内容です。主要な財務指標とプロジェクトの進捗状況が含まれています。</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-                        <h6 className="text-xs font-medium mb-2">全体的な印象</h6>
-                        <div className="flex">
-                          <div className="w-1/4 text-center p-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-l">
-                            肯定的
-                          </div>
-                          <div className="w-2/4 text-center p-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
-                            中立的
-                          </div>
-                          <div className="w-1/4 text-center p-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-r">
-                            否定的
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-                        <h6 className="text-xs font-medium mb-2">キーワード分析</h6>
-                        <div className="flex flex-wrap gap-1">
-                          <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded">収益</span>
-                          <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded">戦略</span>
-                          <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded">プロジェクト</span>
-                          <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded">成長</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+        {/* 右側スライド表示 - 極限までシンプルに */}
+        <div className="flex-1 flex items-center justify-center bg-white">
+          {currentSlideId && currentSlide ? (
+            <div className="w-full max-w-3xl px-4">
+              <div className="bg-white border rounded shadow-sm p-8 aspect-[16/9]">
+                <h2 className="text-2xl font-bold">{currentSlide.title || 'タイトルなし'}</h2>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          ) : (
+            <div className="text-center">
+              <p className="text-gray-500">スライドを選択してください</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
