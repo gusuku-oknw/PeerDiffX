@@ -5,10 +5,17 @@ import { Button } from "@/components/ui/button";
 import {
   FaFilePowerpoint,
   FaPlus,
-  FaUserCircle
+  FaUserCircle,
+  FaHistory,
+  FaComments,
+  FaTools
 } from "react-icons/fa";
 
-export default function Sidebar() {
+interface SidebarProps {
+  onToggleVersionPanel?: () => void;
+}
+
+export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
   const [location] = useLocation();
   const { data: presentations, isLoading: isLoadingPresentations } = usePresentations();
   const { data: branches, isLoading: isLoadingBranches } = useBranches(presentations?.[0]?.id);
@@ -73,6 +80,33 @@ export default function Sidebar() {
           </div>
         </div>
         
+        <div className="mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 px-3">Tools</h3>
+          <div className="space-y-1">
+            <button 
+              onClick={onToggleVersionPanel}
+              className="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+            >
+              <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex-shrink-0 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3">
+                <FaHistory className="text-xs" />
+              </div>
+              <span>Version History</span>
+            </button>
+            <button className="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+              <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900 flex-shrink-0 flex items-center justify-center text-purple-600 dark:text-purple-400 mr-3">
+                <FaComments className="text-xs" />
+              </div>
+              <span>Comments</span>
+            </button>
+            <button className="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+              <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900 flex-shrink-0 flex items-center justify-center text-green-600 dark:text-green-400 mr-3">
+                <FaTools className="text-xs" />
+              </div>
+              <span>Settings</span>
+            </button>
+          </div>
+        </div>
+
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 px-3">Recent Activities</h3>
           <div className="space-y-3">

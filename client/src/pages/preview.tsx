@@ -71,8 +71,12 @@ export default function Preview() {
   };
   
   const handleViewHistory = () => {
-    // Navigate to history view
-    window.location.href = `/history/${defaultBranch?.id}`;
+    // Toggle version panel
+    setShowVersionPanel(true);
+  };
+  
+  const toggleVersionPanel = () => {
+    setShowVersionPanel(prev => !prev);
   };
   
   const handleViewChanges = (commitId: number) => {
@@ -149,7 +153,7 @@ export default function Preview() {
   
   return (
     <div className="flex-1 flex overflow-hidden">
-      <Sidebar />
+      <Sidebar onToggleVersionPanel={toggleVersionPanel} />
       
       {activeSlideId && (
         <>
