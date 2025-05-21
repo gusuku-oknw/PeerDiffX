@@ -126,8 +126,7 @@ export class DatabaseStorage implements IStorage {
         // ブランチの削除
         await tx.delete(branches).where(eq(branches.presentationId, id));
         
-        // スナップショットの削除
-        await tx.delete(snapshots).where(eq(snapshots.presentationId, id));
+        // スナップショット機能削除済み
         
         // アクセス権の削除
         await tx.delete(presentationAccess).where(eq(presentationAccess.presentationId, id));
@@ -288,51 +287,7 @@ export class DatabaseStorage implements IStorage {
     return diff;
   }
 
-  // Snapshot operations
-  async getSnapshot(id: string): Promise<Snapshot | undefined> {
-    const [snapshot] = await db.select().from(snapshots).where(eq(snapshots.id, id));
-    return snapshot;
-  }
-
-  async createSnapshot(snapshotData: InsertSnapshot): Promise<Snapshot> {
-    // Generate a UUID if not provided
-    const snapshotWithId = {
-      ...snapshotData,
-      id: snapshotData.id || uuidv4()
-    };
-    
-    const [snapshot] = await db.insert(snapshots).values(snapshotWithId).returning();
-    return snapshot;
-  }
-
-  async updateSnapshotAccessCount(id: string): Promise<Snapshot | undefined> {
-    const [snapshot] = await db
-      .select()
-      .from(snapshots)
-      .where(eq(snapshots.id, id));
-    
-    if (!snapshot) return undefined;
-    
-    const [updatedSnapshot] = await db
-      .update(snapshots)
-      .set({
-        accessCount: snapshot.accessCount + 1
-      })
-      .where(eq(snapshots.id, id))
-      .returning();
-    
-    return updatedSnapshot;
-  }
-
-  async deleteExpiredSnapshots(): Promise<number> {
-    const now = new Date();
-    const result = await db
-      .delete(snapshots)
-      .where(lt(snapshots.expiresAt, now))
-      .returning();
-    
-    return result.length;
-  }
+  // Snapshot operations removed
 
   // Comment operations
   async getComments(slideId: number): Promise<Comment[]> {
