@@ -2,13 +2,20 @@ import { Link, useLocation } from "wouter";
 import { usePresentations } from "@/hooks/use-pptx";
 import { useBranches } from "@/hooks/use-branches";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import {
   FaFilePowerpoint,
   FaPlus,
   FaUserCircle,
   FaHistory,
   FaComments,
-  FaTools
+  FaTools,
+  FaUserGraduate,
+  FaMedal,
+  FaChartLine,
+  FaCreditCard
 } from "react-icons/fa";
 
 interface SidebarProps {
@@ -19,6 +26,39 @@ export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
   const [location] = useLocation();
   const { data: presentations, isLoading: isLoadingPresentations } = usePresentations();
   const { data: branches, isLoading: isLoadingBranches } = useBranches(presentations?.[0]?.id);
+  const { user } = useAuth();
+  
+  // 学生レビュー枠の情報取得（通常はAPIエンドポイントから取得）
+  const { data: studentReviewCredits } = useQuery({
+    queryKey: ['/api/student-review-credits'],
+    queryFn: async () => {
+      // 実際のAPIが実装される予定です
+      // モックデータの例
+      return {
+        totalCredits: 50,
+        usedCredits: 28,
+        remainingCredits: 22,
+        planName: 'エンタープライズ'
+      };
+    },
+    enabled: !!user
+  });
+  
+  // ランキング情報の取得（通常はAPIエンドポイントから取得）
+  const { data: studentRankings } = useQuery({
+    queryKey: ['/api/student-rankings'],
+    queryFn: async () => {
+      // 実際のAPIが実装される予定です
+      // モックデータの例
+      return {
+        goldStudents: 3,
+        silverStudents: 8,
+        bronzeStudents: 15,
+        totalBonusPaid: 12500
+      };
+    },
+    enabled: !!user
+  });
   
   // Find active presentation from URL
   const activePresentationId = parseInt(location.split('/')[2]) || presentations?.[0]?.id;
