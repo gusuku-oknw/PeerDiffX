@@ -15,13 +15,13 @@ export function AiAnalysisButton({ presentationId, commitId }: AiAnalysisButtonP
   return (
     <>
       <Button 
-        variant="outline" 
-        size="sm"
+        variant="ghost" 
+        size="icon"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 bg-gradient-to-r from-blue-100 to-indigo-100 hover:from-blue-200 hover:to-indigo-200 border-blue-300 text-blue-800 dark:from-blue-900/30 dark:to-indigo-900/30 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40 dark:border-blue-800 dark:text-blue-400"
+        className="p-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+        title="AI分析"
       >
         <FaRobot className="h-4 w-4" />
-        <span>AI分析</span>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>

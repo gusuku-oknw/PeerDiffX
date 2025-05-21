@@ -287,21 +287,19 @@ export default function SlideCanvas({
         
         <div className="flex items-center space-x-2">
           {/* 左側：XMLとAI分析のユーティリティボタン */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-1">
             <Button 
-              variant="outline" 
-              size="sm" 
-              className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm flex items-center"
+              variant="ghost" 
+              size="icon" 
+              className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
               onClick={onViewXmlDiff}
+              title="XML表示"
             >
-              <FaCode className="mr-2 text-gray-500" />
-              <span>XML表示</span>
+              <FaCode className="h-4 w-4" />
             </Button>
             
             {/* AI分析ボタン */}
-            <div className="ml-2">
-              <AiAnalysisButton presentationId={1} commitId={slide?.commitId || 1} />
-            </div>
+            <AiAnalysisButton presentationId={1} commitId={slide?.commitId || 1} />
           </div>
           
           {/* 右側：パネル操作とコミット */}
@@ -336,7 +334,7 @@ export default function SlideCanvas({
       {/* Slide Canvas and Side Panel */}
       <div className="flex-1 overflow-auto bg-gray-200 dark:bg-gray-900 flex items-center justify-center p-8">
         <div className="flex w-full h-full">
-          <div className={`flex-1 flex items-center justify-center transition-all ${showSidePanel ? 'pr-0 lg:w-2/3 2xl:w-3/4' : ''}`}>
+          <div className={`flex-1 flex items-center justify-center transition-all ${showSidePanel ? 'pr-0 lg:w-[60%] 2xl:w-2/3' : ''}`}>
             <div 
               ref={canvasRef}
               className={`bg-white dark:bg-gray-800 shadow-lg rounded-sm ${aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'} w-full max-w-4xl`}
@@ -347,7 +345,7 @@ export default function SlideCanvas({
           </div>
           
           {showSidePanel && (
-            <div className="w-full lg:w-1/3 2xl:w-1/4 min-h-screen bg-white dark:bg-gray-900 border-l border-gray-300 dark:border-gray-700 flex flex-col transition-all overflow-hidden">
+            <div className="w-full lg:w-[40%] 2xl:w-1/3 min-h-screen bg-white dark:bg-gray-900 border-l border-gray-300 dark:border-gray-700 flex flex-col transition-all overflow-hidden z-10">
               {/* タブ切り替え部分 */}
               <div className="border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
                 <Tabs defaultValue={activeTab} onValueChange={(val) => setActiveTab(val as 'comments' | 'history' | 'locks' | 'ai')}>
