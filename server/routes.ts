@@ -67,9 +67,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Presentations endpoints
   apiRouter.get("/api/presentations", async (req: Request, res: Response) => {
-    // In a real app, get from authenticated user
-    const userId = 1;
+    // ユーザーIDを取得（認証済みユーザーまたはモックユーザー）
+    const userId = req.user?.id || '41964833';  // モックの場合のデフォルトユーザーID
+    console.log("Fetching presentations for userId:", userId);
     const presentations = await storage.getPresentationsByUserId(userId);
+    console.log("Found presentations:", presentations.length);
     res.json(presentations);
   });
 
@@ -187,10 +189,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Save presentation metadata
-      const userId = 1; // In a real app, get from authenticated user
+      const userId = req.user?.id || '41964833'; // 認証済みユーザーまたはモックユーザー
+      console.log("Creating presentation with userId:", userId);
       const presentation = await storage.createPresentation({
         name: req.file.originalname,
-        userId
+        userId: String(userId)
       });
       
       // Get default branch
