@@ -73,34 +73,52 @@ export default function Home() {
   const handleCreatePresentation = async () => {
     if (!newPresentationName.trim()) {
       toast({
-        title: "Name required",
-        description: "Please enter a name for the presentation",
+        title: "名前が必要です",
+        description: "プレゼンテーションの名前を入力してください",
         variant: "destructive",
       });
       return;
     }
 
+    // 進捗表示のトースト
+    toast({
+      title: "プレゼンテーション作成中...",
+      description: "新しいプレゼンテーションを作成しています。しばらくお待ちください。",
+    });
+
     try {
-      await apiRequest('POST', '/api/presentations', {
-        name: newPresentationName.endsWith('.pptx') 
-          ? newPresentationName 
-          : `${newPresentationName}.pptx`
+      const fileName = newPresentationName.endsWith('.pptx') 
+        ? newPresentationName 
+        : `${newPresentationName}.pptx`;
+        
+      // プレゼンテーション作成リクエスト
+      const response = await apiRequest('POST', '/api/presentations', {
+        name: fileName
       });
       
-      // 強力にキャッシュを無効化して確実に再取得する
+      const newPresentation = await response.json();
+      
+      // キャッシュを無効化して確実に再取得する
       await queryClient.invalidateQueries({ queryKey: ["/api/presentations"] });
       await queryClient.refetchQueries({ queryKey: ["/api/presentations"] });
+      
       setNewPresentationDialog(false);
       setNewPresentationName("");
+      
       toast({
-        title: "Presentation created",
-        description: "Your new presentation has been created",
+        title: "プレゼンテーション作成完了",
+        description: "新しいプレゼンテーションが作成されました",
       });
+      
+      // 作成したプレゼンテーションを自動的に開く
+      setTimeout(() => {
+        window.location.href = `/preview?id=${newPresentation.id}`;
+      }, 500);
     } catch (error) {
       console.error("Error creating presentation:", error);
       toast({
-        title: "Creation failed",
-        description: "There was an error creating your presentation",
+        title: "作成に失敗しました",
+        description: "プレゼンテーションの作成中にエラーが発生しました",
         variant: "destructive",
       });
     }
