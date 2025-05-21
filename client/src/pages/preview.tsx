@@ -160,6 +160,8 @@ export default function Preview() {
             onNextSlide={handleNextSlide}
             onViewXmlDiff={handleViewXmlDiff}
             onViewHistory={() => setShowVersionPanel(true)}
+            presentationId={presentationId}
+            presentationName={presentation?.name}
             shareDialogComponent={
               <ShareDialog 
                 presentationId={presentationId} 
