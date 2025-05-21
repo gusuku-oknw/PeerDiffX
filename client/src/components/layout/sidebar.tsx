@@ -98,12 +98,15 @@ export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
               </div>
               <span>Comments</span>
             </button>
-            <button className="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+            <Link
+              href="/settings"
+              className="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+            >
               <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900 flex-shrink-0 flex items-center justify-center text-green-600 dark:text-green-400 mr-3">
                 <FaTools className="text-xs" />
               </div>
-              <span>Settings</span>
-            </button>
+              <span>設定</span>
+            </Link>
           </div>
         </div>
 

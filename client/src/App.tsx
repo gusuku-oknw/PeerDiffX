@@ -15,6 +15,7 @@ import DiffView from "@/pages/diff-view";
 import History from "@/pages/history";
 import Branches from "@/pages/branches";
 import SnapshotPage from "@/pages/snapshot";
+import SettingsPage from "@/pages/settings";
 import AdminDashboard from "@/pages/admin/dashboard";
 
 function Router() {
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/history/:branchId" component={History} />
       <Route path="/branches/:presentationId" component={Branches} />
       <Route path="/snapshot/:id" component={SnapshotPage} />
+      <Route path="/settings" component={SettingsPage} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>
