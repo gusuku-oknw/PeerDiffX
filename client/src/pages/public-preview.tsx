@@ -37,7 +37,7 @@ export default function PublicPreview() {
     data: commit,
     isLoading: isLoadingCommit,
     error: commitError
-  } = useQuery({
+  } = useQuery<{id: number, message?: string}>({
     queryKey: ['/api/preview/commit', presentationId, commitId],
     queryFn: async () => {
       if (commitId) {
