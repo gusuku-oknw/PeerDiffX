@@ -41,7 +41,11 @@ export default function SlideCanvas({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showBottomPanel, setShowBottomPanel] = useState(false);
   const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'locks' | 'ai'>('comments');
+  const [panelHeight, setPanelHeight] = useState(240); // 初期パネル高さ(px)
   const canvasRef = useRef<HTMLDivElement>(null);
+  const resizeRef = useRef<HTMLDivElement>(null);
+  const startYRef = useRef<number>(0);
+  const startHeightRef = useRef<number>(panelHeight);
   
   const handleZoomIn = () => {
     setZoomLevel(prev => Math.min(prev + 10, 200));
@@ -123,6 +127,27 @@ export default function SlideCanvas({
         canvasRef.current.requestFullscreen();
       }
     }
+  };
+  
+  // リサイズハンドラー
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    startYRef.current = e.clientY;
+    startHeightRef.current = panelHeight;
+    
+    document.addEventListener('mousemove', handleResizeMove);
+    document.addEventListener('mouseup', handleResizeEnd);
+  };
+  
+  const handleResizeMove = (e: MouseEvent) => {
+    const deltaY = startYRef.current - e.clientY;
+    const newHeight = Math.max(100, Math.min(window.innerHeight * 0.7, startHeightRef.current + deltaY));
+    setPanelHeight(newHeight);
+  };
+  
+  const handleResizeEnd = () => {
+    document.removeEventListener('mousemove', handleResizeMove);
+    document.removeEventListener('mouseup', handleResizeEnd);
   };
   
   // アクティブパネルのコンテンツをレンダリング
@@ -409,7 +434,16 @@ export default function SlideCanvas({
         
         {/* VSCode風の下部パネル - 表示/非表示を切り替え */}
         {showBottomPanel && (
-          <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+            {/* リサイズ用のグラブバー */}
+            <div 
+              ref={resizeRef}
+              className="h-1 bg-gray-200 dark:bg-gray-700 hover:bg-blue-300 dark:hover:bg-blue-700 cursor-ns-resize group flex justify-center items-center"
+              onMouseDown={handleResizeStart}
+            >
+              <div className="w-8 h-1 bg-gray-400 dark:bg-gray-600 group-hover:bg-blue-500 dark:group-hover:bg-blue-400 rounded-full transform scale-75 group-hover:scale-100 transition-all"></div>
+            </div>
+            
             {/* タブナビゲーション */}
             <div className="flex border-b border-gray-200 dark:border-gray-700">
               <button
@@ -465,8 +499,8 @@ export default function SlideCanvas({
               </div>
             </div>
             
-            {/* パネルコンテンツ - 固定高さのスクロール可能なエリア */}
-            <div className="h-64 overflow-auto">
+            {/* パネルコンテンツ - 可変高さのスクロール可能なエリア */}
+            <div className="overflow-auto" style={{ height: `${panelHeight}px` }}>
               {renderActiveTabContent()}
             </div>
           </div>
