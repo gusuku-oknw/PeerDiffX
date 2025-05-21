@@ -153,19 +153,47 @@ export default function Home() {
     if (!selectedPresentation) return;
     
     try {
-      await apiRequest('DELETE', `/api/presentations/${selectedPresentation.id}`);
-      queryClient.invalidateQueries({ queryKey: ["/api/presentations"] });
+      // Show a loading toast
+      toast({
+        title: "Deleting presentation...",
+        description: "Please wait while we delete your presentation",
+      });
+      
+      // Send the delete request
+      const response = await fetch(`/api/presentations/${selectedPresentation.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to delete: ${response.status} ${response.statusText}`);
+      }
+      
+      // Force reload data
+      await queryClient.invalidateQueries({ queryKey: ["/api/presentations"] });
+      setTimeout(() => {
+        // Refetch again after a short delay to ensure we get the latest data
+        queryClient.invalidateQueries({ queryKey: ["/api/presentations"] });
+      }, 500);
+      
       setDeleteDialogOpen(false);
       setSelectedPresentation(null);
+      
       toast({
         title: "Presentation deleted",
-        description: "Your presentation has been deleted",
+        description: "Your presentation has been deleted successfully",
       });
+      
+      // Force refresh the page to ensure clean state
+      window.location.reload();
     } catch (error) {
       console.error("Error deleting presentation:", error);
       toast({
         title: "Deletion failed",
-        description: "There was an error deleting your presentation",
+        description: "There was an error deleting your presentation. Please try again.",
         variant: "destructive",
       });
     }

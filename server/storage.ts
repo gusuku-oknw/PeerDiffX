@@ -32,7 +32,7 @@ export interface IStorage {
   getPresentation(id: number): Promise<Presentation | undefined>;
   createPresentation(presentation: InsertPresentation): Promise<Presentation>;
   updatePresentation(id: number, presentation: Partial<InsertPresentation>): Promise<Presentation | undefined>;
-  deletePresentation(id: number): Promise<void>;
+  deletePresentation(id: number): Promise<boolean>;
   
   // Branch operations
   getBranchesByPresentationId(presentationId: number): Promise<Branch[]>;

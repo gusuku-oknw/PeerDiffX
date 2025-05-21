@@ -345,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Simplified delete route for presentations with direct SQL approach
+  // Use our dedicated deletion script
   apiRouter.delete("/api/presentations/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -358,15 +358,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Processing delete request for presentation ID: ${id}`);
       
-      // Use direct SQL approach to delete the presentation
-      const deleted = await db.query(`
-        DELETE FROM presentations WHERE id = $1 RETURNING id;
-      `, [id]);
+      // Use our dedicated deletion script
+      const { deletePresentationById } = require('./scripts/delete-presentation');
+      const success = await deletePresentationById(id);
       
-      console.log(`Deletion result:`, deleted);
-      
-      // Return success response
-      res.status(200).json({ message: "Presentation deleted successfully" });
+      if (success) {
+        // Return success response
+        res.status(200).json({ message: "Presentation deleted successfully" });
+      } else {
+        // If deletion failed
+        res.status(500).json({ message: "Failed to delete presentation" });
+      }
     } catch (error) {
       console.error("Error deleting presentation:", error);
       res.status(500).json({ message: "Failed to delete presentation" });
