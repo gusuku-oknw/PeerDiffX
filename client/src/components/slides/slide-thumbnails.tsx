@@ -21,10 +21,16 @@ export default function SlideThumbnails({ commitId, activeSlideId, onSelectSlide
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing) return;
       
-      const newWidth = e.clientX;
-      if (newWidth >= minWidth && newWidth <= maxWidth) {
-        setWidth(newWidth);
-      }
+      // 画面の左端からパネル右端までの距離を計算
+      const panelRect = resizeRef.current?.getBoundingClientRect();
+      if (!panelRect) return;
+      
+      // パネルの左端位置（固定）
+      const panelLeft = panelRect.left - (width - panelRect.width);
+      // 新しいパネル幅 = マウスX座標 - パネル左端位置
+      const newWidth = Math.max(minWidth, Math.min(maxWidth, e.clientX - panelLeft));
+      
+      setWidth(newWidth);
     };
     
     const handleMouseUp = () => {
