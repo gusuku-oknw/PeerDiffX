@@ -1,32 +1,30 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { FileCode, AlertTriangle, ChevronLeft, ChevronRight, Maximize, Home, Copy, Shield } from "lucide-react";
+import { FileCode, AlertTriangle, ChevronLeft, ChevronRight, Maximize, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { decodeId } from "@/lib/hash-utils";
 import { SlideViewer } from "../features/slides/slide-renderer";
-import { Share } from "@/components/ui/share";
-import { Card, CardContent } from "@/components/ui/card";
 
 /**
- * 公開プレビューページ - デザインを保持しつつフック問題を修正したバージョン
+ * Public preview page component
+ * This is a standalone page for viewing presentations without needing the full editor
+ * フック順序の問題を修正したバージョン - 元のデザイン保持
  */
 export default function PublicPreview() {
-  // 基本的な状態の設定 - 必ずフックをコンポーネントのトップレベルで定義
+  // 基本的な状態を先に定義
   const [, params] = useRoute("/public-preview/:presentationId/:commitId?");
   const { toast } = useToast();
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   
   // URLパラメータからID情報を取得（エンコードIDにも対応）
   const rawPresentationId = params?.presentationId;
   const rawCommitId = params?.commitId;
   
-  // IDの変換処理
   const presentationId = rawPresentationId ? 
     (rawPresentationId.startsWith('pdx-') ? 
       decodeId(rawPresentationId) : 
@@ -37,7 +35,7 @@ export default function PublicPreview() {
       decodeId(rawCommitId) : 
       parseInt(rawCommitId)) : undefined;
   
-  // デバッグ情報の記録
+  // デバッグログ - すべての条件分岐で一貫して呼び出されるよう配置
   useEffect(() => {
     console.log('Route params:', params);
     console.log('Parsed presentationId:', presentationId);
@@ -54,39 +52,27 @@ export default function PublicPreview() {
     queryFn: async () => {
       if (!presentationId) return {};
       
-      console.log(`Fetching presentation: ${presentationId}`);
       try {
         const response = await fetch(`/api/presentations/${presentationId}`);
         
         if (!response.ok) {
-          console.error('Failed to fetch presentation:', response.status, response.statusText);
-          
+          // 404エラーの場合は別のプレゼンテーションを探す
           if (response.status === 404) {
-            toast({
-              title: "プレゼンテーションが見つかりません",
-              description: `ID ${presentationId} のプレゼンテーションは存在しません。別のプレゼンテーションを選択してください。`,
-              variant: "destructive"
-            });
-            
-            // 代わりに利用可能なプレゼンテーション一覧を取得
             const allResponse = await fetch(`/api/presentations`);
-            const presentations = await allResponse.json();
-            
-            if (presentations.length > 0) {
-              console.log('Available presentations:', presentations);
-              // 最初のプレゼンテーションを代わりに表示する選択肢があることを示す
-              return { ...presentations[0], alternateFound: true };
+            if (allResponse.ok) {
+              const presentations = await allResponse.json();
+              if (presentations.length > 0) {
+                // 代替プレゼンテーションを返す
+                return { ...presentations[0], alternateFound: true };
+              }
             }
           }
-          
           throw new Error("プレゼンテーションの取得に失敗しました");
         }
         
-        const data = await response.json();
-        console.log('Presentation data received:', data);
-        return data;
+        return await response.json();
       } catch (error) {
-        console.error('Error in presentation fetch:', error);
+        console.error('Error fetching presentation:', error);
         throw error;
       }
     },
@@ -96,6 +82,7 @@ export default function PublicPreview() {
   });
   
   // 代替プレゼンテーションへのリダイレクト処理
+  // 条件分岐の外でフックを定義
   useEffect(() => {
     if (presentation?.alternateFound && presentation?.id) {
       toast({
@@ -105,8 +92,8 @@ export default function PublicPreview() {
       window.location.href = `/public-preview/${presentation.id}`;
     }
   }, [presentation, presentationId, toast]);
-  
-  // コミット情報の取得
+
+  // コミット情報を取得
   const {
     data: commit,
     isLoading: isLoadingCommit,
@@ -116,12 +103,9 @@ export default function PublicPreview() {
     queryFn: async () => {
       if (!presentationId) return null;
       
-      console.log(`Fetching commit data - presentationId: ${presentationId}, commitId: ${commitId || 'latest'}`);
-      
       try {
         // ブランチ情報を取得
         const branchResponse = await fetch(`/api/presentations/${presentationId}/branches`);
-        
         if (!branchResponse.ok) {
           throw new Error("Failed to fetch branches");
         }
@@ -130,16 +114,15 @@ export default function PublicPreview() {
         console.log(`Retrieved ${branches.length} branches`);
         
         // デフォルトブランチか最初のブランチを使用
-        const defaultBranch = branches.find((branch: any) => branch.isDefault) || branches[0];
+        const defaultBranch = branches.find(branch => branch.isDefault) || branches[0];
         if (!defaultBranch) {
           throw new Error("No branches found for this presentation");
         }
         
         console.log(`Using branch: ${defaultBranch.id} (${defaultBranch.name})`);
         
-        // コミット情報の取得
+        // コミット情報を取得
         const commitsResponse = await fetch(`/api/branches/${defaultBranch.id}/commits`);
-        
         if (!commitsResponse.ok) {
           throw new Error("Failed to fetch commits");
         }
@@ -153,7 +136,7 @@ export default function PublicPreview() {
         
         // 指定されたコミットか最新コミットを返す
         if (commitId) {
-          const requestedCommit = commits.find((c: any) => c.id === commitId);
+          const requestedCommit = commits.find(c => c.id === commitId);
           if (!requestedCommit) {
             throw new Error(`Commit with ID ${commitId} not found`);
           }
@@ -168,10 +151,9 @@ export default function PublicPreview() {
       }
     },
     enabled: !!presentationId,
-    retry: 1
   });
   
-  // スライド情報の取得
+  // スライド情報を取得
   const {
     data: slides = [],
     isLoading: isLoadingSlides,
@@ -181,11 +163,8 @@ export default function PublicPreview() {
     queryFn: async () => {
       if (!commit?.id) return [];
       
-      console.log(`Fetching slides for commit: ${commit.id}`);
-      
       try {
         const response = await fetch(`/api/commits/${commit.id}/slides`);
-        
         if (!response.ok) {
           throw new Error("Failed to fetch slides");
         }
@@ -202,29 +181,24 @@ export default function PublicPreview() {
     enabled: !!commit?.id,
   });
   
-  // ナビゲーション関数
+  // スライド操作関数
   const goToPreviousSlide = useCallback(() => {
     if (currentSlideIndex > 0) {
-      setCurrentSlideIndex(prev => prev - 1);
+      setCurrentSlideIndex(currentSlideIndex - 1);
     }
   }, [currentSlideIndex]);
   
   const goToNextSlide = useCallback(() => {
     if (currentSlideIndex < slides.length - 1) {
-      setCurrentSlideIndex(prev => prev + 1);
+      setCurrentSlideIndex(currentSlideIndex + 1);
     }
   }, [currentSlideIndex, slides.length]);
   
   const toggleFullscreen = useCallback(() => {
-    setIsFullscreen(prev => !prev);
-  }, []);
+    setIsFullscreen(!isFullscreen);
+  }, [isFullscreen]);
   
-  // 共有モーダルの切り替え
-  const toggleShareModal = useCallback(() => {
-    setIsShareModalOpen(prev => !prev);
-  }, []);
-  
-  // キーボードショートカット
+  // キーボードショートカットの処理
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
@@ -247,23 +221,23 @@ export default function PublicPreview() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [goToPreviousSlide, goToNextSlide, toggleFullscreen, isFullscreen]);
   
-  // デバッグ情報のログ
+  // デバッグ情報の表示（常にフックの呼び出し順序を保つ）
   useEffect(() => {
     if (commit?.id) {
       console.log('Current commit:', commit);
       console.log('Loaded slides:', slides);
       console.log('Current slide index:', currentSlideIndex);
-      if (slides.length > 0 && currentSlideIndex < slides.length) {
+      if (slides && slides.length > 0 && currentSlideIndex < slides.length) {
         console.log('Current slide:', slides[currentSlideIndex]);
       }
     }
   }, [commit, slides, currentSlideIndex]);
   
-  // 現在のスライド取得
-  const currentSlide = slides[currentSlideIndex];
-  
-  // ローディング状態の結合
+  // ローディング状態の統合
   const isLoading = isLoadingPresentation || isLoadingCommit || isLoadingSlides;
+  
+  // 現在のスライド
+  const currentSlide = slides[currentSlideIndex];
   
   // エラー表示
   if (presentationError || commitError || slidesError) {
@@ -331,7 +305,7 @@ export default function PublicPreview() {
     );
   }
   
-  // スライドがない場合
+  // スライドが空の場合
   if (commit?.id && slides.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
@@ -354,16 +328,11 @@ export default function PublicPreview() {
     );
   }
   
-  // 共有URLの生成
-  const shareUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/public-preview/${presentationId}${commitId ? `/${commitId}` : ''}`
-    : '';
-  
-  // メインプレビュー画面
+  // メインのプレゼンテーション表示
   return (
     <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-black' : 'min-h-screen'} flex flex-col bg-gray-50 dark:bg-gray-900`}>
       <div className="w-full max-w-7xl mx-auto p-4 flex-1 flex flex-col">
-        {/* プレゼンテーションタイトル（フルスクリーン時は非表示） */}
+        {/* Header with presentation title */}
         {!isFullscreen && (
           <div className="mb-6">
             <h1 className="text-2xl font-bold truncate">{presentation.name}</h1>
@@ -371,110 +340,64 @@ export default function PublicPreview() {
           </div>
         )}
         
-        {/* メインコンテンツ */}
+        {/* Main content */}
         <div className="flex-1 flex flex-col items-center justify-center">
-          {/* スライド表示エリア */}
+          {/* Slide display */}
           <div 
             className={`relative ${isFullscreen ? 'w-full h-full' : 'w-full max-w-4xl aspect-[16/9]'} bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden`}
             onClick={toggleFullscreen}
           >
-            {slides && slides.length > 0 && currentSlideIndex < slides.length ? (
-              <div className="w-full h-full transition-opacity duration-300 ease-in-out">
-                <SlideViewer 
-                  slide={slides[currentSlideIndex]} 
-                  aspectRatio={isFullscreen ? undefined : "16:9"} 
-                />
-                <div className="absolute bottom-3 right-3 text-xs bg-black/30 text-white px-2 py-1 rounded">
-                  {currentSlideIndex + 1} / {slides.length}
-                </div>
+          {slides && slides.length > 0 && currentSlideIndex < slides.length ? (
+            <div className="w-full h-full transition-opacity duration-300 ease-in-out">
+              <SlideViewer 
+                slide={slides[currentSlideIndex]} 
+                aspectRatio={isFullscreen ? undefined : "16:9"} 
+              />
+              <div className="absolute bottom-3 right-3 text-xs bg-black/30 text-white px-2 py-1 rounded">
+                {currentSlideIndex + 1} / {slides.length}
               </div>
-            ) : (
-              <div className="flex items-center justify-center h-full p-8 text-muted-foreground">
-                <div className="text-center">
-                  <div className="mb-4">スライドデータの読み込み中、または表示可能なスライドがありません</div>
-                  {commit && (
-                    <div className="text-sm text-gray-500">
-                      コミットID: {commit.id} / スライド数: {slides ? slides.length : 0}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {/* ナビゲーションコントロール */}
-          <div className={`mt-6 flex items-center space-x-4 ${isFullscreen ? 'absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/30 p-2 rounded-full' : ''}`}>
-            <Button
-              variant="outline"
-              size={isFullscreen ? "sm" : "default"}
-              onClick={goToPreviousSlide}
-              disabled={currentSlideIndex === 0}
-            >
-              <ChevronLeft className="mr-1" /> 前へ
-            </Button>
-            
-            <Button
-              variant="outline"
-              size={isFullscreen ? "sm" : "default"}
-              onClick={goToNextSlide}
-              disabled={currentSlideIndex === slides.length - 1}
-            >
-              次へ <ChevronRight className="ml-1" />
-            </Button>
-            
-            <Button variant="ghost" size={isFullscreen ? "sm" : "default"} onClick={toggleFullscreen}>
-              <Maximize className="h-4 w-4" />
-              <span className="ml-2">{isFullscreen ? '通常表示' : '全画面表示'}</span>
-            </Button>
-            
-            {/* 共有・情報エリア（フルスクリーン時は非表示） */}
-            {!isFullscreen && (
-              <>
-                <Button variant="ghost" onClick={toggleShareModal}>
-                  <Copy className="mr-2 h-4 w-4" />
-                  共有
-                </Button>
-                {!presentation.isPublic && (
-                  <div className="ml-auto flex items-center text-sm text-muted-foreground">
-                    <Shield className="mr-1 h-3 w-3" />
-                    非公開プレゼンテーション
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full p-8 text-muted-foreground">
+              <div className="text-center">
+                <div className="mb-4">スライドデータの読み込み中、または表示可能なスライドがありません</div>
+                {commit && (
+                  <div className="text-sm text-gray-500">
+                    コミットID: {commit.id} / スライド数: {slides ? slides.length : 0}
                   </div>
                 )}
-              </>
-            )}
-          </div>
-          
-          {/* 下部の追加情報（フルスクリーン時は非表示） */}
-          {!isFullscreen && (
-            <div className="mt-8 w-full max-w-4xl">
-              <Card className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="text-md font-medium">{commit ? commit.message : 'N/A'}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        コミットID: {commit ? commit.id : 'N/A'} | 
-                        作成日: {commit ? new Date(commit.createdAt).toLocaleDateString() : 'N/A'}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm">スライド数: {slides.length}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
             </div>
           )}
         </div>
+        
+        {/* Navigation controls - simplified in fullscreen mode */}
+        <div className={`mt-6 flex items-center space-x-4 ${isFullscreen ? 'absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/30 p-2 rounded-full' : ''}`}>
+          <Button
+            variant="outline"
+            size={isFullscreen ? "sm" : "default"}
+            onClick={goToPreviousSlide}
+            disabled={currentSlideIndex === 0}
+          >
+            <ChevronLeft className="mr-1" /> 前へ
+          </Button>
+          
+          <Button
+            variant="outline"
+            size={isFullscreen ? "sm" : "default"}
+            onClick={goToNextSlide}
+            disabled={currentSlideIndex === slides.length - 1}
+          >
+            次へ <ChevronRight className="ml-1" />
+          </Button>
+          
+          <Button variant="ghost" size={isFullscreen ? "sm" : "default"} onClick={toggleFullscreen}>
+            <Maximize className="h-4 w-4" />
+            <span className="ml-2">{isFullscreen ? '通常表示' : '全画面表示'}</span>
+          </Button>
+        </div>
       </div>
-      
-      {/* 共有モーダル */}
-      <Share
-        isOpen={isShareModalOpen}
-        onClose={toggleShareModal}
-        title={presentation.name || 'プレゼンテーションプレビュー'}
-        url={shareUrl}
-      />
+    </div>
     </div>
   );
 }
