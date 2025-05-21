@@ -1,0 +1,86 @@
+## 概要まとめ
+
+PeerDiffXは、学生が主体となって企業説明会資料の添削を行い、その編集履歴をXMLレベルで差分抽出・ブランチ管理しつつ、ブラウザ上で即時プレビューと生成AI要約を提供するプラットフォームです。以下では、システム要件から運用機能、AI連携、セキュリティまで網羅的にまとめています。
+
+## 1. システム要件定義
+
+1. **XMLレベル差分抽出**
+
+   * PPTXをZIP→XML構造として直接解析し、テキスト・レイアウト・図形変更を検出する機能が必須です ([マイクロソフトサポート][1])。
+2. **Gitライクなブランチ＆マージ管理**
+
+   * 複数の「学生ブランチ」を作成し、マージ操作やコンフリクト解消をUIで提供します ([Stack Overflow][2])。
+3. **ブラウザ即時プレビュー**
+
+   * react-konva等でCanvas/SVG描画し、大規模スライドでも100ms以内のレンダリングを実現します ([マイクロソフトサポート][3])。
+4. **API連携による高度機能付与**
+
+   * Aspose.Slides Cloud等を介してアニメーション・SmartArt・トランジションを追加可能にします ([ソフトウェアアドバイス][4])。
+
+## 2. コア機能
+
+1. **学生レビュー管理**
+
+   * ユニーク参加学生数ベースで課金し、各学生の「レビュー権」を管理します ([AiPPT.com][5])。
+2. **優秀者パフォーマンスボーナス**
+
+   * 上位10%の学生に基本報酬＋30%ボーナスを自動支給するインセンティブ設計です ([Stack Overflow][2])。
+3. **生成AI要約レポート**
+
+   * GPT-4 Turbo等でフィードバック全文を3～5文に要約し、キーワード抽出・感情分析を付与します ([YouTube][6])。
+4. **ダッシュボード＆分析**
+
+   * 企業はレビュー状況、AI要約、学生ランクをリアルタイムに確認できます ([スライド天才][7])。
+
+## 3. コラボレーション機能
+
+1. **リアルタイム共同編集**
+
+   * 複数ユーザーが同時アクセス時に、カーソル位置や編集状況を可視化します ([マイクロソフトサポート][3])。
+2. **コメント＆ディスカッション**
+
+   * スライド上にコメントを付与し、スレッド形式で議論を進められます ([Tom Ky Tran][8])。
+3. **レビュー完了ワークフロー**
+
+   * 学生のレビュー完了後、自動で企業に通知し、マージ申請が可能です ([BrightCarbon][9])。
+
+## 4. セキュリティ & アクセス管理
+
+1. **学生認証**
+
+   * 大学メールなど一意IDでなりすましを防止します ([AiPPT.com][5])。
+2. **権限コントロール**
+
+   * 「閲覧のみ」「コメント可」「編集可」を granular に設定可能です ([マイクロソフトサポート][1])。
+3. **監査ログ**
+
+   * すべての差分・コメント・ログイン履歴を保存し、後追い調査に対応します ([Microsoft Learn][10])。
+
+## 5. インフラ & 運用
+
+1. **スケーラブル非同期処理**
+
+   * 差分抽出・AI要約はRabbitMQ等でキューイングし、コンテナを水平スケールします ([ソフトウェアアドバイス][4])。
+2. **決済冗長化**
+
+   * 複数の決済プロバイダーを組み込み、課金失敗時は自動リトライを実装します ([Indeed][11])。
+3. **SL A監視 & アラート**
+
+   * API レイテンシやエラー率を監視し、閾値超過時に自動アラートを発信します ([stl-training.co.uk][12])。
+
+---
+
+上記機能を統合することで、PeerDiffXは「学生主体の添削」を根幹に据えた、差分管理からAI要約までを網羅する革新的プラットフォームとして実現できます。
+
+[1]: https://support.microsoft.com/en-us/office/track-changes-in-your-presentation-35dad781-50f7-4c4f-9b15-cf418f03c279?utm_source=chatgpt.com "Track changes in your presentation - Microsoft Support"
+[2]: https://stackoverflow.com/questions/32259943/is-it-possible-to-diff-powerpoint-version-controlled-with-git?utm_source=chatgpt.com "Is it possible to diff PowerPoint version-controlled with git?"
+[3]: https://support.microsoft.com/en-us/office/work-together-on-powerpoint-presentations-0c30ee3f-8674-4f0e-97be-89cf2892a34d?utm_source=chatgpt.com "Work together on PowerPoint presentations - Microsoft Support"
+[4]: https://www.softwareadvice.com/resources/key-features-of-presentation-software/?utm_source=chatgpt.com "5 Key Features of Presentation Software"
+[5]: https://learn.aippt.com/how-google-slides-helps-improve-collaborative-presentation-development/?utm_source=chatgpt.com "How Google Slides Helps Improve Collaborative Presentation ..."
+[6]: https://www.youtube.com/watch?v=5DF8QLe4JJg&utm_source=chatgpt.com "Compare and Review Changes Between Two Presentations"
+[7]: https://www.slidegenius.com/cm-faq-question/what-are-the-features-and-benefits-of-using-pitch-collaborative-presentation-software?utm_source=chatgpt.com "Pitch Software: Features & Benefits Overview - SlideGenius"
+[8]: https://www.tomkytran.com/collaborative-presentations-best-practices-for-co-creating-and-delivering-a-group-presentation/?utm_source=chatgpt.com "Collaborative Presentations: Best Practices for Co-creating and ..."
+[9]: https://www.brightcarbon.com/blog/compare-combine-powerpoint-file/?utm_source=chatgpt.com "How to compare two versions of a PowerPoint file - BrightCarbon"
+[10]: https://learn.microsoft.com/en-us/microsoft-365/community/versioning-basics-best-practices?utm_source=chatgpt.com "Versioning in SharePoint | Microsoft Learn"
+[11]: https://ca.indeed.com/career-advice/career-development/online-presentation-tools?utm_source=chatgpt.com "16 Online Presentation Tools (With Features and Tips) - Indeed"
+[12]: https://www.stl-training.co.uk/versions/powerpoint-difference.php?utm_source=chatgpt.com "Microsoft Powerpoint version differences - STL Training"

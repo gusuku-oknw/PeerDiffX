@@ -57,7 +57,7 @@ export default function Header() {
       <div className="container mx-auto px-4 py-2 flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <Link href="/" className="text-xl font-bold text-blue-600 dark:text-blue-400">
-            SlideVersionControl
+            PeerDiffX
           </Link>
           <div className="hidden md:flex items-center space-x-2">
             {branches && branches.length > 0 && (
