@@ -303,6 +303,11 @@ export default function SlideCanvas({
             <FaHistory className={`mr-2 ${versionPanelVisible ? 'text-white' : 'text-gray-500'}`} />
             <span>History</span>
           </Button>
+          {shareDialogComponent && (
+            <div className="ml-2">
+              {shareDialogComponent}
+            </div>
+          )}
           <Button className="px-3 py-1.5 rounded-md bg-blue-500 hover:bg-blue-600 text-white transition text-sm">
             <span>Save</span>
           </Button>
