@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRoute, Link } from 'wouter';
 import { useSlide, usePresentation, useSlides } from '@/hooks/use-pptx';
+import { decodeId } from '@/lib/hash-utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { FaLayerGroup } from 'react-icons/fa';
@@ -13,11 +14,10 @@ import { Home } from 'lucide-react';
 export default function PublicPreview() {
   const [, params] = useRoute<{ presentationId: string; commitId?: string }>('/public-preview/:presentationId/:commitId?');
   
-  // IDの変換をシンプルに
-  const rawPresentationId = params?.presentationId || '';
-  const presentationId = rawPresentationId.startsWith('pdx-') 
-    ? parseInt(rawPresentationId.substring(4), 10) 
-    : parseInt(rawPresentationId, 10) || 12;
+  // 正しいデコード方法を使用
+  const presentationId = params?.presentationId ? 
+    decodeId(params.presentationId) || 12 
+    : 12;
   
   const commitId = params?.commitId ? parseInt(params.commitId, 10) : 35;
   
