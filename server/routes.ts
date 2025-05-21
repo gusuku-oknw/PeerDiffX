@@ -2,8 +2,8 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertPresentationSchema, insertBranchSchema, insertCommitSchema, insertSlideSchema, insertDiffSchema } from "@shared/schema";
-import { extractDiffFromPPTX, comparePPTXFiles } from "./services/diff-service";
+import { insertPresentationSchema, insertBranchSchema, insertCommitSchema, insertSlideSchema, insertDiffSchema, insertCommentSchema } from "@shared/schema";
+import { extractDiffFromPPTX, comparePPTXFiles, lockFile, unlockFile, checkLockStatus } from "./services/diff-service";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
@@ -455,6 +455,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting replies:", error);
       res.status(500).json({ error: "Failed to get replies" });
+    }
+  });
+
+  // File locking endpoints for collaborative editing
+  apiRouter.post("/api/presentations/:presentationId/lock", async (req: Request, res: Response) => {
+    try {
+      const presentationId = parseInt(req.params.presentationId);
+      const userId = req.body.userId;
+      const durationMinutes = req.body.durationMinutes || 30;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+      }
+
+      const lockAcquired = lockFile(presentationId, userId, durationMinutes);
+      
+      if (lockAcquired) {
+        res.json({ 
+          success: true, 
+          message: "Lock acquired successfully",
+          expiresInMinutes: durationMinutes
+        });
+      } else {
+        const lockStatus = checkLockStatus(presentationId);
+        res.status(409).json({ 
+          success: false, 
+          message: "Presentation is already locked by another user",
+          lockStatus
+        });
+      }
+    } catch (error) {
+      console.error("Error locking presentation:", error);
+      res.status(500).json({ error: "Failed to lock presentation" });
+    }
+  });
+
+  apiRouter.post("/api/presentations/:presentationId/unlock", async (req: Request, res: Response) => {
+    try {
+      const presentationId = parseInt(req.params.presentationId);
+      const userId = req.body.userId;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+      }
+
+      const unlockResult = unlockFile(presentationId, userId);
+      
+      if (unlockResult) {
+        res.json({ 
+          success: true, 
+          message: "Presentation unlocked successfully" 
+        });
+      } else {
+        res.status(403).json({ 
+          success: false, 
+          message: "You don't have permission to unlock this presentation or it's not locked" 
+        });
+      }
+    } catch (error) {
+      console.error("Error unlocking presentation:", error);
+      res.status(500).json({ error: "Failed to unlock presentation" });
+    }
+  });
+
+  apiRouter.get("/api/presentations/:presentationId/lock-status", async (req: Request, res: Response) => {
+    try {
+      const presentationId = parseInt(req.params.presentationId);
+      const lockStatus = checkLockStatus(presentationId);
+      
+      res.json(lockStatus);
+    } catch (error) {
+      console.error("Error checking lock status:", error);
+      res.status(500).json({ error: "Failed to check lock status" });
     }
   });
 
