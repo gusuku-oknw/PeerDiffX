@@ -531,8 +531,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + parseInt(expiryDays));
       
-      // UUIDを生成
-      const id = crypto.randomUUID();
+      // IDを生成（プレゼンテーションIDとスライドIDをエンコード）
+      const idBase = `${presentationId}-${slideId || 0}`;
+      const id = Buffer.from(idBase).toString('base64').replace(/=/g, '');
       
       // ベースとなるデータの取得
       const presentation = await storage.getPresentation(presentationId);
@@ -605,8 +606,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       
-      // スナップショットの取得
-      const snapshot = await storage.getSnapshot(id);
+      console.log("検索するスナップショットID:", id);
+      
+      // URLに含まれるIDでスナップショットを検索
+      let snapshot = await storage.getSnapshot(id);
+      
+      // 見つからない場合は、既存のIDを分解してみる（"59-523481"のような形式）
+      if (!snapshot && id.includes('-')) {
+        const [presentationId, slideId] = id.split('-');
+        console.log(`代替検索: presentationId=${presentationId}, slideId=${slideId}`);
+        
+        // 別の形式のIDを試す (エンコードIDで検索)
+        const encodedId = Buffer.from(id).toString('base64').replace(/=/g, '');
+        snapshot = await storage.getSnapshot(encodedId);
+      }
       
       if (!snapshot) {
         return res.status(404).json({ error: "Snapshot not found" });

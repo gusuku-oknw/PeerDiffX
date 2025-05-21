@@ -16,6 +16,7 @@ import DiffView from "@/pages/diff-view";
 import History from "@/pages/history";
 import Branches from "@/pages/branches";
 import SnapshotPage from "@/pages/snapshot";
+import PDXPreviewPage from "@/pages/pdx-preview";
 import SettingsPage from "@/pages/settings";
 import AdminDashboard from "@/pages/admin/dashboard";
 

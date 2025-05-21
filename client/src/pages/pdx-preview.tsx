@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
-import { useSlide } from "@/hooks/use-pptx";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +12,7 @@ import { ArrowLeft, Download, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import SlideCanvas from "@/components/slides/slide-canvas";
 
-export default function SnapshotPage() {
+export default function PDXPreviewPage() {
   const [, params] = useRoute("/preview/pdx-:id");
   const snapshotId = params?.id;
   
@@ -31,16 +30,9 @@ export default function SnapshotPage() {
       
       try {
         console.log("スナップショットID:", snapshotId);
-        // APIエンドポイントでは、デコードしたIDを使用
-        let decodedId;
-        try {
-          decodedId = Buffer.from(snapshotId, 'base64').toString();
-          console.log("デコードされたID:", decodedId);
-        } catch (err) {
-          console.error("IDデコードエラー:", err);
-          decodedId = snapshotId;
-        }
-        const response = await fetch(`/api/snapshots/${decodedId}`);
+        
+        // URLに直接使用されているIDを元にスナップショットを取得
+        const response = await fetch(`/api/snapshots/preview/${snapshotId}`);
         
         if (!response.ok) {
           if (response.status === 404) {
