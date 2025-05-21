@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import BranchSelector from "@/components/branches/branch-selector";
+import { SidebarAiAnalysisButton } from "@/components/ai/sidebar-ai-analysis-button";
 import {
   FaFilePowerpoint,
   FaPlus,
@@ -16,7 +17,9 @@ import {
   FaUserGraduate,
   FaMedal,
   FaChartLine,
-  FaCreditCard
+  FaCreditCard,
+  FaRobot,
+  FaBrain
 } from "react-icons/fa";
 
 interface SidebarProps {
@@ -224,12 +227,12 @@ export default function Sidebar({ onToggleVersionPanel }: SidebarProps) {
               </div>
               <span>コメント</span>
             </button>
-            <Link href="/ai-analysis" className="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-              <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900 flex-shrink-0 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-3">
-                <FaChartLine className="text-xs" />
-              </div>
-              <span>AI分析レポート</span>
-            </Link>
+            {presentationId && currentBranch && (
+              <SidebarAiAnalysisButton 
+                presentationId={presentationId} 
+                commitId={0} // コミットIDはAI分析ボタン内部で取得
+              />
+            )}
             <Link
               href="/settings"
               className="flex items-center w-full px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
