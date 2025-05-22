@@ -1,692 +1,191 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useRoute, Link } from 'wouter';
-import { usePresentation, useSlides } from '@/hooks/use-pptx';
-import { decodeId, encodeId } from '@/lib/hash-utils';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
+import { Box, CssBaseline } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
+import { useRoute } from 'wouter';
 
-// Material-UI imports
-import {
-  Box,
-  Typography,
-  Button,
-  Paper,
-  Skeleton,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Divider,
-  Tabs,
-  Tab,
-  Stack,
-  Avatar,
-  Fade,
-  Slide,
-  Chip,
-  useTheme,
-  alpha,
-  Container,
-  Grid,
-  Tooltip,
-  Badge,
-} from '@mui/material';
-import {
-  Home,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  ZoomIn,
-  ZoomOut,
-  Fullscreen,
-  Comment,
-  History,
-  Lock,
-  Close,
-  AccountTree,
-  MergeType as GitCompare,
-  Layers,
-  PlayArrow,
-  Share,
-  Download,
-  Edit,
-  Visibility,
-  CheckCircle,
-} from '@mui/icons-material';
+// 新しく作成したコンポーネント
+import { PresentationInfoPanel } from '@/components/presentation/presentation-info-panel';
+import { PresentationToolbar } from '@/components/presentation/presentation-toolbar';
+import { PresentationThumbnails } from '@/components/presentation/presentation-thumbnails';
+import { PresentationSlideViewer } from '@/components/presentation/presentation-slide-viewer';
 
-import SlideThumbnails from '@/components/slides/slide-thumbnails';
+interface Slide {
+  id: number;
+  slideNumber: number;
+  title: string;
+  content: string;
+  commitId: number;
+}
+
+interface Presentation {
+  id: number;
+  name: string;
+  description: string;
+}
 
 export default function PublicPreview() {
-  const theme = useTheme();
-  const [, params] = useRoute<{ presentationId: string; commitId?: string }>('/public-preview/:presentationId/:commitId?');
-
-  const presentationId = params?.presentationId
-    ? decodeId(params.presentationId) || 12
-    : 12;
-  const commitId = params?.commitId ? parseInt(params.commitId, 10) : 35;
-
-  const { toast } = useToast();
-  const { data: presentation, isLoading: isLoadingPresentation } = usePresentation(presentationId);
-  const { data: slides = [], isLoading: isLoadingSlides } = useSlides(commitId);
-
-  const [currentSlideId, setCurrentSlideId] = useState<number | null>(null);
+  const [, params] = useRoute('/preview/:presentationId');
+  const presentationId = params?.presentationId ? parseInt(params.presentationId) : null;
+  
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [showBottomPanel, setShowBottomPanel] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
-  const [panelHeight, setPanelHeight] = useState(300);
   const [zoomLevel, setZoomLevel] = useState(100);
+  
+  // プレゼンテーションデータの取得
+  const { data: presentation, isLoading: isPresentationLoading } = useQuery({
+    queryKey: ['/api/presentations', presentationId],
+    enabled: !!presentationId,
+  });
 
-  // サンプルスライドデータ
-  const sampleSlides = [
-    {
-      id: 9999,
-      title: 'Q4 Presentation',
-      slideNumber: 1,
-      content: {
-        elements: [
-          {
-            type: 'text',
-            x: 50,
-            y: 150,
-            content: 'Q4 Presentation',
-            style: { fontSize: 42, fontWeight: 'bold', color: '#000000' },
-          },
-          {
-            type: 'text',
-            x: 50,
-            y: 220,
-            content: 'Company Overview and Results',
-            style: { fontSize: 24, color: '#444444' },
-          },
-          {
-            type: 'text',
-            x: 50,
-            y: 320,
-            content: new Date().toLocaleDateString('ja-JP'),
-            style: { fontSize: 16, color: '#666666' },
-          },
-        ],
-      },
+  // スライドデータの取得
+  const { data: slides = [], isLoading: isSlidesLoading } = useQuery({
+    queryKey: ['/api/commits', presentationId, 'slides'],
+    queryFn: async () => {
+      if (!presentationId) return [];
+      
+      // 最新のコミットを取得
+      const commitsResponse = await fetch('/api/commits');
+      const commits = await commitsResponse.json();
+      
+      if (commits.length === 0) return [];
+      
+      const latestCommit = commits[0];
+      
+      // スライドを取得
+      const slidesResponse = await fetch(`/api/commits/${latestCommit.id}/slides`);
+      const slidesData = await slidesResponse.json();
+      
+      return slidesData.sort((a: Slide, b: Slide) => a.slideNumber - b.slideNumber);
     },
-    {
-      id: 9998,
-      title: '売上概要',
-      slideNumber: 2,
-      content: {
-        elements: [
-          {
-            type: 'text',
-            x: 50,
-            y: 100,
-            content: '売上概要',
-            style: { fontSize: 36, fontWeight: 'bold', color: '#000000' },
-          },
-          {
-            type: 'text',
-            x: 50,
-            y: 180,
-            content: '• 2025年第4四半期の売上は前年同期比15%増',
-            style: { fontSize: 20, color: '#333333' },
-          },
-          {
-            type: 'text',
-            x: 50,
-            y: 220,
-            content: '• 主力製品の売上が好調に推移',
-            style: { fontSize: 20, color: '#333333' },
-          },
-          {
-            type: 'text',
-            x: 50,
-            y: 260,
-            content: '• 新規顧客獲得数が目標を上回る',
-            style: { fontSize: 20, color: '#333333' },
-          },
-        ],
-      },
-    },
-    {
-      id: 9997,
-      title: '今後の展望',
-      slideNumber: 3,
-      content: {
-        elements: [
-          {
-            type: 'text',
-            x: 50,
-            y: 100,
-            content: '今後の展望',
-            style: { fontSize: 36, fontWeight: 'bold', color: '#000000' },
-          },
-          {
-            type: 'text',
-            x: 50,
-            y: 180,
-            content: '1. デジタル化の推進',
-            style: { fontSize: 24, fontWeight: 'bold', color: '#1976d2' },
-          },
-          {
-            type: 'text',
-            x: 70,
-            y: 220,
-            content: '- AI技術の活用による業務効率化',
-            style: { fontSize: 18, color: '#333333' },
-          },
-          {
-            type: 'text',
-            x: 70,
-            y: 250,
-            content: '- クラウドサービスの導入',
-            style: { fontSize: 18, color: '#333333' },
-          },
-        ],
-      },
-    },
-    {
-      id: 9996,
-      title: 'まとめ',
-      slideNumber: 4,
-      content: {
-        elements: [
-          {
-            type: 'text',
-            x: 50,
-            y: 150,
-            content: 'まとめ',
-            style: { fontSize: 42, fontWeight: 'bold', color: '#000000' },
-          },
-          {
-            type: 'text',
-            x: 50,
-            y: 240,
-            content: 'ご清聴ありがとうございました',
-            style: { fontSize: 28, color: '#444444' },
-          },
-          {
-            type: 'text',
-            x: 50,
-            y: 320,
-            content: 'ご質問がございましたら、お気軽にお声かけください',
-            style: { fontSize: 18, color: '#666666' },
-          },
-        ],
-      },
-    },
-  ];
+    enabled: !!presentationId,
+  });
 
-  const sampleSlide = sampleSlides[0];
+  const currentSlide = slides[currentSlideIndex] || null;
+  const totalSlides = slides.length;
 
-  // 利用可能なスライドを統合（データベースのスライド + サンプルスライド）
-  const allSlides = slides.length > 0 ? slides : sampleSlides;
-
-  // initialize current slide
-  useEffect(() => {
-    if (!isLoadingSlides) {
-      if (allSlides.length > 0) {
-        setCurrentSlideId(allSlides[0].id);
-        setCurrentSlideIndex(0);
-      }
+  // スライドナビゲーション
+  const goToNextSlide = () => {
+    if (currentSlideIndex < totalSlides - 1) {
+      setCurrentSlideIndex(currentSlideIndex + 1);
     }
-  }, [allSlides, isLoadingSlides]);
-
-  // update index when slide id changes
-  useEffect(() => {
-    if (currentSlideId !== sampleSlide.id && slides.length > 0) {
-      const idx = slides.findIndex(s => s.id === currentSlideId);
-      if (idx !== -1) setCurrentSlideIndex(idx);
-    }
-  }, [currentSlideId, slides]);
+  };
 
   const goToPreviousSlide = () => {
     if (currentSlideIndex > 0) {
-      setCurrentSlideId(slides[currentSlideIndex - 1].id);
+      setCurrentSlideIndex(currentSlideIndex - 1);
     }
   };
-  const goToNextSlide = () => {
-    if (currentSlideIndex < slides.length - 1) {
-      setCurrentSlideId(slides[currentSlideIndex + 1].id);
+
+  const selectSlide = (slideId: number) => {
+    const slideIndex = slides.findIndex((slide: Slide) => slide.id === slideId);
+    if (slideIndex !== -1) {
+      setCurrentSlideIndex(slideIndex);
     }
   };
-  const handleSelectSlide = (id: number) => setCurrentSlideId(id);
-  const handleTabChange = (_: any, v: number) => setActiveTab(v);
-  const handleViewHistory = () => {
-    setActiveTab(1);
-    setShowBottomPanel(true);
-  };
-  const handleViewXmlDiff = () => {
-    setActiveTab(1);
-    setShowBottomPanel(true);
-  };
-  const handleZoomIn = () => setZoomLevel(z => Math.min(200, z + 25));
-  const handleZoomOut = () => setZoomLevel(z => Math.max(50, z - 25));
 
-  // resize bottom panel
-  const startYRef = useRef(0);
-  const startHRef = useRef(panelHeight);
-  const handleResizeStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    startYRef.current = e.clientY;
-    startHRef.current = panelHeight;
-    document.addEventListener('mousemove', handleResizeMove);
-    document.addEventListener('mouseup', handleResizeEnd);
-  };
-  const handleResizeMove = (e: MouseEvent) => {
-    const delta = startYRef.current - e.clientY;
-    const nh = Math.max(150, Math.min(window.innerHeight * 0.7, startHRef.current + delta));
-    setPanelHeight(nh);
-  };
-  const handleResizeEnd = () => {
-    document.removeEventListener('mousemove', handleResizeMove);
-    document.removeEventListener('mouseup', handleResizeEnd);
+  // ズーム操作
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 10, 200));
   };
 
-  // keyboard shortcuts
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 10, 50));
+  };
+
+  // キーボードナビゲーション
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') goToPreviousSlide();
-      if (e.key === 'ArrowRight') goToNextSlide();
-      if (e.key === 'Escape') setShowBottomPanel(false);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          e.preventDefault();
+          goToPreviousSlide();
+          break;
+        case 'ArrowRight':
+        case 'ArrowDown':
+        case ' ':
+          e.preventDefault();
+          goToNextSlide();
+          break;
+        case 'Home':
+          e.preventDefault();
+          setCurrentSlideIndex(0);
+          break;
+        case 'End':
+          e.preventDefault();
+          setCurrentSlideIndex(totalSlides - 1);
+          break;
+      }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [currentSlideIndex, slides]);
 
-  if (isLoadingPresentation || !presentation) {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentSlideIndex, totalSlides]);
+
+  if (isPresentationLoading || isSlidesLoading) {
     return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: 'background.default',
-          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)}, ${alpha(
-            theme.palette.secondary.main,
-            0.05
-          )})`,
-        }}
-      >
-        <Container maxWidth="sm">
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-            <Skeleton variant="text" width="60%" height={40} />
-            <Skeleton variant="rectangular" width="100%" height={200} sx={{ mt: 3, borderRadius: 2 }} />
-            <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-              <Skeleton variant="circular" width={40} height={40} />
-              <Box sx={{ flex: 1 }}>
-                <Skeleton variant="text" width="80%" />
-                <Skeleton variant="text" width="60%" />
-              </Box>
-            </Stack>
-          </Paper>
-        </Container>
+      <Box sx={{ 
+        height: '100vh', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center' 
+      }}>
+        読み込み中...
       </Box>
     );
   }
 
-  const TabPanel = ({ children, value, index, ...other }: any) => (
-    <div role="tabpanel" hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
+  if (!presentation || !presentationId) {
+    return (
+      <Box sx={{ 
+        height: '100vh', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center' 
+      }}>
+        プレゼンテーションが見つかりません
+      </Box>
+    );
+  }
 
   return (
     <>
-      {/* 固定ヘッダー */}
-      <AppBar position="fixed" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', backdropFilter: 'blur(10px)' }}>
-        <Toolbar sx={{ px: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
-                <Avatar sx={{ width: 40, height: 40, background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`, mr: 1.5 }}>
-                  <Layers sx={{ fontSize: 20 }} />
-                </Avatar>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                  PeerDiffX
-                </Typography>
-              </Box>
-            </Link>
-            <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography variant="h6" sx={{ mr: 2, color: 'text.primary' }}>
-                {presentation.name}
-              </Typography>
-              <Chip label="公開中" color="success" size="small" icon={<Visibility />} sx={{ mr: 2 }} />
-              <Badge badgeContent="3" color="primary">
-                <Comment sx={{ color: 'text.secondary' }} />
-              </Badge>
-            </Box>
-          </Box>
-          <Stack direction="row" spacing={1}>
-            <Tooltip title="プレゼン開始">
-              <Button startIcon={<PlayArrow />} variant="contained" sx={{ borderRadius: 2, background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})` }}>
-                プレゼン開始
-              </Button>
-            </Tooltip>
-            <Tooltip title="共有">
-              <IconButton color="primary">
-                <Share />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="ダウンロード">
-              <IconButton color="primary">
-                <Download />
-              </IconButton>
-            </Tooltip>
-            <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-            <Button component={Link} href="/" startIcon={<Home />} color="inherit" sx={{ color: 'text.primary' }}>
-              ホーム
-            </Button>
-            <Button component={Link} href="/settings" startIcon={<Settings />} color="inherit" sx={{ color: 'text.primary' }}>
-              設定
-            </Button>
-          </Stack>
-        </Toolbar>
-      </AppBar>
+      <CssBaseline />
+      <Box sx={{ height: '100vh', display: 'flex', overflow: 'hidden' }}>
+        {/* 左側：情報パネル */}
+        <PresentationInfoPanel
+          presentationName={presentation.name || 'プレゼンテーション'}
+          totalSlides={totalSlides}
+          currentSlideNumber={currentSlideIndex + 1}
+        />
 
-      {/* ヘッダー分のオフセット */}
-      <Box sx={{ height: theme.mixins.toolbar.minHeight }} />
-
-      {/* メイン領域 */}
-      <Box sx={{ display: 'flex', height: `calc(100vh - ${theme.mixins.toolbar.minHeight}px)`, overflow: 'hidden', bgcolor: 'background.default' }}>
-        {/* サイドバー */}
-        <Paper elevation={0} sx={{ width: 280, borderRight: 1, borderColor: 'divider', overflow: 'auto', bgcolor: alpha(theme.palette.background.paper, 0.7), backdropFilter: 'blur(10px)' }}>
-          <Box sx={{ p: 3 }}>
-            {/* プレゼン情報 */}
-            <Paper elevation={0} sx={{ mb: 3, border: 1, borderColor: 'divider', borderRadius: 2, background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)}, ${alpha(theme.palette.secondary.main, 0.05)})` }}>
-              <Box sx={{ p: 2 }}>
-                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
-                  {presentation.name}
-                </Typography>
-                {presentation.description && (
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {presentation.description}
-                  </Typography>
-                )}
-                <Typography variant="caption" color="text.secondary">
-                  最終更新: {new Date(presentation.updatedAt).toLocaleDateString('ja-JP')}
-                </Typography>
-              </Box>
-            </Paper>
-
-            {/* ブランチ＆コミット */}
-            <Typography variant="overline" sx={{ fontWeight: 600, color: 'text.secondary', mb: 2, display: 'block' }}>
-              ブランチ & コミット
-            </Typography>
-            <Stack spacing={2}>
-              <Paper elevation={0} sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: alpha(theme.palette.success.main, 0.05) }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <CheckCircle sx={{ color: 'success.main', mr: 1.5, fontSize: 20 }} />
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    main
-                  </Typography>
-                </Box>
-              </Paper>
-              <Paper elevation={0} sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2, borderLeft: 3, borderLeftColor: 'primary.main' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  Initial commit
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {new Date().toLocaleDateString('ja-JP')} • コミット #{commitId}
-                </Typography>
-              </Paper>
-            </Stack>
-
-            {/* 統計 */}
-            <Typography variant="overline" sx={{ fontWeight: 600, color: 'text.secondary', mt: 3, mb: 2, display: 'block' }}>
-              統計情報
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Paper elevation={0} sx={{ p: 2, textAlign: 'center', border: 1, borderColor: 'divider', borderRadius: 2, flex: 1 }}>
-                <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>
-                  {slides.length || 1}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  スライド
-                </Typography>
-              </Paper>
-              <Paper elevation={0} sx={{ p: 2, textAlign: 'center', border: 1, borderColor: 'divider', borderRadius: 2, flex: 1 }}>
-                <Typography variant="h6" color="secondary" sx={{ fontWeight: 700 }}>
-                  3
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  コメント
-                </Typography>
-              </Paper>
-            </Box>
-          </Box>
-        </Paper>
-
-        {/* 共通ツールバー - サムネイルとスライド表示の上に配置 */}
+        {/* 中央：メインコンテンツエリア */}
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {/* スライドナビツールバー */}
-          <Paper elevation={0} sx={{ 
-            borderBottom: 1, 
-            borderColor: 'divider', 
-            p: 2, 
-            bgcolor: 'background.paper',
-            position: 'sticky',
-            top: 0,
-            zIndex: 10,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Stack direction="row" spacing={1}>
-                  <Tooltip title="前のスライド">
-                    <span>
-                      <IconButton onClick={goToPreviousSlide} disabled={currentSlideIndex <= 0} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}>
-                        <ChevronLeft />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                  <Paper elevation={0} sx={{ px: 2, py: 1, bgcolor: 'background.paper', border: 1, borderColor: 'divider' }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {currentSlideIndex + 1} / {allSlides.length}
-                    </Typography>
-                  </Paper>
-                  <Tooltip title="次のスライド">
-                    <span>
-                      <IconButton onClick={goToNextSlide} disabled={currentSlideIndex >= allSlides.length - 1} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}>
-                        <ChevronRight />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                </Stack>
-                <Divider orientation="vertical" flexItem />
-                <Stack direction="row" spacing={1}>
-                  <Button variant="outlined" size="small" startIcon={<History />} onClick={handleViewHistory} sx={{ borderRadius: 2 }}>
-                    履歴
-                  </Button>
-                  <Button variant="outlined" size="small" startIcon={<GitCompare />} onClick={handleViewXmlDiff} sx={{ borderRadius: 2 }}>
-                    差分
-                  </Button>
-                </Stack>
-              </Stack>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <IconButton size="small" onClick={handleZoomOut}>
-                  <ZoomOut />
-                </IconButton>
-                <Paper elevation={0} sx={{ px: 2, py: 0.5, bgcolor: 'background.paper', border: 1, borderColor: 'divider' }}>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {zoomLevel}%
-                  </Typography>
-                </Paper>
-                <IconButton size="small" onClick={handleZoomIn}>
-                  <ZoomIn />
-                </IconButton>
-                <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-                <IconButton size="small">
-                  <Fullscreen />
-                </IconButton>
-                <Button variant="contained" size="small" startIcon={<AccountTree />} sx={{ ml: 1, borderRadius: 2, background: `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.dark})` }}>
-                  Commit
-                </Button>
-              </Stack>
-            </Box>
-          </Paper>
+          {/* ツールバー */}
+          <PresentationToolbar
+            currentSlideNumber={currentSlideIndex + 1}
+            totalSlides={totalSlides}
+            onPrevSlide={goToPreviousSlide}
+            onNextSlide={goToNextSlide}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            zoomLevel={zoomLevel}
+          />
 
-          {/* サムネイルとスライド表示の水平レイアウト */}
+          {/* スライド表示エリア */}
           <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
             {/* サムネイル */}
-            <SlideThumbnails commitId={commitId} activeSlideId={currentSlideId || undefined} onSelectSlide={handleSelectSlide} slides={slides} />
+            <PresentationThumbnails
+              slides={slides}
+              activeSlideId={currentSlide?.id || 0}
+              onSelectSlide={selectSlide}
+            />
 
-            {/* スライド表示 - アスペクト比16:9を保持しながら最大化 */}
-            <Box sx={{ flex: 1, overflow: 'auto', bgcolor: alpha(theme.palette.grey[50], 0.5), display: 'flex', flexDirection: 'column' }}>
-              {/* スライド本体 - アスペクト比を保持しながら最大化 */}
-              <Box sx={{ 
-                flex: 1, 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                p: 2
-              }}>
-                <Fade in timeout={300}>
-                  <Paper sx={{ 
-                    width: '90%',
-                    aspectRatio: '16/9',
-                    borderRadius: 3, 
-                    overflow: 'hidden', 
-                    position: 'relative', 
-                    transform: `scale(${zoomLevel / 100})`, 
-                    transition: 'transform 0.3s ease', 
-                    boxShadow: `0 20px 40px ${alpha(theme.palette.common.black, 0.1)}` 
-                  }} elevation={8}>
-                    {allSlides[currentSlideIndex] ? (
-                      <Box sx={{ p: 4, height: '100%', position: 'relative', bgcolor: 'background.paper' }}>
-                        {allSlides[currentSlideIndex].content?.elements?.map((el: any, i: number) =>
-                          el.type === 'text' ? (
-                            <Typography
-                              key={i}
-                              sx={{
-                                position: 'absolute',
-                                left: `${el.x}px`,
-                                top: `${el.y}px`,
-                                color: el.style?.color || '#000',
-                                fontSize: `${el.style?.fontSize || 16}px`,
-                                fontWeight: el.style?.fontWeight || 'normal',
-                              }}
-                            >
-                              {el.content}
-                            </Typography>
-                          ) : null
-                        )}
-                      </Box>
-                    ) : (
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                        <Typography color="text.secondary">スライドデータを読み込み中...</Typography>
-                      </Box>
-                    )}
-                  </Paper>
-                </Fade>
-              </Box>
-            </Box>
+            {/* メインスライド */}
+            <PresentationSlideViewer
+              slide={currentSlide}
+              zoomLevel={zoomLevel}
+            />
           </Box>
-
-          {/* ボトムパネル */}
-          {showBottomPanel && (
-            <Slide direction="up" in mountOnEnter unmountOnExit>
-              <Paper sx={{ position: 'absolute', bottom: 0, width: '100%', height: panelHeight, borderTop: 1, borderColor: 'divider', borderTopLeftRadius: 12, borderTopRightRadius: 12, bgcolor: alpha(theme.palette.background.paper, 0.95), backdropFilter: 'blur(10px)' }} elevation={8}>
-                <Box sx={{ height: 8, cursor: 'ns-resize', display: 'flex', justifyContent: 'center', alignItems: 'center', '&:hover .resize-handle': { bgcolor: 'primary.main', transform: 'scaleY(1.5)' } }} onMouseDown={handleResizeStart}>
-                  <Box className="resize-handle" sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: 2, transition: 'all 0.2s ease' }} />
-                </Box>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2 }}>
-                  <Tabs value={activeTab} onChange={handleTabChange} sx={{ '& .MuiTab-root': { minHeight: 48, textTransform: 'none', fontWeight: 500 } }}>
-                    <Tab icon={<Comment />} label="コメント" iconPosition="start" />
-                    <Tab icon={<History />} label="履歴" iconPosition="start" />
-                    <Tab icon={<Lock />} label="ロック状況" iconPosition="start" />
-                  </Tabs>
-                  <Tooltip title="パネルを閉じる">
-                    <IconButton onClick={() => setShowBottomPanel(false)} sx={{ color: 'text.secondary' }}>
-                      <Close />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-                <Box sx={{ flex: 1, overflow: 'auto' }}>
-                  <TabPanel value={activeTab} index={0}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        スライド {currentSlideIndex + 1} のコメント
-                      </Typography>
-                      <Button variant="contained" size="small" startIcon={<Comment />} sx={{ borderRadius: 2 }}>
-                        新規コメント
-                      </Button>
-                    </Box>
-                    <Stack spacing={2}>
-                      <Paper elevation={0} sx={{ p: 3, border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: alpha(theme.palette.info.main, 0.05) }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-                          このスライドにはまだコメントがありません。
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mt: 1 }}>
-                          右上のボタンから新しいコメントを追加できます。
-                        </Typography>
-                      </Paper>
-                    </Stack>
-                  </TabPanel>
-                  <TabPanel value={activeTab} index={1}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        バージョン履歴
-                      </Typography>
-                      <Chip label={`最終更新: ${new Date().toLocaleDateString('ja-JP')}`} size="small" variant="outlined" />
-                    </Box>
-                    <Stack spacing={2}>
-                      <Paper elevation={0} sx={{ p: 3, border: 1, borderColor: 'divider', borderRadius: 2, borderLeft: 4, borderLeftColor: 'primary.main', bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                            初期バージョン
-                          </Typography>
-                          <Chip label={new Date().toLocaleDateString('ja-JP')} size="small" color="primary" variant="outlined" />
-                        </Box>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          プレゼンテーションを作成しました。
-                        </Typography>
-                        <Stack direction="row" spacing={1}>
-                          <Chip label={`コミット #${commitId}`} size="small" />
-                          <Chip label="main" size="small" color="success" />
-                        </Stack>
-                      </Paper>
-                      <Paper elevation={0} sx={{ p: 3, border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: alpha(theme.palette.grey[100], 0.5) }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-                          これ以前の履歴はありません
-                        </Typography>
-                      </Paper>
-                    </Stack>
-                  </TabPanel>
-                  <TabPanel value={activeTab} index={2}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        ファイルロック状況
-                      </Typography>
-                      <Button variant="outlined" size="small" startIcon={<Lock />} sx={{ borderRadius: 2 }}>
-                        現在のスライドをロック
-                      </Button>
-                    </Box>
-                    <Stack spacing={2}>
-                      <Paper elevation={0} sx={{ p: 3, border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: alpha(theme.palette.success.main, 0.05) }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                          <CheckCircle sx={{ color: 'success.main', mr: 2 }} />
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                            すべてのスライドが利用可能
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
-                          現在ロックされているスライドはありません。他のユーザーが編集中の場合、ここに表示されます。
-                        </Typography>
-                      </Paper>
-                      <Paper elevation={0} sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: 'background.paper' }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                          ロック機能について
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          • スライドをロックすると、他のユーザーは編集できなくなります<br />
-                          • ロックは編集終了時に自動的に解除されます<br />
-                          • 管理者はすべてのロックを解除できます
-                        </Typography>
-                      </Paper>
-                    </Stack>
-                  </TabPanel>
-                </Box>
-              </Paper>
-            </Slide>
-          )}
         </Box>
       </Box>
     </>
