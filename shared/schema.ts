@@ -386,3 +386,174 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
   }),
   replies: many(comments),
 }));
+
+// プロジェクト管理テーブル（学生向けタスク管理）
+export const projects = pgTable("projects", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  companyName: text("company_name").notNull(),
+  presentationId: integer("presentation_id").references(() => presentations.id, { onDelete: 'cascade' }).notNull(),
+  dueDate: timestamp("due_date"),
+  status: varchar("status", { length: 20 }).default("active").notNull(), // active, completed, archived
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdBy: varchar("created_by", { length: 255 }).references(() => users.id),
+});
+
+export const insertProjectSchema = createInsertSchema(projects).pick({
+  name: true,
+  description: true,
+  companyName: true,
+  presentationId: true,
+  dueDate: true,
+  status: true,
+  createdBy: true,
+});
+
+export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type Project = typeof projects.$inferSelect;
+
+// 学生のプロジェクトアサイン
+export const studentProjects = pgTable("student_projects", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  studentId: varchar("student_id", { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  status: varchar("status", { length: 20 }).default("assigned").notNull(), // assigned, in_progress, completed
+  commentCount: integer("comment_count").default(0),
+});
+
+export const insertStudentProjectSchema = createInsertSchema(studentProjects).pick({
+  projectId: true,
+  studentId: true,
+  status: true,
+});
+
+export type InsertStudentProject = z.infer<typeof insertStudentProjectSchema>;
+export type StudentProject = typeof studentProjects.$inferSelect;
+
+// 学生プロフィール（ランク・進捗管理）
+export const studentProfiles = pgTable("student_profiles", {
+  userId: varchar("user_id", { length: 255 }).primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  rank: varchar("rank", { length: 20 }).default("bronze").notNull(), // bronze, silver, gold
+  totalComments: integer("total_comments").default(0),
+  approvedComments: integer("approved_comments").default(0),
+  approvalRate: integer("approval_rate").default(0), // パーセンテージ
+  bonusProgress: integer("bonus_progress").default(0),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertStudentProfileSchema = createInsertSchema(studentProfiles).pick({
+  userId: true,
+  rank: true,
+  totalComments: true,
+  approvedComments: true,
+  approvalRate: true,
+  bonusProgress: true,
+});
+
+export type InsertStudentProfile = z.infer<typeof insertStudentProfileSchema>;
+export type StudentProfile = typeof studentProfiles.$inferSelect;
+
+// サブスクリプション管理
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
+  planType: varchar("plan_type", { length: 20 }).notNull(), // light, standard, premium
+  reviewQuotaUsed: integer("review_quota_used").default(0),
+  reviewQuotaLimit: integer("review_quota_limit").notNull(),
+  nextBillingDate: timestamp("next_billing_date"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).pick({
+  userId: true,
+  planType: true,
+  reviewQuotaUsed: true,
+  reviewQuotaLimit: true,
+  nextBillingDate: true,
+  isActive: true,
+});
+
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+export type Subscription = typeof subscriptions.$inferSelect;
+
+// コメント拡張（匿名ID、座標、ステータス管理）
+export const commentExtensions = pgTable("comment_extensions", {
+  commentId: integer("comment_id").primaryKey().references(() => comments.id, { onDelete: 'cascade' }),
+  anonymousId: varchar("anonymous_id", { length: 50 }), // Student#001 形式
+  x: integer("x"), // スライド上の座標
+  y: integer("y"), // スライド上の座標
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, in_progress, completed
+  approvedBy: varchar("approved_by", { length: 255 }).references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+});
+
+export const insertCommentExtensionSchema = createInsertSchema(commentExtensions).pick({
+  commentId: true,
+  anonymousId: true,
+  x: true,
+  y: true,
+  status: true,
+  approvedBy: true,
+  approvedAt: true,
+});
+
+export type InsertCommentExtension = z.infer<typeof insertCommentExtensionSchema>;
+export type CommentExtension = typeof commentExtensions.$inferSelect;
+
+// プロジェクトリレーション
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  presentation: one(presentations, {
+    fields: [projects.presentationId],
+    references: [presentations.id],
+  }),
+  createdByUser: one(users, {
+    fields: [projects.createdBy],
+    references: [users.id],
+  }),
+  studentAssignments: many(studentProjects),
+}));
+
+// 学生プロジェクトリレーション
+export const studentProjectsRelations = relations(studentProjects, ({ one }) => ({
+  project: one(projects, {
+    fields: [studentProjects.projectId],
+    references: [projects.id],
+  }),
+  student: one(users, {
+    fields: [studentProjects.studentId],
+    references: [users.id],
+  }),
+}));
+
+// 学生プロファイルリレーション
+export const studentProfilesRelations = relations(studentProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [studentProfiles.userId],
+    references: [users.id],
+  }),
+}));
+
+// サブスクリプションリレーション
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [subscriptions.userId],
+    references: [users.id],
+  }),
+}));
+
+// コメント拡張リレーション
+export const commentExtensionsRelations = relations(commentExtensions, ({ one }) => ({
+  comment: one(comments, {
+    fields: [commentExtensions.commentId],
+    references: [comments.id],
+  }),
+  approvedByUser: one(users, {
+    fields: [commentExtensions.approvedBy],
+    references: [users.id],
+  }),
+}));
