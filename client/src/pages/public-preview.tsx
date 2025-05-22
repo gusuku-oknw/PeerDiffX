@@ -13,6 +13,9 @@ import { TaskProgressBar } from '@/components/progress/task-progress-bar';
 import { PopoverComment } from '@/components/comments/popover-comment';
 import { CommentTemplates } from '@/components/comments/comment-templates';
 import { NotificationIcon } from '@/components/notifications/notification-icon';
+// 新しいナビゲーションコンポーネント
+import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { EnhancedHeader } from '@/components/ui/enhanced-header';
 
 interface Slide {
   id: number;
@@ -38,6 +41,7 @@ export default function PublicPreview() {
   const [showPopoverComment, setShowPopoverComment] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
   const [completedSlides, setCompletedSlides] = useState<number[]>([1, 2]); // モックデータ: すでに完了したスライド
+  const [activeHeaderTab, setActiveHeaderTab] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(100);
   
   // 仮データで表示（バックエンド連携は後回し）
@@ -176,16 +180,51 @@ export default function PublicPreview() {
     );
   }
 
+  // パンくずリストデータ
+  const breadcrumbItems = [
+    { label: 'ダッシュボード', href: '/' },
+    { label: 'プロジェクト', href: '/projects' },
+    { label: 'プレゼン資料', href: '/presentations' },
+    { label: '企業説明会資料 v2.3' } // 最後の項目はリンクなし
+  ];
+
+  // 参加者データ
+  const participants = [
+    { id: '1', name: '佐山', avatar: '' },
+    { id: '2', name: '田中', avatar: '' },
+    { id: '3', name: '鈴木', avatar: '' }
+  ];
+
   return (
     <>
       <CssBaseline />
-      <Box sx={{ height: '100vh', display: 'flex', overflow: 'hidden' }}>
+      
+      {/* 新しいヘッダー */}
+      <EnhancedHeader
+        projectName={presentation.name || 'プレゼンテーション'}
+        progress={{ current: 5, total: 5 }}
+        participants={participants}
+        activeTab={activeHeaderTab}
+        onTabChange={setActiveHeaderTab}
+      />
+
+      <Box sx={{ height: 'calc(100vh - 64px)', display: 'flex', overflow: 'hidden' }}>
         {/* 左側：情報パネル */}
-        <PresentationInfoPanel
-          presentationName={presentation.name || 'プレゼンテーション'}
-          totalSlides={totalSlides}
-          currentSlideNumber={currentSlideIndex + 1}
-        />
+        <Box sx={{ width: 350, borderRight: 1, borderColor: 'divider', overflow: 'auto' }}>
+          {/* パンくずリスト */}
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+            <Breadcrumb items={breadcrumbItems} />
+          </Box>
+          
+          <PresentationInfoPanel
+            presentationName={presentation.name || 'プレゼンテーション'}
+            totalSlides={totalSlides}
+            currentSlideNumber={currentSlideIndex + 1}
+            lastModified="2024年12月21日"
+            author="田中太郎"
+            width={350}
+          />
+        </Box>
 
         {/* 中央：メインコンテンツエリア */}
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

@@ -34,24 +34,6 @@ export function Navbar() {
           <nav className="flex items-center space-x-6">
             {isAuthenticated && (
               <>
-                <Link
-                  href="/presentations"
-                  className="text-sm font-medium transition-colors hover:text-primary"
-                >
-                  Presentations
-                </Link>
-                <Link
-                  href="/student/dashboard"
-                  className="text-sm font-medium transition-colors hover:text-primary"
-                >
-                  学生ダッシュボード
-                </Link>
-                <Link
-                  href="/corporate/dashboard"
-                  className="text-sm font-medium transition-colors hover:text-primary"
-                >
-                  企業ダッシュボード
-                </Link>
                 {isAdmin && (
                   <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
                     管理者
@@ -62,12 +44,6 @@ export function Navbar() {
                   className="text-sm font-medium transition-colors hover:text-primary"
                 >
                   History
-                </Link>
-                <Link
-                  href="/branches"
-                  className="text-sm font-medium transition-colors hover:text-primary"
-                >
-                  Branches
                 </Link>
               </>
             )}
