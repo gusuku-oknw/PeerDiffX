@@ -234,30 +234,20 @@ export function PPTXSlideViewer({
       <Paper 
         elevation={4}
         sx={{ 
-          // フレキシブルレスポンシブサイズ（全端末対応）
-          width: {
-            xs: '95vw',    // モバイル縦：画面幅の95%
-            sm: '90vw',    // タブレット縦：画面幅の90%
-            md: '85vw',    // タブレット横：画面幅の85%
-            lg: '80vw',    // デスクトップ：画面幅の80%
-            xl: '75vw'     // 大画面：画面幅の75%
+          // 利用可能スペース内でのサイズ調整
+          width: 'fit-content',
+          height: 'fit-content',
+          maxWidth: '100%',
+          maxHeight: '100%',
+          // 利用可能な親要素の90%を使用
+          minWidth: {
+            xs: '300px',
+            sm: '400px', 
+            md: '500px',
+            lg: '600px',
+            xl: '700px'
           },
-          maxWidth: {
-            xs: '480px',   // モバイル：最大480px
-            sm: '640px',   // タブレット：最大640px
-            md: '800px',   // 中画面：最大800px
-            lg: '960px',   // デスクトップ：最大960px
-            xl: '1120px'   // 大画面：最大1120px
-          },
-          height: 'auto',
-          maxHeight: {
-            xs: '60vh',    // モバイル：画面高の60%
-            sm: '65vh',    // タブレット：画面高の65%
-            md: '70vh',    // 中画面：画面高の70%
-            lg: '75vh',    // デスクトップ：画面高の75%
-            xl: '80vh'     // 大画面：画面高の80%
-          },
-          // PPTXファイル標準の16:9比率を全端末で維持
+          // PPTXファイル標準の16:9比率を確実に維持
           aspectRatio: '16/9',
           transform: `scale(${zoomLevel / 100})`,
           transformOrigin: 'center',
@@ -270,27 +260,8 @@ export function PPTXSlideViewer({
           // 中央配置の確実な実現
           margin: 'auto',
           display: 'block',
-          // 小画面での追加調整
-          minWidth: {
-            xs: '280px',   // 最小幅を保証
-            sm: '400px',
-            md: '500px'
-          },
-          // 縦画面での最適化
-          '@media (orientation: portrait)': {
-            maxWidth: {
-              xs: '98vw',
-              sm: '95vw',
-              md: '90vw'
-            }
-          },
-          // 横画面での最適化  
-          '@media (orientation: landscape)': {
-            maxHeight: {
-              xs: '80vh',
-              sm: '85vh'
-            }
-          }
+          // コンテナ内でのフィット
+          boxSizing: 'border-box'
         }}
       >
         <div 
