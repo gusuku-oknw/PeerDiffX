@@ -153,16 +153,29 @@ export default function PreviewMock() {
   return (
     <>
       <CssBaseline />
-      <Box sx={{ height: '100vh', display: 'flex', overflow: 'hidden' }}>
-        {/* 左側：情報パネル */}
-        <PresentationInfoPanel
-          presentationName={presentation.name}
-          totalSlides={totalSlides}
-          currentSlideNumber={currentSlideIndex + 1}
-        />
+      <Box sx={{ 
+        height: '100vh', 
+        display: 'flex', 
+        overflow: 'hidden',
+        flexDirection: { xs: 'column', md: 'row' } // モバイルでは縦、デスクトップでは横
+      }}>
+        {/* 左側：情報パネル - デスクトップのみ表示 */}
+        <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+          <PresentationInfoPanel
+            presentationName={presentation.name}
+            totalSlides={totalSlides}
+            currentSlideNumber={currentSlideIndex + 1}
+          />
+        </Box>
 
         {/* 中央：メインコンテンツエリア */}
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Box sx={{ 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column', 
+          overflow: 'hidden',
+          minWidth: 0 // フレックス子要素の縮小を許可
+        }}>
           {/* ツールバー */}
           <PresentationToolbar
             currentSlideNumber={currentSlideIndex + 1}
@@ -175,13 +188,24 @@ export default function PreviewMock() {
           />
 
           {/* スライド表示エリア */}
-          <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          <Box sx={{ 
+            flex: 1, 
+            display: 'flex', 
+            overflow: 'hidden',
+            flexDirection: { xs: 'column', sm: 'row' }, // 小画面では縦積み
+            minHeight: 0
+          }}>
             {/* サムネイル */}
-            <PresentationThumbnails
-              slides={slides}
-              activeSlideId={currentSlide?.id || 0}
-              onSelectSlide={selectSlide}
-            />
+            <Box sx={{ 
+              display: { xs: 'none', sm: 'block' }, // 極小画面では非表示
+              flexShrink: 0
+            }}>
+              <PresentationThumbnails
+                slides={slides}
+                activeSlideId={currentSlide?.id || 0}
+                onSelectSlide={selectSlide}
+              />
+            </Box>
 
             {/* メインスライド */}
             <PresentationSlideViewer

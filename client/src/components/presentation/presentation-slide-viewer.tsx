@@ -11,14 +11,12 @@ interface Slide {
 interface PresentationSlideViewerProps {
   slide: Slide | null;
   isLoading?: boolean;
-  aspectRatio?: '16:9' | '4:3';
   zoomLevel?: number;
 }
 
 export function PresentationSlideViewer({ 
   slide, 
   isLoading = false,
-  aspectRatio = '16:9',
   zoomLevel = 100
 }: PresentationSlideViewerProps) {
   // スライドコンテンツはテキスト形式として直接使用
@@ -129,23 +127,40 @@ export function PresentationSlideViewer({
       display: 'flex', 
       justifyContent: 'center', 
       alignItems: 'center',
-      p: 4,
+      p: { xs: 2, sm: 3, md: 4 }, // レスポンシブパディング
       bgcolor: 'background.default',
-      overflow: 'auto'
+      overflow: 'auto',
+      minHeight: 0 // フレックス子要素の縮小を許可
     }}>
       <Paper 
         elevation={4}
         sx={{ 
           width: '100%',
-          maxWidth: aspectRatio === '16:9' ? '80%' : '70%',
-          aspectRatio: aspectRatio === '16:9' ? '16/9' : '4/3',
+          maxWidth: { xs: '95%', sm: '90%', md: '85%', lg: '80%' }, // レスポンシブ最大幅
+          aspectRatio: '16/9', // 統一された16:9アスペクト比
           transform: `scale(${zoomLevel / 100})`,
           transformOrigin: 'center',
           transition: 'transform 0.2s ease-in-out',
           bgcolor: 'background.paper',
           border: 1,
           borderColor: 'divider',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          // レスポンシブフォントサイズ調整
+          '& .MuiTypography-h2': {
+            fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem', lg: '3rem' }
+          },
+          '& .MuiTypography-h3': {
+            fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.875rem', lg: '2.25rem' }
+          },
+          '& .MuiTypography-h4': {
+            fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem', lg: '1.875rem' }
+          },
+          '& .MuiTypography-h5': {
+            fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem', lg: '1.5rem' }
+          },
+          '& .MuiTypography-h6': {
+            fontSize: { xs: '0.875rem', sm: '1rem', md: '1.125rem', lg: '1.25rem' }
+          }
         }}
       >
         {renderSlideContent()}
