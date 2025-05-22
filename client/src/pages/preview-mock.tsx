@@ -6,7 +6,7 @@ import { useRoute } from 'wouter';
 import { PresentationInfoPanel } from '@/components/presentation/presentation-info-panel';
 import { PresentationToolbar } from '@/components/presentation/presentation-toolbar';
 import { PresentationThumbnails } from '@/components/presentation/presentation-thumbnails';
-import { PresentationSlideViewer } from '@/components/presentation/presentation-slide-viewer';
+import { SlideContent } from '@/features/slides/slide-renderer';
 
 interface Slide {
   id: number;
@@ -208,10 +208,19 @@ export default function PreviewMock() {
             </Box>
 
             {/* メインスライド */}
-            <PresentationSlideViewer
-              slide={currentSlide}
-              zoomLevel={zoomLevel}
-            />
+            <Box sx={{ 
+              flex: 1, 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              p: { xs: 2, sm: 3, md: 4 },
+              bgcolor: 'background.default'
+            }}>
+              <div className="w-full max-w-4xl aspect-[16/9] bg-white shadow-lg rounded border overflow-hidden"
+                   style={{ transform: `scale(${zoomLevel / 100})` }}>
+                {currentSlide && <SlideContent slide={currentSlide} />}
+              </div>
+            </Box>
           </Box>
         </Box>
       </Box>
