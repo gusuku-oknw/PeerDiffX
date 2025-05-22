@@ -236,15 +236,36 @@ export function PresentationInfoPanel({
 
       <Divider sx={{ my: 3 }} />
 
+      {/* レビュー枠進捗パネル */}
+      <ReviewQuotaPanel 
+        quotaLimit={200} 
+        quotaUsed={150} 
+        currentMonth="12月" 
+      />
+
+      {/* AI要約ワンクリックアクセス */}
+      <AISummaryWidget 
+        projectName={presentationName}
+        commentCount={28}
+        onViewFullAnalysis={() => console.log('詳細分析表示')}
+      />
+
+      <Divider sx={{ my: 3 }} />
+
+      {/* 優秀者インセンティブ管理 */}
+      <IncentiveManagementPanel />
+
+      <Divider sx={{ my: 3 }} />
+
       {/* プロジェクト管理 */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-          プロジェクト管理
+          その他の管理機能
         </Typography>
         
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Button 
-            variant="contained" 
+            variant="outlined" 
             size="small" 
             fullWidth
             sx={{ textTransform: 'none' }}
