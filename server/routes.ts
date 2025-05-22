@@ -827,6 +827,156 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ================== 学生向けAPIエンドポイント ==================
+  
+  // 学生のプロジェクト一覧を取得
+  apiRouter.get("/api/student/projects", async (req: Request, res: Response) => {
+    try {
+      const userId = 41964833; // 開発用ユーザーID
+      
+      const query = `
+        SELECT 
+          p.id, p.name, p.company_name as "companyName", 
+          p.due_date as "dueDate", sp.status, sp.comment_count as "commentCount"
+        FROM projects p
+        JOIN student_projects sp ON p.id = sp.project_id
+        WHERE sp.student_id = $1
+        ORDER BY p.created_at DESC
+      `;
+      
+      const result = await db.execute(query, [userId]);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching student projects:", error);
+      res.status(500).json({ error: "Failed to fetch student projects" });
+    }
+  });
+
+  // 学生のプロフィール情報を取得
+  apiRouter.get("/api/student/profile", async (req: Request, res: Response) => {
+    try {
+      const userId = 41964833; // 開発用ユーザーID
+      
+      const query = `
+        SELECT rank, total_comments as "totalComments", 
+               approved_comments as "approvedComments", 
+               approval_rate as "approvalRate", 
+               bonus_progress as "bonusProgress"
+        FROM student_profiles 
+        WHERE user_id = $1
+      `;
+      
+      const result = await db.execute(query, [userId]);
+      if (result.rows.length > 0) {
+        res.json(result.rows[0]);
+      } else {
+        // デフォルトプロフィールを返す
+        res.json({
+          rank: "bronze",
+          totalComments: 0,
+          approvedComments: 0,
+          approvalRate: 0,
+          bonusProgress: 0
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching student profile:", error);
+      res.status(500).json({ error: "Failed to fetch student profile" });
+    }
+  });
+
+  // ================== 企業向けAPIエンドポイント ==================
+  
+  // 企業のプロジェクト統計情報を取得
+  apiRouter.get("/api/corporate/projects", async (req: Request, res: Response) => {
+    try {
+      const userId = 41964833; // 開発用ユーザーID
+      
+      const query = `
+        SELECT 
+          p.id, p.name, p.company_name as "companyName",
+          p.due_date as "dueDate", p.status,
+          75 as progress, -- 仮の進捗率
+          3 as "unreadComments", -- 仮の未読コメント数
+          5 as "totalStudents", -- 仮の学生数
+          'プレゼンテーションの全体的な構成とデザインに関する建設的なフィードバックが多数寄せられています。' as "aiSummary"
+        FROM projects p
+        WHERE p.created_by = $1
+        ORDER BY p.created_at DESC
+      `;
+      
+      const result = await db.execute(query, [userId]);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching corporate projects:", error);
+      res.status(500).json({ error: "Failed to fetch corporate projects" });
+    }
+  });
+
+  // 企業のサブスクリプション情報を取得
+  apiRouter.get("/api/corporate/subscription", async (req: Request, res: Response) => {
+    try {
+      const userId = 41964833; // 開発用ユーザーID
+      
+      const query = `
+        SELECT 
+          plan_type as "planType",
+          review_quota_used as "reviewQuotaUsed",
+          review_quota_limit as "reviewQuotaLimit",
+          next_billing_date as "nextBillingDate",
+          is_active as "isActive"
+        FROM subscriptions 
+        WHERE user_id = $1 AND is_active = true
+      `;
+      
+      const result = await db.execute(query, [userId]);
+      if (result.rows.length > 0) {
+        res.json(result.rows[0]);
+      } else {
+        // デフォルトサブスクリプション情報を返す
+        res.json({
+          planType: "standard",
+          reviewQuotaUsed: 3,
+          reviewQuotaLimit: 50,
+          nextBillingDate: "2025-02-22T00:00:00Z",
+          isActive: true
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
+      res.status(500).json({ error: "Failed to fetch subscription" });
+    }
+  });
+
+  // 学生プロジェクト詳細ページ用エンドポイント
+  apiRouter.get("/api/student/project/:projectId", async (req: Request, res: Response) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const userId = 41964833; // 開発用ユーザーID
+      
+      const query = `
+        SELECT 
+          p.id, p.name, p.description, p.company_name as "companyName",
+          p.due_date as "dueDate", sp.status, sp.comment_count as "commentCount",
+          pr.id as "presentationId"
+        FROM projects p
+        JOIN student_projects sp ON p.id = sp.project_id
+        JOIN presentations pr ON p.presentation_id = pr.id
+        WHERE p.id = $1 AND sp.student_id = $2
+      `;
+      
+      const result = await db.execute(query, [projectId, userId]);
+      if (result.rows.length > 0) {
+        res.json(result.rows[0]);
+      } else {
+        res.status(404).json({ error: "Project not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching project details:", error);
+      res.status(500).json({ error: "Failed to fetch project details" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

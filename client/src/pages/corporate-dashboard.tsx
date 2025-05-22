@@ -88,7 +88,7 @@ export default function CorporateDashboard() {
           <p className="text-gray-600">プロジェクト管理とレビュー進捗を一元管理できます</p>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs value="overview" onValueChange={() => {}} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">概要</TabsTrigger>
             <TabsTrigger value="projects">プロジェクト管理</TabsTrigger>
@@ -97,7 +97,7 @@ export default function CorporateDashboard() {
           </TabsList>
 
           {/* 概要タブ */}
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" index={0} className="space-y-6">
             {/* サマリーカード */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
@@ -197,7 +197,7 @@ export default function CorporateDashboard() {
           </TabsContent>
 
           {/* プロジェクト管理タブ */}
-          <TabsContent value="projects" className="space-y-6">
+          <TabsContent value="projects" index={1} className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">プロジェクト管理</h2>
               <Button onClick={() => setLocation("/corporate/upload")} className="flex items-center gap-2">
@@ -288,7 +288,7 @@ export default function CorporateDashboard() {
           </TabsContent>
 
           {/* AI分析レポートタブ */}
-          <TabsContent value="analytics" className="space-y-6">
+          <TabsContent value="analytics" index={2} className="space-y-6">
             <h2 className="text-2xl font-bold">AI分析レポート</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -346,7 +346,7 @@ export default function CorporateDashboard() {
           </TabsContent>
 
           {/* サブスクリプションタブ */}
-          <TabsContent value="subscription" className="space-y-6">
+          <TabsContent value="subscription" index={3} className="space-y-6">
             <h2 className="text-2xl font-bold">サブスクリプション管理</h2>
             
             {subscription && (
