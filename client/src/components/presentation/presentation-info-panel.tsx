@@ -1,9 +1,7 @@
-import { Paper, Box, Typography, Chip, Avatar, Tabs, Tab } from '@mui/material';
-import { FaCalendarAlt, FaUser, FaClock, FaSlash } from 'react-icons/fa';
+import { Paper, Box, Typography, Chip, Avatar, TextField, Button, Divider } from '@mui/material';
+import { FaComment, FaStar, FaUser, FaCalendarAlt, FaHome } from 'react-icons/fa';
 import { useState } from 'react';
 import { useAdmin } from '@/hooks/useAdmin';
-import StudentDashboard from '@/pages/student-dashboard';
-import CorporateDashboard from '@/pages/corporate-dashboard';
 
 interface PresentationInfoPanelProps {
   presentationName: string;
@@ -23,10 +21,25 @@ export function PresentationInfoPanel({
   width = 280
 }: PresentationInfoPanelProps) {
   const { isAdmin } = useAdmin();
-  const [tabValue, setTabValue] = useState(0);
+  const [slideComment, setSlideComment] = useState('');
+  const [overallComment, setOverallComment] = useState('');
+  const [rating, setRating] = useState(0);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  const handleSlideCommentSubmit = () => {
+    if (slideComment.trim()) {
+      // TODO: API呼び出しでスライドコメントを保存
+      console.log('スライドコメント:', slideComment);
+      setSlideComment('');
+    }
+  };
+
+  const handleOverallCommentSubmit = () => {
+    if (overallComment.trim()) {
+      // TODO: API呼び出しで全体コメントを保存
+      console.log('全体コメント:', overallComment, '評価:', rating);
+      setOverallComment('');
+      setRating(0);
+    }
   };
 
   return (
@@ -44,116 +57,141 @@ export function PresentationInfoPanel({
         flexDirection: 'column'
       }}
     >
-      {isAdmin ? (
-        <>
-          {/* 管理者用タブ */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs 
-              value={tabValue} 
-              onChange={handleTabChange}
-              variant="fullWidth"
-              textColor="primary"
-              indicatorColor="primary"
-            >
-              <Tab label="学生" sx={{ fontSize: '0.8rem', minHeight: 40 }} />
-              <Tab label="企業" sx={{ fontSize: '0.8rem', minHeight: 40 }} />
-            </Tabs>
-          </Box>
-
-          {/* タブコンテンツ */}
-          <Box sx={{ flex: 1, overflow: 'auto' }}>
-            {tabValue === 0 ? (
-              <Box sx={{ transform: 'scale(0.7)', transformOrigin: 'top left', width: '142.86%', height: '142.86%' }}>
-                <StudentDashboard />
-              </Box>
-            ) : (
-              <Box sx={{ transform: 'scale(0.7)', transformOrigin: 'top left', width: '142.86%', height: '142.86%' }}>
-                <CorporateDashboard />
-              </Box>
-            )}
-          </Box>
-        </>
-      ) : (
-        /* 一般ユーザー用の元の情報パネル */
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, lineHeight: 1.3 }}>
-            {presentationName}
-          </Typography>
-
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2, fontWeight: 600 }}>
-              基本情報
+      <Box sx={{ p: 3 }}>
+        {/* 学生ホーム情報 */}
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <FaHome className="text-blue-500" />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              学生ダッシュボード
             </Typography>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <FaUser className="text-gray-500" style={{ marginRight: 8, fontSize: 14 }} />
-              <Typography variant="body2" color="text.secondary">
-                作成者: {author}
+          </Box>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
+              田
+            </Avatar>
+            <Box>
+              <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                田中太郎
               </Typography>
-            </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <FaCalendarAlt className="text-gray-500" style={{ marginRight: 8, fontSize: 14 }} />
               <Typography variant="body2" color="text.secondary">
-                更新日: {lastModified}
-              </Typography>
-            </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <FaSlash className="text-gray-500" style={{ marginRight: 8, fontSize: 14 }} />
-              <Typography variant="body2" color="text.secondary">
-                スライド数: {totalSlides}枚
+                学生ID: S2024001
               </Typography>
             </Box>
           </Box>
 
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2, fontWeight: 600 }}>
-              統計情報
-            </Typography>
-            
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-              <Paper elevation={0} sx={{ p: 2, textAlign: 'center', border: 1, borderColor: 'divider', borderRadius: 2 }}>
-                <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>
-                  {currentSlideNumber}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  現在
-                </Typography>
-              </Paper>
-              <Paper elevation={0} sx={{ p: 2, textAlign: 'center', border: 1, borderColor: 'divider', borderRadius: 2 }}>
-                <Typography variant="h6" color="secondary" sx={{ fontWeight: 700 }}>
-                  {totalSlides}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  スライド
-                </Typography>
-              </Paper>
-            </Box>
-          </Box>
-
-          <Box>
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2, fontWeight: 600 }}>
-              ステータス
-            </Typography>
-            
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Chip 
-                label="プレビューモード" 
-                color="primary" 
-                variant="outlined" 
-                size="small"
-              />
-              <Chip 
-                label="読み取り専用" 
-                color="default" 
-                variant="outlined" 
-                size="small"
-              />
-            </Box>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3 }}>
+            <Paper elevation={0} sx={{ p: 2, textAlign: 'center', border: 1, borderColor: 'divider', borderRadius: 2 }}>
+              <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>
+                5
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                完了プロジェクト
+              </Typography>
+            </Paper>
+            <Paper elevation={0} sx={{ p: 2, textAlign: 'center', border: 1, borderColor: 'divider', borderRadius: 2 }}>
+              <Typography variant="h6" color="secondary" sx={{ fontWeight: 700 }}>
+                ゴールド
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                ランク
+              </Typography>
+            </Paper>
           </Box>
         </Box>
-      )}
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* 現在のスライドコメント */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <FaComment className="text-green-500" />
+            スライド {currentSlideNumber} へのコメント
+          </Typography>
+          
+          <TextField
+            multiline
+            rows={3}
+            fullWidth
+            size="small"
+            placeholder="このスライドについてコメントを入力..."
+            value={slideComment}
+            onChange={(e) => setSlideComment(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          
+          <Button 
+            variant="contained" 
+            size="small" 
+            fullWidth
+            onClick={handleSlideCommentSubmit}
+            disabled={!slideComment.trim()}
+            sx={{ textTransform: 'none' }}
+          >
+            スライドコメントを投稿
+          </Button>
+        </Box>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* 全体評価とコメント */}
+        <Box>
+          <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <FaStar className="text-yellow-500" />
+            プレゼンテーション全体の評価
+          </Typography>
+          
+          {/* 星評価 */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, justifyContent: 'center' }}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <FaStar
+                key={star}
+                className={`cursor-pointer text-xl ${
+                  star <= rating ? 'text-yellow-400' : 'text-gray-300'
+                }`}
+                onClick={() => setRating(star)}
+              />
+            ))}
+          </Box>
+          
+          <TextField
+            multiline
+            rows={3}
+            fullWidth
+            size="small"
+            placeholder="プレゼンテーション全体についてコメント..."
+            value={overallComment}
+            onChange={(e) => setOverallComment(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          
+          <Button 
+            variant="outlined" 
+            size="small" 
+            fullWidth
+            onClick={handleOverallCommentSubmit}
+            disabled={!overallComment.trim() || rating === 0}
+            sx={{ textTransform: 'none' }}
+          >
+            評価とコメントを投稿
+          </Button>
+        </Box>
+
+        {/* プレゼンテーション基本情報 */}
+        <Divider sx={{ my: 3 }} />
+        <Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+            プレゼンテーション情報
+          </Typography>
+          <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+            {presentationName}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {totalSlides} スライド • {author} • {lastModified}
+          </Typography>
+        </Box>
+      </Box>
     </Paper>
   );
 }
