@@ -21,23 +21,11 @@ export function PresentationSlideViewer({
   aspectRatio = '16:9',
   zoomLevel = 100
 }: PresentationSlideViewerProps) {
-  const [slideContent, setSlideContent] = useState<any>(null);
-
-  useEffect(() => {
-    if (slide?.content) {
-      try {
-        const content = JSON.parse(slide.content);
-        setSlideContent(content);
-      } catch (error) {
-        console.error('Error parsing slide content:', error);
-        setSlideContent(null);
-      }
-    }
-  }, [slide]);
+  // スライドコンテンツはテキスト形式として直接使用
 
   // スライドコンテンツのレンダリング
   const renderSlideContent = () => {
-    if (!slide || !slideContent) {
+    if (!slide) {
       return (
         <Box sx={{ 
           display: 'flex', 
@@ -53,9 +41,7 @@ export function PresentationSlideViewer({
       );
     }
 
-    const elements = slideContent.elements || [];
-
-    // スライドタイプに基づいてコンテンツを生成
+    // スライドタイトルと内容に基づいてコンテンツを生成
     if (slide.slideNumber === 1) {
       // タイトルスライド
       return (
@@ -74,14 +60,14 @@ export function PresentationSlideViewer({
             textAlign: 'center',
             color: 'primary.main'
           }}>
-            Q4 Presentation
+            {slide.title}
           </Typography>
           <Typography variant="h4" sx={{ 
             mb: 4, 
             textAlign: 'center',
             color: 'text.secondary'
           }}>
-            Company Overview and Results
+            {slide.content}
           </Typography>
           <Typography variant="h6" sx={{ 
             textAlign: 'center',
@@ -91,79 +77,8 @@ export function PresentationSlideViewer({
           </Typography>
         </Box>
       );
-    } else if (slide.slideNumber === 2) {
-      // 売上概要スライド
-      return (
-        <Box sx={{ height: '100%', p: 6, bgcolor: 'background.paper' }}>
-          <Typography variant="h3" sx={{ 
-            fontWeight: 700, 
-            mb: 4, 
-            color: 'primary.main'
-          }}>
-            売上概要
-          </Typography>
-          <Box sx={{ ml: 2 }}>
-            {[
-              '2025年第4四半期の売上は前年同期比15%増',
-              '主力製品の売上が好調に推移',
-              '新規顧客獲得数が目標を上回る'
-            ].map((text, index) => (
-              <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Box sx={{ 
-                  width: 12, 
-                  height: 12, 
-                  borderRadius: '50%', 
-                  bgcolor: 'primary.main', 
-                  mr: 3,
-                  flexShrink: 0
-                }} />
-                <Typography variant="h5" sx={{ color: 'text.primary' }}>
-                  {text}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        </Box>
-      );
-    } else if (slide.slideNumber === 3) {
-      // 今後の展望スライド
-      return (
-        <Box sx={{ height: '100%', p: 6, bgcolor: 'background.paper' }}>
-          <Typography variant="h3" sx={{ 
-            fontWeight: 700, 
-            mb: 4, 
-            color: 'primary.main'
-          }}>
-            今後の展望
-          </Typography>
-          <Box sx={{ ml: 2 }}>
-            <Typography variant="h4" sx={{ 
-              fontWeight: 600, 
-              mb: 3, 
-              color: 'secondary.main'
-            }}>
-              1. デジタル化の推進
-            </Typography>
-            <Box sx={{ ml: 4 }}>
-              {[
-                'AI技術の活用による業務効率化',
-                'クラウドサービスの導入'
-              ].map((text, index) => (
-                <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6" sx={{ mr: 2, color: 'text.secondary' }}>
-                    -
-                  </Typography>
-                  <Typography variant="h5" sx={{ color: 'text.primary' }}>
-                    {text}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        </Box>
-      );
     } else {
-      // まとめスライド
+      // その他のスライド
       return (
         <Box sx={{ 
           height: '100%', 
@@ -174,26 +89,20 @@ export function PresentationSlideViewer({
           p: 6,
           bgcolor: 'background.paper'
         }}>
-          <Typography variant="h2" sx={{ 
+          <Typography variant="h3" sx={{ 
             fontWeight: 700, 
             mb: 4, 
             textAlign: 'center',
             color: 'primary.main'
           }}>
-            まとめ
+            {slide.title}
           </Typography>
-          <Typography variant="h4" sx={{ 
+          <Typography variant="h5" sx={{ 
             mb: 4, 
             textAlign: 'center',
             color: 'text.secondary'
           }}>
-            ご清聴ありがとうございました
-          </Typography>
-          <Typography variant="h6" sx={{ 
-            textAlign: 'center',
-            color: 'text.disabled'
-          }}>
-            ご質問がございましたら、お気軽にお声かけください
+            {slide.content}
           </Typography>
         </Box>
       );
