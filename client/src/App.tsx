@@ -21,9 +21,7 @@ import AdminDashboard from "@/pages/admin/dashboard";
 // シンプルなデモページの追加
 import DemoPage from "@/pages/demo";
 import DemoSimplePage from "@/pages/demo-simple";
-// 学生・企業向けダッシュボード
-import StudentDashboard from "@/pages/student-dashboard";
-import CorporateDashboard from "@/pages/corporate-dashboard";
+// 学生・企業向けダッシュボードは情報パネルに統合済み
 
 function Router() {
   const [location] = useLocation();
@@ -45,8 +43,7 @@ function Router() {
       <Route path="/branches/:presentationId" component={Branches} />
       <Route path="/settings" component={SettingsPage} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
-      <Route path="/student/dashboard" component={StudentDashboard} />
-      <Route path="/corporate/dashboard" component={CorporateDashboard} />
+
       <Route path="/demo" component={DemoPage} />
       <Route path="/demo-simple" component={DemoSimplePage} />
       <Route component={NotFound} />
