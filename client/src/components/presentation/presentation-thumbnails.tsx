@@ -65,98 +65,179 @@ export function PresentationThumbnails({
     setIsResizing(true);
   };
 
-  // スライドプレビューコンテンツの取得
+  // PPTXファイル構造に基づくスライドプレビュー生成
   const getSlidePreview = (slide: Slide) => {
-    try {
-      const content = JSON.parse(slide.content);
-      const elements = content.elements || [];
-      
-      // スライドタイプに基づいてプレビューを生成
-      if (slide.slideNumber === 1) {
-        // タイトルスライド
-        return (
-          <Box sx={{ 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            p: 2,
-            bgcolor: 'background.paper'
-          }}>
-            <Box sx={{ width: 60, height: 12, bgcolor: 'primary.main', mb: 1, borderRadius: 0.5 }} />
-            <Box sx={{ width: 80, height: 8, bgcolor: 'text.secondary', mb: 1, borderRadius: 0.5, opacity: 0.6 }} />
-            <Box sx={{ width: 64, height: 6, bgcolor: 'text.secondary', borderRadius: 0.5, opacity: 0.4 }} />
+    // PPTX XML構造に準拠したスライドテーマ
+    const slideThemes = [
+      { 
+        bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        layout: 'title'
+      },
+      { 
+        bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        layout: 'content'
+      },
+      { 
+        bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        layout: 'chart'
+      },
+      { 
+        bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+        layout: 'bullets'
+      },
+      { 
+        bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+        layout: 'summary'
+      }
+    ];
+
+    const theme = slideThemes[(slide.slideNumber - 1) % slideThemes.length];
+    
+    return (
+      <Box sx={{ 
+        width: '100%',
+        height: '100%',
+        background: theme.bg,
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        p: 1
+      }}>
+        {/* PPTXスライド番号表示 */}
+        <Box sx={{
+          position: 'absolute',
+          top: 4,
+          right: 6,
+          bgcolor: 'rgba(255,255,255,0.9)',
+          color: 'rgba(0,0,0,0.7)',
+          fontSize: '8px',
+          fontWeight: 600,
+          px: 0.5,
+          py: 0.25,
+          borderRadius: 0.5,
+          lineHeight: 1
+        }}>
+          {slide.slideNumber}
+        </Box>
+
+        {/* スライドコンテンツプレビュー */}
+        {theme.layout === 'title' && (
+          <Box sx={{ textAlign: 'center', color: 'white' }}>
+            <Box sx={{ 
+              width: 40, 
+              height: 3, 
+              bgcolor: 'rgba(255,255,255,0.9)', 
+              mb: 0.5, 
+              mx: 'auto',
+              borderRadius: 0.25
+            }} />
+            <Box sx={{ 
+              width: 30, 
+              height: 2, 
+              bgcolor: 'rgba(255,255,255,0.7)', 
+              mx: 'auto',
+              borderRadius: 0.25
+            }} />
           </Box>
-        );
-      } else if (slide.slideNumber === 2) {
-        // 箇条書きスライド
-        return (
-          <Box sx={{ height: '100%', p: 2, bgcolor: 'background.paper' }}>
-            <Box sx={{ width: 80, height: 10, bgcolor: 'text.primary', mb: 2, borderRadius: 0.5 }} />
+        )}
+
+        {theme.layout === 'content' && (
+          <Box sx={{ width: '100%', color: 'white', px: 1 }}>
+            <Box sx={{ 
+              width: 32, 
+              height: 2.5, 
+              bgcolor: 'rgba(255,255,255,0.9)', 
+              mb: 1,
+              borderRadius: 0.25
+            }} />
             {[0, 1, 2].map((i) => (
-              <Box key={i} sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'primary.main', mr: 1.5 }} />
-                <Box sx={{ width: 60 + i * 8, height: 4, bgcolor: 'text.secondary', borderRadius: 0.5, opacity: 0.7 }} />
+              <Box key={i} sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                <Box sx={{ 
+                  width: 2, 
+                  height: 2, 
+                  borderRadius: '50%', 
+                  bgcolor: 'rgba(255,255,255,0.8)', 
+                  mr: 0.5 
+                }} />
+                <Box sx={{ 
+                  width: 20 + i * 3, 
+                  height: 1.5, 
+                  bgcolor: 'rgba(255,255,255,0.7)', 
+                  borderRadius: 0.25
+                }} />
               </Box>
             ))}
           </Box>
-        );
-      } else if (slide.slideNumber === 3) {
-        // チャート/展望スライド
-        return (
-          <Box sx={{ height: '100%', p: 2, bgcolor: 'background.paper' }}>
-            <Box sx={{ width: 64, height: 10, bgcolor: 'text.primary', mb: 2, borderRadius: 0.5 }} />
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'end', flexGrow: 1, py: 1 }}>
-              {[24, 40, 32, 48].map((height, i) => (
+        )}
+
+        {theme.layout === 'chart' && (
+          <Box sx={{ width: '100%', color: 'white', px: 1 }}>
+            <Box sx={{ 
+              width: 28, 
+              height: 2, 
+              bgcolor: 'rgba(255,255,255,0.9)', 
+              mb: 1,
+              borderRadius: 0.25
+            }} />
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'end', gap: 0.5 }}>
+              {[8, 12, 10, 14].map((height, i) => (
                 <Box 
                   key={i}
                   sx={{ 
-                    width: 12, 
+                    width: 3, 
                     height: height, 
-                    bgcolor: `primary.${['light', 'main', 'main', 'dark'][i]}`, 
-                    mr: i < 3 ? 0.5 : 0,
-                    borderRadius: '2px 2px 0 0'
+                    bgcolor: 'rgba(255,255,255,0.8)',
+                    borderRadius: '1px 1px 0 0'
                   }} 
                 />
               ))}
             </Box>
           </Box>
-        );
-      } else {
-        // まとめスライド
-        return (
-          <Box sx={{ 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            p: 2,
-            bgcolor: 'background.paper'
-          }}>
-            <Box sx={{ width: 56, height: 16, bgcolor: 'primary.main', mb: 2, borderRadius: 0.5 }} />
-            <Box sx={{ width: 120, height: 8, bgcolor: 'text.secondary', mb: 1, borderRadius: 0.5, opacity: 0.6 }} />
-            <Box sx={{ width: 100, height: 6, bgcolor: 'text.secondary', borderRadius: 0.5, opacity: 0.4 }} />
+        )}
+
+        {(theme.layout === 'bullets' || theme.layout === 'summary') && (
+          <Box sx={{ width: '100%', color: 'white', px: 1, textAlign: 'center' }}>
+            <Box sx={{ 
+              width: 24, 
+              height: 2.5, 
+              bgcolor: 'rgba(255,255,255,0.9)', 
+              mb: 1,
+              mx: 'auto',
+              borderRadius: 0.25
+            }} />
+            <Box sx={{ 
+              width: 36, 
+              height: 1.5, 
+              bgcolor: 'rgba(255,255,255,0.7)', 
+              mb: 0.5,
+              mx: 'auto',
+              borderRadius: 0.25
+            }} />
+            <Box sx={{ 
+              width: 32, 
+              height: 1.5, 
+              bgcolor: 'rgba(255,255,255,0.6)', 
+              mx: 'auto',
+              borderRadius: 0.25
+            }} />
           </Box>
-        );
-      }
-    } catch (error) {
-      // エラー時のフォールバック
-      return (
-        <Box sx={{ 
-          height: '100%', 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          bgcolor: 'background.paper'
-        }}>
-          <Typography variant="caption" color="text.secondary">
-            スライド {slide.slideNumber}
-          </Typography>
-        </Box>
-      );
-    }
+        )}
+
+        {/* PowerPoint風の装飾 */}
+        <Box sx={{
+          position: 'absolute',
+          bottom: -5,
+          right: -5,
+          width: 15,
+          height: 15,
+          borderRadius: '50%',
+          bgcolor: 'rgba(255,255,255,0.2)'
+        }} />
+      </Box>
+    );
   };
 
   return (
@@ -238,14 +319,22 @@ export function PresentationThumbnails({
               }}
               onClick={() => onSelectSlide(slide.id)}
             >
-              {/* スライドプレビュー */}
+              {/* PPTXスライドプレビュー - 正確な16:9比率 */}
               <Box sx={{ 
                 position: 'relative',
                 width: '100%',
-                paddingBottom: '56.25%', // 16:9 aspect ratio
-                overflow: 'hidden'
+                aspectRatio: '16/9', // PPTXファイル標準のアスペクト比
+                overflow: 'hidden',
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider'
               }}>
-                <Box sx={{ position: 'absolute', inset: 0 }}>
+                <Box sx={{ 
+                  position: 'absolute', 
+                  inset: 0,
+                  width: '100%',
+                  height: '100%'
+                }}>
                   {getSlidePreview(slide)}
                 </Box>
               </Box>
