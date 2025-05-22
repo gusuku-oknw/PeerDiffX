@@ -298,7 +298,11 @@ export function PPTXSlideViewer({
           style={{ 
             width: '100%', 
             height: '100%',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'relative'
           }}
           dangerouslySetInnerHTML={{ __html: slideHtml }}
         />
