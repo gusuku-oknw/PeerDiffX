@@ -292,225 +292,158 @@ export async function initializeDatabase() {
     // Create slides
     console.log('Creating slides...');
     
+    // スライド1: タイトルページ
     const titleSlide = {
       commitId: latestCommitId,
       slideNumber: 1,
-      title: 'Welcome to PeerDiffX',
+      title: 'Q4 Presentation',
       content: JSON.stringify({
         elements: [
           {
-            id: 'title1',
             type: 'text',
             x: 50,
-            y: 50,
-            width: 500,
-            height: 100,
-            content: 'Welcome to PeerDiffX',
-            style: { fontSize: 44, fontWeight: 'bold', textAlign: 'center' }
+            y: 150,
+            content: 'Q4 Presentation',
+            style: { fontSize: 42, fontWeight: 'bold', color: '#000000' }
           },
           {
-            id: 'subtitle1',
             type: 'text',
             x: 50,
-            y: 160,
-            width: 500,
-            height: 50,
-            content: 'Version Control for Presentations',
-            style: { fontSize: 24, textAlign: 'center' }
-          }
-        ],
-        background: '#ffffff'
-      }),
-      thumbnail: null,
-      xmlContent: '<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>Welcome to PeerDiffX</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>'
-    };
-    
-    const contentSlide = {
-      commitId: latestCommitId,
-      slideNumber: 2,
-      title: 'Key Features',
-      content: JSON.stringify({
-        elements: [
+            y: 220,
+            content: 'Company Overview and Results',
+            style: { fontSize: 24, color: '#444444' }
+          },
           {
-            id: 'title2',
             type: 'text',
             x: 50,
-            y: 50,
-            width: 500,
-            height: 50,
-            content: 'Key Features',
-            style: { fontSize: 36, fontWeight: 'bold' }
-          },
-          {
-            id: 'bullet1',
-            type: 'text',
-            x: 70,
-            y: 120,
-            width: 500,
-            height: 30,
-            content: 'Version Control for PowerPoint',
-            style: { fontSize: 24 }
-          },
-          {
-            id: 'bullet2',
-            type: 'text',
-            x: 70,
-            y: 160,
-            width: 500,
-            height: 30,
-            content: 'Visual Diff Tool',
-            style: { fontSize: 24 }
-          },
-          {
-            id: 'bullet3',
-            type: 'text',
-            x: 70,
-            y: 200,
-            width: 500,
-            height: 30,
-            content: 'Collaboration & Review',
-            style: { fontSize: 24 }
-          }
-        ],
-        background: '#ffffff'
-      }),
-      thumbnail: null,
-      xmlContent: '<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>Key Features</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>'
-    };
-    
-    const chartSlide = {
-      commitId: latestCommitId,
-      slideNumber: 3,
-      title: 'Performance',
-      content: JSON.stringify({
-        elements: [
-          {
-            id: 'title3',
-            type: 'text',
-            x: 50,
-            y: 50,
-            width: 500,
-            height: 50,
-            content: 'Performance Metrics',
-            style: { fontSize: 36, fontWeight: 'bold' }
-          },
-          {
-            id: 'chart1',
-            type: 'chart',
-            x: 100,
-            y: 120,
-            width: 400,
-            height: 300,
-            content: 'chart-data-placeholder',
-            style: { chartType: 'bar' }
-          }
-        ],
-        background: '#ffffff'
-      }),
-      thumbnail: null,
-      xmlContent: '<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>Performance Metrics</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>'
-    };
-    
-    const imageSlide = {
-      commitId: latestCommitId,
-      slideNumber: 4,
-      title: 'Team',
-      content: JSON.stringify({
-        elements: [
-          {
-            id: 'title4',
-            type: 'text',
-            x: 50,
-            y: 50,
-            width: 500,
-            height: 50,
-            content: 'Our Team',
-            style: { fontSize: 36, fontWeight: 'bold' }
-          },
-          {
-            id: 'image1',
-            type: 'image',
-            x: 150,
-            y: 120,
-            width: 300,
-            height: 200,
-            content: 'team-image-placeholder',
-            style: {}
-          }
-        ],
-        background: '#ffffff'
-      }),
-      thumbnail: null,
-      xmlContent: '<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>Our Team</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>'
-    };
-    
-    // Insert slides
-    await db.insert(slides).values(titleSlide);
-    await db.insert(slides).values(contentSlide);
-    await db.insert(slides).values(chartSlide);
-    await db.insert(slides).values(imageSlide);
-    
-    // Create a diff example
-    console.log('Creating example diff...');
-    
-    const [contentSlideResult] = await db
-      .select()
-      .from(slides)
-      .where(eq(slides.commitId, latestCommitId))
-      .where(eq(slides.slideNumber, 2));
-    
-    if (!contentSlideResult) {
-      throw new Error('Failed to find content slide');
-    }
-    
-    const contentSlideDiff = {
-      commitId: latestCommitId,
-      slideId: contentSlideResult.id,
-      diffContent: JSON.stringify({
-        added: [
-          {
-            id: 'bullet4',
-            type: 'text',
-            x: 70,
-            y: 240,
-            width: 500,
-            height: 30,
-            content: 'AI-Powered Analysis',
-            style: { fontSize: 24 }
-          }
-        ],
-        deleted: [],
-        modified: [
-          {
-            before: {
-              id: 'title2',
-              type: 'text',
-              x: 50,
-              y: 50,
-              width: 500,
-              height: 50,
-              content: 'Features',
-              style: { fontSize: 36, fontWeight: 'bold' }
-            },
-            after: {
-              id: 'title2',
-              type: 'text',
-              x: 50,
-              y: 50,
-              width: 500,
-              height: 50,
-              content: 'Key Features',
-              style: { fontSize: 36, fontWeight: 'bold' }
-            }
+            y: 320,
+            content: new Date().toLocaleDateString('ja-JP'),
+            style: { fontSize: 16, color: '#666666' }
           }
         ]
       }),
-      xmlDiff: '<diff><added path="/p:sld/p:cSld/p:spTree[1]/p:sp[4]"><p:sp><p:txBody><a:p><a:r><a:t>AI-Powered Analysis</a:t></a:r></a:p></p:txBody></p:sp></added><modified path="/p:sld/p:cSld/p:spTree[1]/p:sp[1]/p:txBody/a:p/a:r/a:t">Features</modified><modified path="/p:sld/p:cSld/p:spTree[1]/p:sp[1]/p:txBody/a:p/a:r/a:t">Key Features</modified></diff>',
-      changeType: 'update'
+      thumbnail: null,
+      xmlContent: '<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>Q4 Presentation</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>'
+    };
+
+    // スライド2: 売上概要
+    const salesSlide = {
+      commitId: latestCommitId,
+      slideNumber: 2,
+      title: '売上概要',
+      content: JSON.stringify({
+        elements: [
+          {
+            type: 'text',
+            x: 50,
+            y: 100,
+            content: '売上概要',
+            style: { fontSize: 36, fontWeight: 'bold', color: '#000000' }
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 180,
+            content: '• 2025年第4四半期の売上は前年同期比15%増',
+            style: { fontSize: 20, color: '#333333' }
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 220,
+            content: '• 主力製品の売上が好調に推移',
+            style: { fontSize: 20, color: '#333333' }
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 260,
+            content: '• 新規顧客獲得数が目標を上回る',
+            style: { fontSize: 20, color: '#333333' }
+          }
+        ]
+      }),
+      thumbnail: null,
+      xmlContent: '<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>売上概要</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>'
+    };
+
+    // スライド3: 今後の展望
+    const futureSlide = {
+      commitId: latestCommitId,
+      slideNumber: 3,
+      title: '今後の展望',
+      content: JSON.stringify({
+        elements: [
+          {
+            type: 'text',
+            x: 50,
+            y: 100,
+            content: '今後の展望',
+            style: { fontSize: 36, fontWeight: 'bold', color: '#000000' }
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 180,
+            content: '1. デジタル化の推進',
+            style: { fontSize: 24, fontWeight: 'bold', color: '#1976d2' }
+          },
+          {
+            type: 'text',
+            x: 70,
+            y: 220,
+            content: '- AI技術の活用による業務効率化',
+            style: { fontSize: 18, color: '#333333' }
+          },
+          {
+            type: 'text',
+            x: 70,
+            y: 250,
+            content: '- クラウドサービスの導入',
+            style: { fontSize: 18, color: '#333333' }
+          }
+        ]
+      }),
+      thumbnail: null,
+      xmlContent: '<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>今後の展望</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>'
+    };
+
+    // スライド4: まとめ
+    const summarySlide = {
+      commitId: latestCommitId,
+      slideNumber: 4,
+      title: 'まとめ',
+      content: JSON.stringify({
+        elements: [
+          {
+            type: 'text',
+            x: 50,
+            y: 150,
+            content: 'まとめ',
+            style: { fontSize: 42, fontWeight: 'bold', color: '#000000' }
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 240,
+            content: 'ご清聴ありがとうございました',
+            style: { fontSize: 28, color: '#444444' }
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 320,
+            content: 'ご質問がございましたら、お気軽にお声かけください',
+            style: { fontSize: 18, color: '#666666' }
+          }
+        ]
+      }),
+      thumbnail: null,
+      xmlContent: '<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>まとめ</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>'
     };
     
-    // Insert diff
-    await db.insert(diffs).values(contentSlideDiff);
+    // 4枚のスライドをデータベースに挿入
+    await db.insert(slides).values([titleSlide, salesSlide, futureSlide, summarySlide]);
     
     console.log('Database initialized successfully!');
   } catch (error) {
