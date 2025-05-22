@@ -74,49 +74,158 @@ export default function PublicPreview() {
   const [panelHeight, setPanelHeight] = useState(300);
   const [zoomLevel, setZoomLevel] = useState(100);
 
-  const sampleSlide = {
-    id: 9999,
-    title: 'Q4 Presentation',
-    slideNumber: 1,
-    content: {
-      elements: [
-        {
-          type: 'text',
-          x: 50,
-          y: 200,
-          content: 'Q4 Presentation',
-          style: { fontSize: 42, fontWeight: 'bold', color: '#000000' },
-        },
-        {
-          type: 'text',
-          x: 50,
-          y: 280,
-          content: 'Company Overview and Results',
-          style: { fontSize: 24, color: '#444444' },
-        },
-        {
-          type: 'text',
-          x: 50,
-          y: 400,
-          content: new Date().toLocaleDateString('ja-JP'),
-          style: { fontSize: 16, color: '#666666' },
-        },
-      ],
+  // サンプルスライドデータ
+  const sampleSlides = [
+    {
+      id: 9999,
+      title: 'Q4 Presentation',
+      slideNumber: 1,
+      content: {
+        elements: [
+          {
+            type: 'text',
+            x: 50,
+            y: 150,
+            content: 'Q4 Presentation',
+            style: { fontSize: 42, fontWeight: 'bold', color: '#000000' },
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 220,
+            content: 'Company Overview and Results',
+            style: { fontSize: 24, color: '#444444' },
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 320,
+            content: new Date().toLocaleDateString('ja-JP'),
+            style: { fontSize: 16, color: '#666666' },
+          },
+        ],
+      },
     },
-  };
+    {
+      id: 9998,
+      title: '売上概要',
+      slideNumber: 2,
+      content: {
+        elements: [
+          {
+            type: 'text',
+            x: 50,
+            y: 100,
+            content: '売上概要',
+            style: { fontSize: 36, fontWeight: 'bold', color: '#000000' },
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 180,
+            content: '• 2025年第4四半期の売上は前年同期比15%増',
+            style: { fontSize: 20, color: '#333333' },
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 220,
+            content: '• 主力製品の売上が好調に推移',
+            style: { fontSize: 20, color: '#333333' },
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 260,
+            content: '• 新規顧客獲得数が目標を上回る',
+            style: { fontSize: 20, color: '#333333' },
+          },
+        ],
+      },
+    },
+    {
+      id: 9997,
+      title: '今後の展望',
+      slideNumber: 3,
+      content: {
+        elements: [
+          {
+            type: 'text',
+            x: 50,
+            y: 100,
+            content: '今後の展望',
+            style: { fontSize: 36, fontWeight: 'bold', color: '#000000' },
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 180,
+            content: '1. デジタル化の推進',
+            style: { fontSize: 24, fontWeight: 'bold', color: '#1976d2' },
+          },
+          {
+            type: 'text',
+            x: 70,
+            y: 220,
+            content: '- AI技術の活用による業務効率化',
+            style: { fontSize: 18, color: '#333333' },
+          },
+          {
+            type: 'text',
+            x: 70,
+            y: 250,
+            content: '- クラウドサービスの導入',
+            style: { fontSize: 18, color: '#333333' },
+          },
+        ],
+      },
+    },
+    {
+      id: 9996,
+      title: 'まとめ',
+      slideNumber: 4,
+      content: {
+        elements: [
+          {
+            type: 'text',
+            x: 50,
+            y: 150,
+            content: 'まとめ',
+            style: { fontSize: 42, fontWeight: 'bold', color: '#000000' },
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 240,
+            content: 'ご清聴ありがとうございました',
+            style: { fontSize: 28, color: '#444444' },
+          },
+          {
+            type: 'text',
+            x: 50,
+            y: 320,
+            content: 'ご質問がございましたら、お気軽にお声かけください',
+            style: { fontSize: 18, color: '#666666' },
+          },
+        ],
+      },
+    },
+  ];
+
+  const sampleSlide = sampleSlides[0];
+
+  // 利用可能なスライドを統合（データベースのスライド + サンプルスライド）
+  const allSlides = slides.length > 0 ? slides : sampleSlides;
 
   // initialize current slide
   useEffect(() => {
     if (!isLoadingSlides) {
-      if (slides.length > 0) {
-        setCurrentSlideId(slides[0].id);
-        setCurrentSlideIndex(0);
-      } else {
-        setCurrentSlideId(sampleSlide.id);
+      if (allSlides.length > 0) {
+        setCurrentSlideId(allSlides[0].id);
         setCurrentSlideIndex(0);
       }
     }
-  }, [slides, isLoadingSlides]);
+  }, [allSlides, isLoadingSlides]);
 
   // update index when slide id changes
   useEffect(() => {
@@ -370,12 +479,12 @@ export default function PublicPreview() {
                   </Tooltip>
                   <Paper elevation={0} sx={{ px: 2, py: 1, bgcolor: 'background.paper', border: 1, borderColor: 'divider' }}>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {currentSlideIndex + 1} / {slides.length || 1}
+                      {currentSlideIndex + 1} / {allSlides.length}
                     </Typography>
                   </Paper>
                   <Tooltip title="次のスライド">
                     <span>
-                      <IconButton onClick={goToNextSlide} disabled={currentSlideIndex >= slides.length - 1} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}>
+                      <IconButton onClick={goToNextSlide} disabled={currentSlideIndex >= allSlides.length - 1} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) } }}>
                         <ChevronRight />
                       </IconButton>
                     </span>
@@ -440,27 +549,25 @@ export default function PublicPreview() {
                     transition: 'transform 0.3s ease', 
                     boxShadow: `0 20px 40px ${alpha(theme.palette.common.black, 0.1)}` 
                   }} elevation={8}>
-                    {currentSlideId === sampleSlide.id ? (
-                      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 6, background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)}, ${alpha(theme.palette.secondary.main, 0.05)})` }}>
-                        <Typography variant="h2" sx={{ fontWeight: 800, mb: 3, textAlign: 'center' }}>
-                          {sampleSlide.title}
-                        </Typography>
-                        <Box sx={{ width: 100, height: 4, bgcolor: 'primary.main', borderRadius: 2, mb: 4 }} />
-                        <Typography variant="h5" color="text.secondary" sx={{ textAlign: 'center', mb: 8 }}>
-                          Company Overview and Results
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary" sx={{ position: 'absolute', bottom: 24 }}>
-                          {new Date().toLocaleDateString('ja-JP')}
-                        </Typography>
-                      </Box>
-                    ) : slides[currentSlideIndex] ? (
+                    {allSlides[currentSlideIndex] ? (
                       <Box sx={{ p: 4, height: '100%', position: 'relative', bgcolor: 'background.paper' }}>
-                        <Typography variant="h3" sx={{ fontWeight: 700, mb: 3 }}>
-                          {slides[currentSlideIndex].title || 'タイトルなし'}
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
-                          スライドの内容をここに表示します
-                        </Typography>
+                        {allSlides[currentSlideIndex].content?.elements?.map((el: any, i: number) =>
+                          el.type === 'text' ? (
+                            <Typography
+                              key={i}
+                              sx={{
+                                position: 'absolute',
+                                left: `${el.x}px`,
+                                top: `${el.y}px`,
+                                color: el.style?.color || '#000',
+                                fontSize: `${el.style?.fontSize || 16}px`,
+                                fontWeight: el.style?.fontWeight || 'normal',
+                              }}
+                            >
+                              {el.content}
+                            </Typography>
+                          ) : null
+                        )}
                       </Box>
                     ) : (
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
