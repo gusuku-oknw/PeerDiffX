@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Box, CssBaseline } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
 import { useRoute } from 'wouter';
 
 // 新しく作成したコンポーネント
@@ -23,7 +22,7 @@ interface Presentation {
   description: string;
 }
 
-export default function PublicPreview() {
+export default function PreviewMock() {
   const [, params] = useRoute('/preview/:presentationId');
   const presentationId = params?.presentationId ? parseInt(params.presentationId) : null;
   
@@ -36,7 +35,6 @@ export default function PublicPreview() {
     name: "デジタルマーケティング戦略 2025",
     description: "TechCorp株式会社の新年度マーケティング戦略プレゼンテーション"
   };
-  const isPresentationLoading = false;
 
   // スライド仮データ
   const slides: Slide[] = [
@@ -76,7 +74,6 @@ export default function PublicPreview() {
       commitId: 1
     }
   ];
-  const isSlidesLoading = false;
 
   const currentSlide = slides[currentSlideIndex] || null;
   const totalSlides = slides.length;
@@ -140,19 +137,6 @@ export default function PublicPreview() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentSlideIndex, totalSlides]);
 
-  if (isPresentationLoading || isSlidesLoading) {
-    return (
-      <Box sx={{ 
-        height: '100vh', 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center' 
-      }}>
-        読み込み中...
-      </Box>
-    );
-  }
-
   if (!presentation || !presentationId) {
     return (
       <Box sx={{ 
@@ -172,7 +156,7 @@ export default function PublicPreview() {
       <Box sx={{ height: '100vh', display: 'flex', overflow: 'hidden' }}>
         {/* 左側：情報パネル */}
         <PresentationInfoPanel
-          presentationName={presentation.name || 'プレゼンテーション'}
+          presentationName={presentation.name}
           totalSlides={totalSlides}
           currentSlideNumber={currentSlideIndex + 1}
         />

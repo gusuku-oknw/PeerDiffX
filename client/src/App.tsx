@@ -12,6 +12,7 @@ import Signup from "@/pages/signup";
 import Profile from "@/pages/profile";
 // プレビューページ
 import PublicPreview from "@/pages/public-preview";
+import PreviewMock from "@/pages/preview-mock";
 import DiffView from "@/pages/diff-view";
 import History from "@/pages/history";
 import Branches from "@/pages/branches";
@@ -38,7 +39,7 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/profile" component={Profile} />
       <Route path="/public-preview/:presentationId/:commitId?" component={PublicPreview} />
-      <Route path="/preview/:presentationId" component={PublicPreview} />
+      <Route path="/preview/:presentationId" component={PreviewMock} />
       <Route path="/diff/:baseCommitId/:compareCommitId" component={DiffView} />
       <Route path="/history/:branchId" component={History} />
       <Route path="/branches/:presentationId" component={Branches} />

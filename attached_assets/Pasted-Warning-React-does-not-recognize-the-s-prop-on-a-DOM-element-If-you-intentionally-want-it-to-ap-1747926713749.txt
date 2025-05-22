@@ -1,0 +1,27 @@
+Warning: React does not recognize the `%s` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `%s` instead. If you accidentally passed it from a parent component, remove it from the DOM element.%s textColor textcolor 
+    at div
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-HJHOPHAJ.js?v=7fac1ac1:2434:45
+    at Box3 (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-HJHOPHAJ.js?v=7fac1ac1:5437:19)
+    at _c2 (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/ui/tabs.tsx:43:12)
+    at div
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-HJHOPHAJ.js?v=7fac1ac1:2434:45
+    at div
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-HJHOPHAJ.js?v=7fac1ac1:2434:45
+    at div
+    at https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-HJHOPHAJ.js?v=7fac1ac1:2434:45
+    at Tabs2 (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@mui_material.js?v=7fac1ac1:42726:17)
+    at Tabs (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/ui/tabs.tsx:19:24)
+    at div
+    at div
+    at CorporateDashboard (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/pages/corporate-dashboard.tsx?t=1747926673923:38:27)
+    at Route (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=7fac1ac1:323:16)
+    at Switch (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=7fac1ac1:379:17)
+    at Router (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/App.tsx?t=1747926673923&v=xfDK9KX8dHYvW9B2oKrEJ:42:22)
+    at div
+    at div
+    at Provider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=7fac1ac1:38:15)
+    at TooltipProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=7fac1ac1:62:5)
+    at LanguageProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/i18n/language-context.tsx:190:36)
+    at QueryClientProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=7fac1ac1:2805:3)
+    at App (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/App.tsx?t=1747926673923&v=xfDK9KX8dHYvW9B2oKrEJ:137:22)
+    at ThemeProvider (https://ffc8cf54-73f5-4ce2-9981-28a7d72785cf-00-38evcdp1lxn27.picard.replit.dev/src/components/theme-provider.tsx:25:3)
