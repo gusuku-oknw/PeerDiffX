@@ -39,6 +39,18 @@ export function Navbar() {
                   Presentations
                 </Link>
                 <Link
+                  href="/student/dashboard"
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                >
+                  学生ダッシュボード
+                </Link>
+                <Link
+                  href="/corporate/dashboard"
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                >
+                  企業ダッシュボード
+                </Link>
+                <Link
                   href="/history"
                   className="text-sm font-medium transition-colors hover:text-primary"
                 >
