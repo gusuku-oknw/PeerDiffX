@@ -19,18 +19,15 @@ export class ApiClient {
   }
 
   async post<T>(endpoint: string, data?: any): Promise<T> {
-    const response = await apiRequest(`${this.baseUrl}${endpoint}`, 'POST', data);
-    return response.json();
+    return apiRequest(endpoint, 'POST', data) as Promise<T>;
   }
 
   async patch<T>(endpoint: string, data?: any): Promise<T> {
-    const response = await apiRequest(`${this.baseUrl}${endpoint}`, 'PATCH', data);
-    return response.json();
+    return apiRequest(endpoint, 'PATCH', data) as Promise<T>;
   }
 
   async delete<T>(endpoint: string): Promise<T> {
-    const response = await apiRequest(`${this.baseUrl}${endpoint}`, 'DELETE');
-    return response.json();
+    return apiRequest(endpoint, 'DELETE') as Promise<T>;
   }
 }
 
