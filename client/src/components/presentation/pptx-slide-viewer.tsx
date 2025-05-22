@@ -114,13 +114,13 @@ export function PPTXSlideViewer({
         height: 100%;
         display: flex;
         flex-direction: column;
-        justify-content: ${justifyContent};
-        align-items: ${alignItems};
+        justify-content: ${slide.slideNumber === 1 ? 'center' : justifyContent};
+        align-items: ${slide.slideNumber === 1 ? 'center' : alignItems};
         padding: 60px;
         background: ${theme.bg};
         color: ${theme.textColor};
         font-family: 'Segoe UI', 'Arial', sans-serif;
-        text-align: ${textAlign};
+        text-align: ${slide.slideNumber === 1 ? 'center' : textAlign};
         position: relative;
         overflow: hidden;
       ">
