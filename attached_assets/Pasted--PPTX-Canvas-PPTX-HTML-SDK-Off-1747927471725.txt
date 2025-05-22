@@ -1,0 +1,114 @@
+以下では、ブラウザ上でPPTXスライドを表示・プレビューするための主なライブラリを紹介します。Canvasベースの高速レンダリングから純フロントエンドのPPTX→HTML変換、さらに商用SDKやOffice Add-insプレビューAPIまで、用途やライセンスに合わせて選択できる多彩なソリューションをまとめました。
+
+1. Canvasベースのライブラリ
+1.1 React Konva
+React上でHTML5 Canvas を扱えるラッパーライブラリです。
+
+特徴：DeclarativeなReactコンポーネントとしてCanvas要素を扱えるため、スライドの図形やテキストを自由に描画できます。 
+Konva
+
+用途：独自にPPTXのXMLを解析し、スライド要素をCanvas上に再現する際の描画エンジンとして最適です。 
+Konva
+
+1.2 pptx-preview.js
+純フロントエンドでPPTXをHTMLに変換し、ブラウザでプレビューできるオープンソースライブラリです。
+
+特徴：アニメーションやチャート表示もサポート。サーバー不要でクライアント側のみで動作します。 
+Develop 365
+
+用途：PPTX→HTMLレンダリングがそのままスライド表示となるため、ブラウザに標準のDOM操作で操作可能です。 
+Develop 365
+
+2. ドキュメントビューア型ライブラリ
+2.1 react-doc-viewer
+Reactコンポーネントとして、PPTXを含む複数ドキュメントをプレビューできるライブラリです。
+
+特徴：PPTX, PDF, Word など多様なフォーマットに対応し、アップロード・URL指定どちらも可能。 
+npm
+
+用途：ドキュメント管理系アプリに組み込み、PPTX以外のファイルも同一UIで扱いたい場合に有効です。 
+npm
+
+2.2 ViewerJS
+オープンソースの汎用ドキュメントビューアで、ODF形式に変換すればPPTを表示できます。
+
+特徴：プラグイン不要かつ外部依存なしで動作し、自ホストで完結。 
+viewerjs.org
+
+用途：PPT→ODPに変換するビルドステップを組み込む必要はありますが、完全OSSで保守性が高いです。 
+Stack Overflow
+
+3. 商用SDK／サービス
+3.1 Nutrient Web SDK
+Nutrient社が提供するWeb SDKで、PPTXをPDF化しつつクライアントでプレビューできます。
+
+特徴：署名・注釈などの編集機能も同時に利用可能。PDF化後はCanvas/DOMレンダリング。 
+Nutrient
+
+用途：社内ドキュメントプロセスでセキュアなプレビュー環境と併せて、注釈機能も必要な場合に最適です。 
+Nutrient
+
+3.2 Apryse WebViewer
+商用ライセンスのReact対応SDKで、PPTXを直接プレビューできる高機能ビューワーです。
+
+特徴：UIカスタマイズ性が高く、注釈・フォーム入力・共同編集にも対応。 
+Apryse
+
+用途：エンタープライズ用途でSLA保証や大規模運用を想定する場合に向いています。 
+Apryse
+
+4. Office Add-ins プレビューAPI
+4.1 PowerPoint JavaScript Preview APIs
+MicrosoftがPreview版として提供するOffice Add-ins向けAPI群です。
+
+特徴：Office Onlineやデスクトップ版PowerPointのレンダリングエンジンを利用してプレビュー可能。 
+マイクロソフト ラーン
+
+用途：企業内のOffice 365環境にシームレスに統合し、正式リリース後は安定的に利用できます。 
+マイクロソフト ラーン
+
+5. 生XML解析／独自描画用ライブラリ
+5.1 js-pptx
+PPTXのOpenXMLを読み書きできる純JavaScriptライブラリです。
+
+特徴：スライドのテキスト・図形・チャートデータを直接操作でき、Canvas描画用データ生成に最適。 
+GitHub
+
+用途：独自に差分抽出やカスタム描画ロジックを組み込みつつ、細かなレイアウト再現を行いたい場合。 
+GitHub
+
+5.2 react-pptx (PptxGenJSラッパー)
+PptxGenJSのReactラッパーで、PPTXを生成・操作するためのコンポーネントを提供します。
+
+特徴：生成寄りのライブラリですが、PptxGenJSの内部構造を利用してプレビュー用途にも応用可能。 
+npm
+
+用途：編集機能を後付けしつつリアルタイムにスライドを再生成・プレビューするハイブリッド実装に有効です。 
+npm
+
+選定のポイント
+純フロントエンドかサーバー依存か
+
+サーバー不要：pptx-preview.js 
+Develop 365
+
+サーバー依存：Nutrient Web SDK 
+Nutrient
+
+ライセンス／商用サポートの有無
+
+OSS：react-konva, pptx-preview.js, js-pptx 
+GitHub
+
+商用SDK：Apryse, Nutrient 
+Apryse
+
+UIのカスタマイズ性
+
+コンポーネントベース：react-doc-viewer 
+npm
+
+Canvas自由描画：react-konva 
+Konva
+
+これらのライブラリから、開発リソース・要件（軽量性／保守性／商用保証）・**機能（注釈・アニメーション・共同編集）**を踏まえて最適な組み合わせをお選びください。
