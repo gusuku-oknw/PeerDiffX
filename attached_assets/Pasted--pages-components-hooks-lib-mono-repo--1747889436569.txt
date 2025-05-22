@@ -1,0 +1,52 @@
+現状の構成は “基本レイヤー型（pages / components / hooks / lib …）＋ mono-repo” で十分わかりやすい 一方、以下の観点で整理すると保守性・スケール性が上がります。
+
+改善ポイント	具体的な課題	推奨アクション
+
+① Feature（ドメイン）単位への分割	components/, pages/ が肥大化し始め、同じ機能に関係する UI・hooks・types が散在	features/slide/, features/comment/, features/ai/ など“機能フォルダー”を作り、<br>index.ts（barrel）でエクスポート集約<br><feature>/components`  <feature>/hooks`  <feature>/model.ts
+② 共通 UI と機能固有 UI を分離	components/ui/ に汎用と半汎用が混在	- @/components/ui → 汎用（Button/Card 等）<br>- @/features/**/components → 機能固有
+③ 型・Enum の集約	型がページや hooks 内に点在	src/types/ または src/@types/peer-diffx.d.ts にドメイン別でまとめ、<br>型エイリアスを export する
+④ API & データアクセス層の一元化	fetcher が lib/ に 1 つあるのみ。各 hooks で endpoint を直書き	src/api/ で service 関数を定義し hooks から呼び出す<br>→ ルートパスの変更・認可ヘッダ追加が一括で済む
+⑤ テストとストーリーの置き場	tests/ が無い / Storybook 無し	- __tests__/ を features 配下に置く or tests/unit,tests/e2e<br>- Storybook を client/.storybook/ に導入し UI をドキュメント化
+⑥ server 側の層分離	routes/ と services/ が浅い	modules/slide,modules/comment… に<br>controller.ts,service.ts,schema.ts をまとめると<br>DDD に近い構造になり拡張しやすい
+⑦ 環境変数の厳格管理	env.example のみ	- zod などで runtime env‐validation<br>- dotenv-flow で stage ごとに切替
+⑧ Assets / static	画像・pptx テンプレが public/ 一括	public/img,public/mock,public/locales に整理 + vite alias
+⑨ エイリアス統一	import パスに @/components/... と ../../../ が混在	tsconfig.paths を "@components/*":"./src/components/*" など全層で統一
+⑩ Mono-repo ツールの活用	pnpm-workspace.yaml のみ	- turbo run build や nx を入れると CI キャッシュ効率化<br>- ルート eslint-config, vitest をパッケージ継承
+
+
+参考構成（クライアント例）
+
+client/
+└─ src/
+   ├─ app/                    # ルート設定（providers, router）
+   ├─ shared/
+   │   ├─ ui/                 # 汎用 UI
+   │   ├─ hooks/
+   │   ├─ api/                # 共通 fetch / axios instance
+   │   └─ types/
+   └─ features/
+       ├─ slide/
+       │   ├─ components/
+       │   ├─ hooks/
+       │   ├─ model.ts
+       │   └─ index.ts
+       ├─ comment/
+       └─ ai/
+
+
+---
+
+効果
+
+ドメイン単位で “UI / ロジック / 型 / テスト” が完結し、
+機能追加・リファクタ時の影響範囲を視覚的に把握しやすい。
+
+API 層をまとめることで エンドポイント変更やリトライ・キャッシュ戦略 を一括管理。
+
+Storybook + test によりデザイン崩れやリグレッションを CI で検知可能。
+
+server も module ごとに分けると OpenAPI 自動生成・認可ポリシー を組み込みやすい。
+
+
+これらを段階的に適用すると、今後チームが増えても迷いにくい構造になります。
+
