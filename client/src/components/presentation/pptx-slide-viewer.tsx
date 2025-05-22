@@ -230,9 +230,11 @@ export function PPTXSlideViewer({
       <Paper 
         elevation={4}
         sx={{ 
-          width: '100%',
-          maxWidth: { xs: '95%', sm: '90%', md: '85%', lg: '80%' },
-          aspectRatio: '16/9',
+          // 固定サイズで統一（PPTXファイル標準16:9比率）
+          width: '960px',
+          height: '540px',
+          maxWidth: '90vw',
+          maxHeight: '70vh',
           transform: `scale(${zoomLevel / 100})`,
           transformOrigin: 'center',
           transition: 'transform 0.2s ease-in-out',
@@ -240,7 +242,9 @@ export function PPTXSlideViewer({
           border: 1,
           borderColor: 'divider',
           overflow: 'hidden',
-          position: 'relative'
+          position: 'relative',
+          // 確実に16:9比率を維持
+          aspectRatio: '16/9'
         }}
       >
         <div 
