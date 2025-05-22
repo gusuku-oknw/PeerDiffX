@@ -336,7 +336,7 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardFooter className="border-t bg-gray-50 dark:bg-gray-800 p-4 flex justify-between items-center">
-                <Link href={`/public-preview/${encodeId(presentation.id)}`}>
+                <Link href={`/preview/${presentation.id}`}>
                   <Button>Open</Button>
                 </Link>
                 <DropdownMenu>
