@@ -126,25 +126,11 @@ export function PresentationInfoPanel({
 
       <Divider sx={{ my: 3 }} />
 
-      {/* 全体評価とコメント */}
+      {/* シンプルな全体フィードバック */}
       <Box>
-        <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <FaStar className="text-yellow-500" />
-          プレゼンテーション全体の評価
+        <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+          プレゼンテーション全体のフィードバック
         </Typography>
-        
-        {/* 星評価 */}
-        <Box sx={{ display: 'flex', gap: 1, mb: 2, justifyContent: 'center' }}>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <FaStar
-              key={star}
-              className={`cursor-pointer text-xl ${
-                star <= rating ? 'text-yellow-400' : 'text-gray-300'
-              }`}
-              onClick={() => setRating(star)}
-            />
-          ))}
-        </Box>
         
         <TextField
           multiline
@@ -157,30 +143,44 @@ export function PresentationInfoPanel({
           sx={{ mb: 2 }}
         />
         
+        {/* シンプルな反応ボタン */}
+        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+          <Button 
+            variant={rating === 1 ? 'contained' : 'outlined'}
+            size="small"
+            onClick={() => setRating(rating === 1 ? 0 : 1)}
+            sx={{ 
+              textTransform: 'none',
+              fontSize: '1.2rem',
+              minWidth: '60px'
+            }}
+          >
+            👍
+          </Button>
+          <Button 
+            variant={rating === -1 ? 'contained' : 'outlined'}
+            size="small"
+            onClick={() => setRating(rating === -1 ? 0 : -1)}
+            sx={{ 
+              textTransform: 'none',
+              fontSize: '1.2rem',
+              minWidth: '60px'
+            }}
+          >
+            👎
+          </Button>
+        </Box>
+        
         <Button 
-          variant="outlined" 
+          variant="contained" 
           size="small" 
           fullWidth
           onClick={handleOverallCommentSubmit}
-          disabled={!overallComment.trim() || rating === 0}
+          disabled={!overallComment.trim()}
           sx={{ textTransform: 'none' }}
         >
-          評価とコメントを投稿
+          フィードバック送信
         </Button>
-      </Box>
-
-      {/* プレゼンテーション基本情報 */}
-      <Divider sx={{ my: 3 }} />
-      <Box>
-        <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-          プレゼンテーション情報
-        </Typography>
-        <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-          {presentationName}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {totalSlides} スライド • {author} • {lastModified}
-        </Typography>
       </Box>
     </Box>
   );
