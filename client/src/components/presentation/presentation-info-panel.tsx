@@ -2,6 +2,10 @@ import { Paper, Box, Typography, Chip, Avatar, TextField, Button, Divider, Tabs,
 import { FaComment, FaStar, FaUser, FaCalendarAlt, FaHome, FaBuilding } from 'react-icons/fa';
 import { useState } from 'react';
 import { useAdmin } from '@/hooks/useAdmin';
+// 新しい企業機能コンポーネント
+import { ReviewQuotaPanel } from '@/components/corporate/review-quota-panel';
+import { AISummaryWidget } from '@/components/corporate/ai-summary-widget';
+import { IncentiveManagementPanel } from '@/components/corporate/incentive-management-panel';
 
 interface PresentationInfoPanelProps {
   presentationName: string;
