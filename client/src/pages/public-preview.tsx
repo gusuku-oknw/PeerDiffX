@@ -348,7 +348,16 @@ export default function PublicPreview() {
         {/* 共通ツールバー - サムネイルとスライド表示の上に配置 */}
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* スライドナビツールバー */}
-          <Paper elevation={0} sx={{ borderBottom: 1, borderColor: 'divider', p: 2, bgcolor: alpha(theme.palette.background.paper, 0.95), backdropFilter: 'blur(10px)', zIndex: 1 }}>
+          <Paper elevation={0} sx={{ 
+            borderBottom: 1, 
+            borderColor: 'divider', 
+            p: 2, 
+            bgcolor: 'background.paper',
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Stack direction="row" spacing={2} alignItems="center">
                 <Stack direction="row" spacing={1}>
@@ -412,13 +421,13 @@ export default function PublicPreview() {
 
             {/* スライド表示 - アスペクト比16:9を保持しながら最大化 */}
             <Box sx={{ flex: 1, overflow: 'auto', bgcolor: alpha(theme.palette.grey[50], 0.5), display: 'flex', flexDirection: 'column' }}>
-              {/* スライド本体 - アスペクト比を保持 */}
-              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3, overflow: 'auto' }}>
+              {/* スライド本体 - アスペクト比を保持しながら最大化 */}
+              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2, overflow: 'auto' }}>
                 <Fade in timeout={300}>
                   <Paper sx={{ 
-                    width: '100%',
-                    maxWidth: '100%',
-                    aspectRatio: '16/9', // 16:9のアスペクト比を強制
+                    width: '95%', // 幅を最大化
+                    maxWidth: 'none', // maxWidthの制限を解除
+                    aspectRatio: '16/9', // 16:9のアスペクト比を保持
                     borderRadius: 3, 
                     overflow: 'hidden', 
                     position: 'relative', 
