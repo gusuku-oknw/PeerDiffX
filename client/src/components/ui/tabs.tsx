@@ -1,53 +1,81 @@
-import * as React from "react"
-import * as TabsPrimitive from "@radix-ui/react-tabs"
+import React, { forwardRef } from 'react';
+import { Tabs as MuiTabs, Tab as MuiTab, Box } from '@mui/material';
 
-import { cn } from "@/lib/utils"
+interface TabsProps {
+  value: string | number;
+  onValueChange: (event: React.SyntheticEvent, newValue: string | number) => void;
+  children: React.ReactNode;
+  className?: string;
+}
+export const Tabs = ({ value, onValueChange, children, className, ...props }: TabsProps) => {
+  return (
+    <MuiTabs
+      value={value}
+      onChange={onValueChange}
+      className={className}
+      {...props}
+    >
+      {children}
+    </MuiTabs>
+  );
+};
 
-const Tabs = TabsPrimitive.Root
+interface TabsListProps {
+  children: React.ReactNode;
+  className?: string;
+}
+export const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
+  ({ children, className, ...props }, ref) => (
+    <Box
+      ref={ref}
+      display="flex"
+      alignItems="center"
+      className={className}
+      {...props}
+    >
+      {children}
+    </Box>
+  )
+);
+TabsList.displayName = 'TabsList';
 
-const TabsList = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.List>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.List
-    ref={ref}
-    className={cn(
-      "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
-      className
-    )}
-    {...props}
-  />
-))
-TabsList.displayName = TabsPrimitive.List.displayName
+interface TabsTriggerProps {
+  value: string | number;
+  children: React.ReactNode;
+  className?: string;
+}
+export const TabsTrigger = forwardRef<HTMLElement, TabsTriggerProps>(
+  ({ value, children, className, ...props }, ref) => (
+    <MuiTab
+      ref={ref}
+      value={value}
+      label={children}
+      className={className}
+      {...props}
+    />
+  )
+);
+TabsTrigger.displayName = 'TabsTrigger';
 
-const TabsTrigger = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
-      className
-    )}
-    {...props}
-  />
-))
-TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
-
-const TabsContent = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.Content
-    ref={ref}
-    className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      className
-    )}
-    {...props}
-  />
-))
-TabsContent.displayName = TabsPrimitive.Content.displayName
-
-export { Tabs, TabsList, TabsTrigger, TabsContent }
+interface TabsContentProps {
+  value: string | number;
+  index: string | number;
+  children: React.ReactNode;
+  className?: string;
+}
+export const TabsContent = forwardRef<HTMLDivElement, TabsContentProps>(
+  ({ value, index, children, className, ...props }, ref) => (
+    <div
+      ref={ref}
+      role="tabpanel"
+      hidden={value !== index}
+      id={`tabpanel-${index}`}
+      aria-labelledby={`tab-${index}`}
+      className={className}
+      {...props}
+    >
+      {value === index && <Box p={2}>{children}</Box>}
+    </div>
+  )
+);
+TabsContent.displayName = 'TabsContent';
