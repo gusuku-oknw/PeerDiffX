@@ -207,19 +207,44 @@ export default function PreviewMock() {
               />
             </Box>
 
-            {/* メインスライド */}
+            {/* メインスライド - 簡略化表示 */}
             <Box sx={{ 
               flex: 1, 
               display: 'flex', 
               justifyContent: 'center', 
               alignItems: 'center',
-              p: { xs: 2, sm: 3, md: 4 },
+              p: 3,
               bgcolor: 'background.default'
             }}>
-              <div className="w-full max-w-4xl aspect-[16/9] bg-white shadow-lg rounded border overflow-hidden"
-                   style={{ transform: `scale(${zoomLevel / 100})` }}>
-                {currentSlide && <SlideContent slide={currentSlide} />}
-              </div>
+              <Box sx={{
+                width: '800px',
+                height: '450px',
+                bgcolor: 'white',
+                border: '1px solid #ddd',
+                borderRadius: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                p: 4,
+                boxShadow: 2
+              }}>
+                {currentSlide ? (
+                  <>
+                    <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem', textAlign: 'center' }}>
+                      {currentSlide.title}
+                    </h1>
+                    <p style={{ fontSize: '1.2rem', textAlign: 'center', color: '#666' }}>
+                      {currentSlide.content}
+                    </p>
+                    <div style={{ position: 'absolute', top: '10px', right: '20px', fontSize: '0.9rem', color: '#999' }}>
+                      {currentSlide.slideNumber} / 5
+                    </div>
+                  </>
+                ) : (
+                  <p style={{ color: '#999' }}>スライドを読み込み中...</p>
+                )}
+              </Box>
             </Box>
           </Box>
         </Box>
