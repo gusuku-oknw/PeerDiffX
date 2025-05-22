@@ -422,12 +422,17 @@ export default function PublicPreview() {
             {/* スライド表示 - アスペクト比16:9を保持しながら最大化 */}
             <Box sx={{ flex: 1, overflow: 'auto', bgcolor: alpha(theme.palette.grey[50], 0.5), display: 'flex', flexDirection: 'column' }}>
               {/* スライド本体 - アスペクト比を保持しながら最大化 */}
-              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2, overflow: 'auto' }}>
+              <Box sx={{ 
+                flex: 1, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                p: 2
+              }}>
                 <Fade in timeout={300}>
                   <Paper sx={{ 
-                    width: '95%', // 幅を最大化
-                    maxWidth: 'none', // maxWidthの制限を解除
-                    aspectRatio: '16/9', // 16:9のアスペクト比を保持
+                    width: '90%',
+                    aspectRatio: '16/9',
                     borderRadius: 3, 
                     overflow: 'hidden', 
                     position: 'relative', 
@@ -435,47 +440,33 @@ export default function PublicPreview() {
                     transition: 'transform 0.3s ease', 
                     boxShadow: `0 20px 40px ${alpha(theme.palette.common.black, 0.1)}` 
                   }} elevation={8}>
-                {currentSlideId === sampleSlide.id ? (
-                  <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 6, background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)}, ${alpha(theme.palette.secondary.main, 0.05)})` }}>
-                    <Typography variant="h2" sx={{ fontWeight: 800, mb: 3, textAlign: 'center' }}>
-                      {sampleSlide.title}
-                    </Typography>
-                    <Box sx={{ width: 100, height: 4, bgcolor: 'primary.main', borderRadius: 2, mb: 4 }} />
-                    <Typography variant="h5" color="text.secondary" sx={{ textAlign: 'center', mb: 8 }}>
-                      Company Overview and Results
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary" sx={{ position: 'absolute', bottom: 24 }}>
-                      {new Date().toLocaleDateString('ja-JP')}
-                    </Typography>
-                  </Box>
-                ) : slides[currentSlideIndex] ? (
-                  <Box sx={{ p: 4, height: '100%', position: 'relative', bgcolor: 'background.paper' }}>
-                    <Typography variant="h3" sx={{ fontWeight: 700, mb: 3 }}>
-                      {slides[currentSlideIndex].title || 'タイトルなし'}
-                    </Typography>
-                    {slides[currentSlideIndex].content?.elements?.map((el: any, i: number) =>
-                      el.type === 'text' ? (
-                        <Typography
-                          key={i}
-                          sx={{
-                            position: 'absolute',
-                            left: `${el.x}px`,
-                            top: `${el.y}px`,
-                            color: el.style?.color || '#000',
-                            fontSize: `${el.style?.fontSize || 16}px`,
-                            fontWeight: el.style?.fontWeight || 'normal',
-                          }}
-                        >
-                          {el.content}
+                    {currentSlideId === sampleSlide.id ? (
+                      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 6, background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)}, ${alpha(theme.palette.secondary.main, 0.05)})` }}>
+                        <Typography variant="h2" sx={{ fontWeight: 800, mb: 3, textAlign: 'center' }}>
+                          {sampleSlide.title}
                         </Typography>
-                      ) : null
+                        <Box sx={{ width: 100, height: 4, bgcolor: 'primary.main', borderRadius: 2, mb: 4 }} />
+                        <Typography variant="h5" color="text.secondary" sx={{ textAlign: 'center', mb: 8 }}>
+                          Company Overview and Results
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" sx={{ position: 'absolute', bottom: 24 }}>
+                          {new Date().toLocaleDateString('ja-JP')}
+                        </Typography>
+                      </Box>
+                    ) : slides[currentSlideIndex] ? (
+                      <Box sx={{ p: 4, height: '100%', position: 'relative', bgcolor: 'background.paper' }}>
+                        <Typography variant="h3" sx={{ fontWeight: 700, mb: 3 }}>
+                          {slides[currentSlideIndex].title || 'タイトルなし'}
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+                          スライドの内容をここに表示します
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                        <Typography color="text.secondary">スライドデータを読み込み中...</Typography>
+                      </Box>
                     )}
-                  </Box>
-                ) : (
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                    <Typography color="text.secondary">スライドデータを読み込み中...</Typography>
-                  </Box>
-                )}
                   </Paper>
                 </Fade>
               </Box>
