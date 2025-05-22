@@ -348,7 +348,7 @@ export default function PublicPreview() {
         {/* 共通ツールバー - サムネイルとスライド表示の上に配置 */}
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* スライドナビツールバー */}
-          <Paper elevation={0} sx={{ borderBottom: 1, borderColor: 'divider', p: 2, bgcolor: alpha(theme.palette.background.paper, 0.8), backdropFilter: 'blur(10px)' }}>
+          <Paper elevation={0} sx={{ borderBottom: 1, borderColor: 'divider', p: 2, bgcolor: alpha(theme.palette.background.paper, 0.95), backdropFilter: 'blur(10px)', zIndex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Stack direction="row" spacing={2} alignItems="center">
                 <Stack direction="row" spacing={1}>
@@ -410,16 +410,15 @@ export default function PublicPreview() {
             {/* サムネイル */}
             <SlideThumbnails commitId={commitId} activeSlideId={currentSlideId || undefined} onSelectSlide={handleSelectSlide} slides={slides} />
 
-            {/* スライド表示 - 100%サイズに調整 */}
+            {/* スライド表示 - アスペクト比16:9を保持しながら最大化 */}
             <Box sx={{ flex: 1, overflow: 'auto', bgcolor: alpha(theme.palette.grey[50], 0.5), display: 'flex', flexDirection: 'column' }}>
-              {/* スライド本体 - 100%幅で表示 */}
+              {/* スライド本体 - アスペクト比を保持 */}
               <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3, overflow: 'auto' }}>
                 <Fade in timeout={300}>
                   <Paper sx={{ 
-                    width: '100%', 
-                    height: '100%',
-                    maxHeight: 'calc(100vh - 200px)', // ヘッダーとツールバー分を引く
-                    aspectRatio: '16/9', 
+                    width: '100%',
+                    maxWidth: '100%',
+                    aspectRatio: '16/9', // 16:9のアスペクト比を強制
                     borderRadius: 3, 
                     overflow: 'hidden', 
                     position: 'relative', 
