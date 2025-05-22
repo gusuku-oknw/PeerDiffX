@@ -1,9 +1,11 @@
 import { Link } from "wouter";
 import { AuthButtons } from "./auth-buttons";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
 
 export function Navbar() {
   const { isAuthenticated } = useAuth();
+  const { isAdmin } = useAdmin();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -50,6 +52,11 @@ export function Navbar() {
                 >
                   企業ダッシュボード
                 </Link>
+                {isAdmin && (
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+                    管理者
+                  </span>
+                )}
                 <Link
                   href="/history"
                   className="text-sm font-medium transition-colors hover:text-primary"
