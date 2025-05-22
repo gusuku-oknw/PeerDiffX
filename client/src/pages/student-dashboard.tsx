@@ -26,15 +26,35 @@ interface StudentProfile {
 export default function StudentDashboard() {
   const [, setLocation] = useLocation();
 
-  // 学生のプロジェクト一覧を取得
-  const { data: projects = [], isLoading: projectsLoading } = useQuery<StudentProject[]>({
-    queryKey: ["/api/student/projects"],
-  });
+  // 仮データで表示（バックエンド連携は後回し）
+  const projects: StudentProject[] = [
+    {
+      id: 1,
+      name: "デジタルマーケティング戦略レビュー",
+      companyName: "TechCorp株式会社",
+      dueDate: "2025-02-15T23:59:59Z",
+      status: "in_progress",
+      commentCount: 3
+    },
+    {
+      id: 2,
+      name: "新商品プレゼンテーション分析",
+      companyName: "Innovation Inc.",
+      dueDate: "2025-02-28T23:59:59Z", 
+      status: "assigned",
+      commentCount: 0
+    }
+  ];
+  const projectsLoading = false;
 
-  // 学生のプロフィール情報を取得
-  const { data: profile } = useQuery<StudentProfile>({
-    queryKey: ["/api/student/profile"],
-  });
+  // 学生プロフィール仮データ
+  const profile: StudentProfile = {
+    rank: "silver",
+    totalComments: 45,
+    approvedComments: 38,
+    approvalRate: 84,
+    bonusProgress: 75
+  };
 
   const getRankColor = (rank: string) => {
     switch (rank) {

@@ -33,15 +33,41 @@ interface Subscription {
 export default function CorporateDashboard() {
   const [, setLocation] = useLocation();
 
-  // プロジェクト統計情報を取得
-  const { data: projects = [], isLoading: projectsLoading } = useQuery<ProjectStats[]>({
-    queryKey: ["/api/corporate/projects"],
-  });
+  // 仮データで表示（バックエンド連携は後回し）
+  const projects: ProjectStats[] = [
+    {
+      id: 1,
+      name: "デジタルマーケティング戦略レビュー",
+      companyName: "TechCorp株式会社",
+      progress: 75,
+      unreadComments: 3,
+      totalStudents: 5,
+      dueDate: "2025-02-15T23:59:59Z",
+      status: "active",
+      aiSummary: "プレゼンテーションの全体的な構成とデザインに関する建設的なフィードバックが多数寄せられています。"
+    },
+    {
+      id: 2,
+      name: "新商品プレゼンテーション",
+      companyName: "Innovation Inc.",
+      progress: 45,
+      unreadComments: 7,
+      totalStudents: 8,
+      dueDate: "2025-02-28T23:59:59Z",
+      status: "active",
+      aiSummary: "商品の魅力をより効果的に伝えるためのビジュアル改善提案が中心となっています。"
+    }
+  ];
+  const projectsLoading = false;
 
-  // サブスクリプション情報を取得
-  const { data: subscription } = useQuery<Subscription>({
-    queryKey: ["/api/corporate/subscription"],
-  });
+  // サブスクリプション仮データ
+  const subscription: Subscription = {
+    planType: "standard",
+    reviewQuotaUsed: 3,
+    reviewQuotaLimit: 50,
+    nextBillingDate: "2025-02-22T00:00:00Z",
+    isActive: true
+  };
 
   const getPlanColor = (plan: string) => {
     switch (plan) {
