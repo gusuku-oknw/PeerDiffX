@@ -6,7 +6,7 @@ import { useRoute } from 'wouter';
 import { PresentationInfoPanel } from '@/components/presentation/presentation-info-panel';
 import { PresentationToolbar } from '@/components/presentation/presentation-toolbar';
 import { PresentationThumbnails } from '@/components/presentation/presentation-thumbnails';
-import { PPTXSlideViewer } from '@/components/presentation/pptx-slide-viewer';
+import { PresentationSlideViewer } from '@/components/presentation/presentation-slide-viewer';
 
 interface Slide {
   id: number;
@@ -208,7 +208,7 @@ export default function PreviewMock() {
             </Box>
 
             {/* メインスライド */}
-            <PPTXSlideViewer
+            <PresentationSlideViewer
               slide={currentSlide}
               zoomLevel={zoomLevel}
             />
