@@ -142,11 +142,12 @@ export function PPTXSlideViewer({
           z-index: 2;
         ">
           <h1 style="
-            font-size: ${slide.slideNumber === 1 ? '4rem' : '3rem'};
+            font-size: ${slide.slideNumber === 1 ? '3.5rem' : '3rem'};
             font-weight: 700;
             margin-bottom: 30px;
             text-shadow: 0 2px 8px rgba(0,0,0,0.3);
             line-height: 1.2;
+            text-align: center;
           ">${slide.title}</h1>
           
           <div style="
@@ -155,6 +156,7 @@ export function PPTXSlideViewer({
             opacity: 0.95;
             max-width: 800px;
             margin-bottom: 40px;
+            text-align: center;
           ">
             ${slide.content}
           </div>
