@@ -8,6 +8,11 @@ import { PresentationInfoPanel } from '@/components/presentation/presentation-in
 import { PresentationToolbar } from '@/components/presentation/presentation-toolbar';
 import { PresentationThumbnails } from '@/components/presentation/presentation-thumbnails';
 import { PresentationSlideViewer } from '@/components/presentation/presentation-slide-viewer';
+// 新機能コンポーネント
+import { TaskProgressBar } from '@/components/progress/task-progress-bar';
+import { PopoverComment } from '@/components/comments/popover-comment';
+import { CommentTemplates } from '@/components/comments/comment-templates';
+import { NotificationIcon } from '@/components/notifications/notification-icon';
 
 interface Slide {
   id: number;
@@ -28,6 +33,11 @@ export default function PublicPreview() {
   const presentationId = params?.presentationId ? parseInt(params.presentationId) : null;
   
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  
+  // 新機能の状態管理
+  const [showPopoverComment, setShowPopoverComment] = useState(false);
+  const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
+  const [completedSlides, setCompletedSlides] = useState<number[]>([1, 2]); // モックデータ: すでに完了したスライド
   const [zoomLevel, setZoomLevel] = useState(100);
   
   // 仮データで表示（バックエンド連携は後回し）
