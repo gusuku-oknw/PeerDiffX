@@ -114,13 +114,13 @@ export function PPTXSlideViewer({
         height: 100%;
         display: flex;
         flex-direction: column;
-        justify-content: ${slide.slideNumber === 1 ? 'center' : justifyContent};
-        align-items: ${slide.slideNumber === 1 ? 'center' : alignItems};
+        justify-content: ${justifyContent};
+        align-items: ${alignItems};
         padding: 60px;
         background: ${theme.bg};
         color: ${theme.textColor};
         font-family: 'Segoe UI', 'Arial', sans-serif;
-        text-align: ${slide.slideNumber === 1 ? 'center' : textAlign};
+        text-align: ${textAlign};
         position: relative;
         overflow: hidden;
       ">
@@ -142,12 +142,11 @@ export function PPTXSlideViewer({
           z-index: 2;
         ">
           <h1 style="
-            font-size: ${slide.slideNumber === 1 ? '3.5rem' : '3rem'};
+            font-size: 3rem;
             font-weight: 700;
             margin-bottom: 30px;
             text-shadow: 0 2px 8px rgba(0,0,0,0.3);
             line-height: 1.2;
-            text-align: center;
           ">${slide.title}</h1>
           
           <div style="
@@ -156,7 +155,6 @@ export function PPTXSlideViewer({
             opacity: 0.95;
             max-width: 800px;
             margin-bottom: 40px;
-            text-align: center;
           ">
             ${slide.content}
           </div>
