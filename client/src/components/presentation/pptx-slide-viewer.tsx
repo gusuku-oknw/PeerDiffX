@@ -226,7 +226,10 @@ export function PPTXSlideViewer({
       bgcolor: 'background.default',
       overflow: 'auto',
       minHeight: 0,
-      width: '100%'
+      width: '100%',
+      height: '100%',
+      // 完全中央配置の強化
+      position: 'relative'
     }}>
       <Paper 
         elevation={4}
@@ -264,6 +267,9 @@ export function PPTXSlideViewer({
           borderColor: 'divider',
           overflow: 'hidden',
           position: 'relative',
+          // 中央配置の確実な実現
+          margin: 'auto',
+          display: 'block',
           // 小画面での追加調整
           minWidth: {
             xs: '280px',   // 最小幅を保証
